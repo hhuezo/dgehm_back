@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\security\PermissionController;
+use App\Http\Controllers\warehouse\AccountingAccountController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,3 +21,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/permission/{id}', [PermissionController::class, 'update']);
     Route::delete('/permission/{id}', [PermissionController::class, 'destroy']);
 });
+
+
+ Route::get('/accounting_account', [AccountingAccountController::class, 'index']);
