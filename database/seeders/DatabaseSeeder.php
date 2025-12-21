@@ -24,13 +24,13 @@ class DatabaseSeeder extends Seeder
         DB::table('wh_accounting_accounts')->delete();
 
         $accounts = [
-            ['code' => '54101', 'description' => 'PRODUCTOS ALIMENTICIOS PARA PERSONAS', 'created_at' => now(), 'updated_at' => now()],
-            ['code' => '54105', 'description' => 'PRODUCTOS DE PAPEL Y CARTON', 'created_at' => now(), 'updated_at' => now()],
-            ['code' => '54107', 'description' => 'PRODUCTOS QUIMICOS', 'created_at' => now(), 'updated_at' => now()],
-            ['code' => '54114', 'description' => 'MATERIALES DE OFICINA', 'created_at' => now(), 'updated_at' => now()],
-            ['code' => '54115', 'description' => 'MATERIALES INFORMATICOS', 'created_at' => now(), 'updated_at' => now()],
-            ['code' => '54119', 'description' => 'MATERIALES ELECTRICOS', 'created_at' => now(), 'updated_at' => now()],
-            ['code' => '54199', 'description' => 'BIENES DE USO Y CONSUMO DIVERSOS', 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54101', 'name' => 'PRODUCTOS ALIMENTICIOS PARA PERSONAS', 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54105', 'name' => 'PRODUCTOS DE PAPEL Y CARTON', 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54107', 'name' => 'PRODUCTOS QUIMICOS', 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54114', 'name' => 'MATERIALES DE OFICINA', 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54115', 'name' => 'MATERIALES INFORMATICOS', 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54119', 'name' => 'MATERIALES ELECTRICOS', 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54199', 'name' => 'BIENES DE USO Y CONSUMO DIVERSOS', 'created_at' => now(), 'updated_at' => now()],
         ];
         DB::table('wh_accounting_accounts')->insert($accounts);
 
@@ -42,17 +42,17 @@ class DatabaseSeeder extends Seeder
 
         $units = [
             // IDs fijos: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
-            ['description' => 'Unidad', 'created_at' => now(), 'updated_at' => now()], // ID 1
-            ['description' => 'Kilogramo', 'created_at' => now(), 'updated_at' => now()], // ID 2
-            ['description' => 'Gramo', 'created_at' => now(), 'updated_at' => now()], // ID 3
-            ['description' => 'Litro', 'created_at' => now(), 'updated_at' => now()], // ID 4
-            ['description' => 'Metro', 'created_at' => now(), 'updated_at' => now()], // ID 5
-            ['description' => 'Caja', 'created_at' => now(), 'updated_at' => now()], // ID 6
-            ['description' => 'Resma', 'created_at' => now(), 'updated_at' => now()], // ID 7
-            ['description' => 'Galón', 'created_at' => now(), 'updated_at' => now()], // ID 8
-            ['description' => 'Paquete', 'created_at' => now(), 'updated_at' => now()], // ID 9
-            ['description' => 'Libra', 'created_at' => now(), 'updated_at' => now()], // ID 10
-            ['description' => 'Bolsa', 'created_at' => now(), 'updated_at' => now()], // ID 11
+            ['name' => 'Unidad', 'created_at' => now(), 'updated_at' => now()], // ID 1
+            ['name' => 'Kilogramo', 'created_at' => now(), 'updated_at' => now()], // ID 2
+            ['name' => 'Gramo', 'created_at' => now(), 'updated_at' => now()], // ID 3
+            ['name' => 'Litro', 'created_at' => now(), 'updated_at' => now()], // ID 4
+            ['name' => 'Metro', 'created_at' => now(), 'updated_at' => now()], // ID 5
+            ['name' => 'Caja', 'created_at' => now(), 'updated_at' => now()], // ID 6
+            ['name' => 'Resma', 'created_at' => now(), 'updated_at' => now()], // ID 7
+            ['name' => 'Galón', 'created_at' => now(), 'updated_at' => now()], // ID 8
+            ['name' => 'Paquete', 'created_at' => now(), 'updated_at' => now()], // ID 9
+            ['name' => 'Libra', 'created_at' => now(), 'updated_at' => now()], // ID 10
+            ['name' => 'Bolsa', 'created_at' => now(), 'updated_at' => now()], // ID 11
         ];
         DB::table('wh_measures')->insert($units);
 
@@ -110,22 +110,22 @@ class DatabaseSeeder extends Seeder
 
         $products = [
             // Insertamos sin 'measure_id' para evitar el error 42S22.
-            ['name' => 'AZUCAR DE 1 LIBRA DEL CAÑAL', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'AZUCAR BLANCA GRANULADA EN SOBRE BOLSA DE 1000 UNIDADES', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'CAFE MOLIDO MAJADA ORO, BOLSA DE 1 LIBRA CON EMPAQUE METALIZADO CON VALVULA', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'CREMORA EN SOBRE BOLSA DE 200 UNIDADES, MARCA CREMAFE', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'PAPEL DE ALUMINIO ROLLO DE 500 PIES', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'SAL EN SOBRE BOLSA DE 500 UNIDADES SOBRE DE 0.39 GRS. MARCA CODIPA', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'SOBRE DE AZUCAR DIETETICA, CAJA DE 200 UNIDADES', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE DE CANELA CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE DE MANZANA CANELA. CAJA DE 20 UNIDADES MARCA SELECTOS', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE DE MANZANILLA CANELA. CAJA DE 20 UNIDADES MARCA MC CORMICK', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE DE MENTA CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE NEGRO CAJA DE 25 SOBRE DE 1.8GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE VERDE CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'SOBRE DE AZUCAR SPLENDA (CAJA DE 100 UNIDADES)', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'BOLSAS DE CAFÉ TOSTADO Y MOLIDO', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'BOLSAS DE AZUCAR BLANCA DE 500G', 'accounting_account_id' => $cuentaId, 'description' => null, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'AZUCAR DE 1 LIBRA DEL CAÑAL', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'AZUCAR BLANCA GRANULADA EN SOBRE BOLSA DE 1000 UNIDADES', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'CAFE MOLIDO MAJADA ORO, BOLSA DE 1 LIBRA CON EMPAQUE METALIZADO CON VALVULA', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'CREMORA EN SOBRE BOLSA DE 200 UNIDADES, MARCA CREMAFE', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'PAPEL DE ALUMINIO ROLLO DE 500 PIES', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'SAL EN SOBRE BOLSA DE 500 UNIDADES SOBRE DE 0.39 GRS. MARCA CODIPA', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'SOBRE DE AZUCAR DIETETICA, CAJA DE 200 UNIDADES', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'TE DE CANELA CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'TE DE MANZANA CANELA. CAJA DE 20 UNIDADES MARCA SELECTOS', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'TE DE MANZANILLA CANELA. CAJA DE 20 UNIDADES MARCA MC CORMICK', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'TE DE MENTA CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'TE NEGRO CAJA DE 25 SOBRE DE 1.8GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'TE VERDE CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'SOBRE DE AZUCAR SPLENDA (CAJA DE 100 UNIDADES)', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'BOLSAS DE CAFÉ TOSTADO Y MOLIDO', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'BOLSAS DE AZUCAR BLANCA DE 500G', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
         ];
         DB::table('wh_products')->insert($products);
 

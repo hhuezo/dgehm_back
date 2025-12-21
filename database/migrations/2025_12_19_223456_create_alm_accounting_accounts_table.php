@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('wh_accounting_accounts', function (Blueprint $table) {
             $table->id();
             $table->string('code', 20)->unique();
-            $table->string('description', 100);
+            $table->string('name', 100);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
