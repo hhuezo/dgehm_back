@@ -2,6 +2,7 @@
 
 namespace App\Models\warehouse;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
@@ -34,5 +35,16 @@ class Office extends Model
             ->useLogName('functional_positions')
             ->logAll()
             ->logOnlyDirty();
+    }
+
+
+    public function users()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'user_wh_office',
+            'wh_office_id',
+            'user_id'
+        )->withTimestamps();
     }
 }
