@@ -93,7 +93,8 @@ class PermissionController extends Controller
 
     public function destroy(string $id)
     {
-        $permission = ModelsPermission::find($id);
+
+        $permission = Permission::find($id);
 
         if (!$permission) {
             return response()->json([
@@ -103,6 +104,7 @@ class PermissionController extends Controller
         }
 
         $permission->delete();
+
 
         return response()->json([
             'success' => true,
