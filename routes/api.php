@@ -5,7 +5,9 @@ use App\Http\Controllers\general\ImageController;
 use App\Http\Controllers\security\PermissionController;
 use App\Http\Controllers\security\RoleController;
 use App\Http\Controllers\warehouse\AccountingAccountController;
+use App\Http\Controllers\warehouse\ProductController;
 use App\Http\Controllers\warehouse\PurchaseOrderController;
+use App\Http\Controllers\warehouse\PurchaseOrderDetailController;
 use App\Http\Controllers\warehouse\SupplierController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -37,10 +39,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::get('supplier', [SupplierController::class, 'index']);
+
+
+
+    Route::get('product', [ProductController::class, 'index']);
 });
 
 
-Route::get('/accounting_account', [AccountingAccountController::class, 'index']);
+Route::get('/accounting_account', [ProductController::class, 'index']);
 
 
 Route::get('general/images/{imgName}', [ImageController::class, 'getGeneralImage']);
@@ -51,3 +57,6 @@ Route::post('purchase_order', [PurchaseOrderController::class, 'store']);
 Route::put('purchase_order/{id}', [PurchaseOrderController::class, 'update']);
 Route::get('purchase_order/{id}', [PurchaseOrderController::class, 'show']);
 Route::get('purchase_order/acta/{id}', [PurchaseOrderController::class, 'reportActa']);
+
+Route::get('purchase_order_detail/{id}', [PurchaseOrderDetailController::class, 'show']);
+Route::post('purchase_order_detail', [PurchaseOrderDetailController::class, 'store']);

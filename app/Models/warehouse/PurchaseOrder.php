@@ -4,6 +4,7 @@ namespace App\Models\warehouse;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 
 class PurchaseOrder extends Model
@@ -42,6 +43,11 @@ class PurchaseOrder extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function details(): HasMany
+    {
+        return $this->hasMany(PurchaseOrderDetail::class, 'purchase_order_id');
     }
 
 

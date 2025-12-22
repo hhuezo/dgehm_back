@@ -4,6 +4,7 @@ namespace App\Http\Controllers\warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\warehouse\PurchaseOrder;
+use App\Models\warehouse\PurchaseOrderDetail;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -14,7 +15,7 @@ class PurchaseOrderController extends Controller
 
     public function index()
     {
-        $orders = PurchaseOrder::with('supplier')->get();
+        $orders = PurchaseOrder::with('supplier')->orderBy('id','desc')->get();
 
         return response()->json([
             'success' => true,
@@ -103,7 +104,10 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-    public function edit(string $id) {}
+
+
+
+
 
     public function update(Request $request, string $id)
     {
