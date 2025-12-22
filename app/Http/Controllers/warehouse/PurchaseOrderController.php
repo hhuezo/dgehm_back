@@ -4,6 +4,7 @@ namespace App\Http\Controllers\warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\warehouse\PurchaseOrder;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use PDF;
@@ -173,9 +174,9 @@ class PurchaseOrderController extends Controller
         }
     }
 
+
     public function reportActa(string $id)
     {
-        // 1. Obtener la orden y sus relaciones
         $order = PurchaseOrder::with('supplier')->find($id);
 
         if (!$order) {
@@ -185,29 +186,25 @@ class PurchaseOrderController extends Controller
             ], 404);
         }
 
-        // 2. Preparar los datos para la vista
+        // 🔹 FORZAR ESPAÑOL
+        Carbon::setLocale('es');
+
+        $actaDate = Carbon::parse($order->acta_date);
+
         $data = [
             'order' => $order,
-            // Separar la fecha y hora del acta para el cuerpo del texto
-            'acta_time_part' => date('H', strtotime($order->acta_date)),
-            'acta_minutes_part' => date('i', strtotime($order->acta_date)),
-            'acta_date_part' => date('d', strtotime($order->acta_date)),
-            'acta_month_part' => date('m', strtotime($order->acta_date)),
-            'acta_year_part' => date('Y', strtotime($order->acta_date)),
-            // Puedes añadir más lógica de formateo aquí si es necesaria
+
+            'acta_time_part'    => $actaDate->format('H'),
+            'acta_minutes_part' => $actaDate->format('i'),
+            'acta_date_part'    => $actaDate->format('d'),
+            'acta_month_part'   => $actaDate->translatedFormat('F'), // ← español
+            'acta_year_part'    => $actaDate->format('Y'),
         ];
 
-        // 3. Generar el PDF
-        // Nota: Asegúrate de que la ruta de la vista exista: 'reports.acta_recepcion'
         $pdf = PDF::loadView('reports.acta_recepcion', $data);
 
-        // Opcional: Nombre del archivo
         $filename = 'Acta_Recepcion_' . $order->order_number . '.pdf';
 
-        // 4. Devolver la descarga del PDF al navegador
         return $pdf->download($filename);
-
-        // Si solo quieres previsualizar en el navegador:
-        // return $pdf->stream($filename);
     }
 }

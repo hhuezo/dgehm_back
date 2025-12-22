@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('budget_commitment_number', 50)->nullable();
 
             // Fecha Acta
-            $table->date('acta_date');
+            $table->dateTime('acta_date');
 
             // Fecha y hora
             $table->dateTime('reception_time');

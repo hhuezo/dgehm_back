@@ -32,7 +32,7 @@ class PurchaseOrder extends Model
     ];
 
     protected $casts = [
-        'acta_date' => 'date',
+        'acta_date' => 'datetime',
         'reception_time' => 'datetime',
         'invoice_date' => 'date',
         'total_amount' => 'decimal:2',
