@@ -5,6 +5,8 @@ use App\Http\Controllers\general\ImageController;
 use App\Http\Controllers\security\PermissionController;
 use App\Http\Controllers\security\RoleController;
 use App\Http\Controllers\warehouse\AccountingAccountController;
+use App\Http\Controllers\warehouse\PurchaseOrderController;
+use App\Http\Controllers\warehouse\SupplierController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/role/togglePermission', [RoleController::class, 'togglePermission']);
 
 
+    Route::get('supplier', [SupplierController::class, 'index']);
 });
 
 
@@ -41,3 +44,10 @@ Route::get('/accounting_account', [AccountingAccountController::class, 'index'])
 
 
 Route::get('general/images/{imgName}', [ImageController::class, 'getGeneralImage']);
+
+
+Route::get('purchase_order', [PurchaseOrderController::class, 'index']);
+Route::post('purchase_order', [PurchaseOrderController::class, 'store']);
+Route::put('purchase_order/{id}', [PurchaseOrderController::class, 'update']);
+Route::get('purchase_order/{id}', [PurchaseOrderController::class, 'show']);
+Route::get('purchase_order/acta/{id}', [PurchaseOrderController::class, 'reportActa']);

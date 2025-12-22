@@ -10,7 +10,7 @@ class PurchaseOrder extends Model
 {
     use HasFactory;
 
-    protected $table = 'purchase_order';
+    protected $table = 'wh_purchase_order';
     protected $primaryKey = 'id';
 
     protected $keyType = 'int';
@@ -37,6 +37,7 @@ class PurchaseOrder extends Model
         'invoice_date' => 'date',
         'total_amount' => 'decimal:2',
     ];
+
 
     public function supplier()
     {

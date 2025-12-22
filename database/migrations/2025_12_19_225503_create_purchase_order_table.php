@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Orden de Compra (Acta de Recepción)
-        Schema::create('purchase_order', function (Blueprint $table) {
+        Schema::create('wh_purchase_order', function (Blueprint $table) {
             $table->id();
 
             // Proveedor
@@ -57,6 +57,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('purchase_order');
+        Schema::dropIfExists('wh_purchase_order');
     }
 };
