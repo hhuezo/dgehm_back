@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('request_status', function (Blueprint $table) {
+        Schema::create('wh_request_status', function (Blueprint $table) {
             $table->id();
             $table->string('name', 50)->unique();
             $table->boolean('active')->default(true); // Campo active con valor por defecto true
@@ -20,7 +20,7 @@ return new class extends Migration
         });
 
         // Opcional: Insertar los estados iniciales de ejemplo
-        DB::table('request_status')->insert([
+        DB::table('wh_request_status')->insert([
             ['name' => 'Pendiente', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Aprobada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Rechazada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],

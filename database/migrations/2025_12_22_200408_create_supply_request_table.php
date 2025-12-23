@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('supply_request', function (Blueprint $table) {
+        Schema::create('wh_supply_request', function (Blueprint $table) {
             $table->id();
 
             // Campos de la solicitud
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->text('delivered_by_id')->nullable(); // entregado_por
 
             $table->foreignId('status_id')
-                  ->constrained('request_status')
+                  ->constrained('wh_request_status')
                   ->default(1);
 
             $table->timestamps();
