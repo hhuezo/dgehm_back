@@ -60,3 +60,6 @@ Route::get('purchase_order/acta/{id}', [PurchaseOrderController::class, 'reportA
 
 Route::get('purchase_order_detail/{id}', [PurchaseOrderDetailController::class, 'show']);
 Route::post('purchase_order_detail', [PurchaseOrderDetailController::class, 'store']);
+Route::delete('purchase_order_detail/{id}', [PurchaseOrderDetailController::class, 'destroy']);
+Route::put('purchase_order_detail/{id}', [PurchaseOrderDetailController::class, 'update']);
+

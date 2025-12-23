@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\warehouse;
 
 use App\Http\Controllers\Controller;
-use App\Models\warehouse\PurchaseOrderDetail;
+use App\Models\warehouse\Kardex;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -12,7 +12,7 @@ class PurchaseOrderDetailController extends Controller
 {
     public function show(string $id)
     {
-        $details = PurchaseOrderDetail::with('product')->where('purchase_order_id', $id)->get();
+       $details = Kardex::with('product.measure')->where('purchase_order_id', $id)->get();
 
         return response()->json([
             'success' => true,
@@ -63,7 +63,7 @@ class PurchaseOrderDetailController extends Controller
 
         try {
             if (isset($data['id'])) {
-                $item = PurchaseOrderDetail::find($data['id']);
+                $item = Kardex::find($data['id']);
                 if (!$item) {
                     return response()->json([
                         'success' => false,
@@ -74,10 +74,11 @@ class PurchaseOrderDetailController extends Controller
                 $item->update($data);
                 $action = 'updated';
             } else {
-                $item = PurchaseOrderDetail::updateOrCreate(
+                $item = Kardex::updateOrCreate(
                     [
                         'purchase_order_id' => $data['purchase_order_id'],
                         'product_id'        => $data['product_id'],
+                        'movement_type'     => 1,
                     ],
                     $data
                 );
@@ -91,11 +92,10 @@ class PurchaseOrderDetailController extends Controller
                 'message' => 'Ítem de Orden ' . ($action === 'created' ? 'creado' : 'actualizado') . ' exitosamente.',
                 'data'    => $item,
             ], 200);
-
         } catch (QueryException $e) {
             // Error común si se intenta crear un producto que ya existe en la orden (violación de índice unique)
             if ($e->getCode() == 23000) { // Código de error de integridad de MySQL/PostgreSQL
-                 return response()->json([
+                return response()->json([
                     'success' => false,
                     'message' => 'El producto seleccionado ya existe en esta orden de compra. Use el modo edición para cambiar la cantidad o precio.',
                     'error'   => $e->getMessage(),
@@ -108,5 +108,87 @@ class PurchaseOrderDetailController extends Controller
                 'error'   => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function update(Request $request, $id)
+    {
+        $item = Kardex::find($id);
+
+        if (!$item) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ítem de Orden no encontrado para actualizar.',
+            ], 404);
+        }
+
+        $rules = [
+            'quantity' => 'required|numeric|min:1',
+            'unit_price' => 'required|numeric|min:0.01',
+        ];
+
+        $messages = [
+            'required' => 'El campo ":attribute" es obligatorio.',
+            'numeric' => 'El campo ":attribute" debe ser un número válido.',
+            'quantity.min' => 'La cantidad debe ser al menos :min.',
+            'unit_price.min' => 'El precio unitario debe ser mayor a cero (0.00).',
+        ];
+
+        $attributes = [
+            'quantity' => 'cantidad',
+            'unit_price' => 'precio unitario',
+        ];
+
+        $validator = Validator::make($request->all(), $rules, $messages, $attributes);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación al actualizar el ítem.',
+                'errors' => $validator->errors()->toArray(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+        $data['subtotal'] = $data['quantity'] * $data['unit_price'];
+
+        try {
+            $item->update($data);
+
+            $item->load('product');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ítem de Orden actualizado exitosamente.',
+                'data' => $item,
+            ], 200);
+        } catch (QueryException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de base de datos al actualizar el ítem.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function destroy(string $id)
+    {
+
+        $detail = Kardex::find($id);
+
+        if (!$detail) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Permiso no encontrado.',
+            ], 404);
+        }
+
+        $detail->delete();
+
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permiso eliminado correctamente.',
+        ]);
     }
 }

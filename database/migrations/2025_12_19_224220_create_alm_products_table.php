@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('wh_products', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('accounting_account_id')->constrained('wh_accounting_accounts')->cascadeOnDelete();
+            $table->foreignId('accounting_account_id')->constrained('wh_accounting_accounts');
+            $table->foreignId('measure_id')->constrained('wh_measures');
             $table->string('name', 150);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

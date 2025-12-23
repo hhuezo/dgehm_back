@@ -98,7 +98,7 @@ class DatabaseSeeder extends Seeder
         DB::table('wh_suppliers')->insert($suppliers);
 
 
-      // -----------------------------------------------------
+        // -----------------------------------------------------
         // 5. PRODUCTOS/INSUMOS (wh_products) - ¡SIN measure_id!
         // -----------------------------------------------------
 
@@ -108,25 +108,27 @@ class DatabaseSeeder extends Seeder
         $cuentaId = DB::table('wh_accounting_accounts')->where('code', '54101')->value('id');
         $cuentaId = $cuentaId ?: 1;
 
-        $products = [
-            // Insertamos sin 'measure_id' para evitar el error 42S22.
-            ['name' => 'AZUCAR DE 1 LIBRA DEL CAÑAL', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'AZUCAR BLANCA GRANULADA EN SOBRE BOLSA DE 1000 UNIDADES', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'CAFE MOLIDO MAJADA ORO, BOLSA DE 1 LIBRA CON EMPAQUE METALIZADO CON VALVULA', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'CREMORA EN SOBRE BOLSA DE 200 UNIDADES, MARCA CREMAFE', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'PAPEL DE ALUMINIO ROLLO DE 500 PIES', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'SAL EN SOBRE BOLSA DE 500 UNIDADES SOBRE DE 0.39 GRS. MARCA CODIPA', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'SOBRE DE AZUCAR DIETETICA, CAJA DE 200 UNIDADES', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE DE CANELA CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE DE MANZANA CANELA. CAJA DE 20 UNIDADES MARCA SELECTOS', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE DE MANZANILLA CANELA. CAJA DE 20 UNIDADES MARCA MC CORMICK', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE DE MENTA CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE NEGRO CAJA DE 25 SOBRE DE 1.8GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE VERDE CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'SOBRE DE AZUCAR SPLENDA (CAJA DE 100 UNIDADES)', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'BOLSAS DE CAFÉ TOSTADO Y MOLIDO', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'BOLSAS DE AZUCAR BLANCA DE 500G', 'accounting_account_id' => $cuentaId,  'created_at' => now(), 'updated_at' => now()],
+        //measures_id
+       $products = [
+             ['name' => 'AZUCAR DE 1 LIBRA DEL CAÑAL', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'AZUCAR BLANCA GRANULADA EN SOBRE BOLSA DE 1000 UNIDADES', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'CAFE MOLIDO MAJADA ORO, BOLSA DE 1 LIBRA CON EMPAQUE METALIZADO CON VALVULA', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'CREMORA EN SOBRE BOLSA DE 200 UNIDADES, MARCA CREMAFE', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'PAPEL DE ALUMINIO ROLLO DE 500 PIES', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'SAL EN SOBRE BOLSA DE 500 UNIDADES SOBRE DE 0.39 GRS. MARCA CODIPA', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'SOBRE DE AZUCAR DIETETICA, CAJA DE 200 UNIDADES', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'TE DE CANELA CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'TE DE MANZANA CANELA. CAJA DE 20 UNIDADES MARCA SELECTOS', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'TE DE MANZANILLA CANELA. CAJA DE 20 UNIDADES MARCA MC CORMICK', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'TE DE MENTA CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'TE NEGRO CAJA DE 25 SOBRE DE 1.8GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'TE VERDE CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'SOBRE DE AZUCAR SPLENDA (CAJA DE 100 UNIDADES)', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'BOLSAS DE CAFÉ TOSTADO Y MOLIDO', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'BOLSAS DE AZUCAR BLANCA DE 500G', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
         ];
+
+
         DB::table('wh_products')->insert($products);
 
         // -----------------------------------------------------
@@ -137,7 +139,7 @@ class DatabaseSeeder extends Seeder
 
 
 
-       // =====================
+        // =====================
         // ROLES
         // =====================
         $adminRole = Role::firstOrCreate([
@@ -176,6 +178,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-         $almacenUser->assignRole('almacen-admin');
+        $almacenUser->assignRole('almacen-admin');
     }
 }

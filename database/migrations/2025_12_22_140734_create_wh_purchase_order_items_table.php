@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('wh_purchase_order_items', function (Blueprint $table) {
+        Schema::create('wh_kardex', function (Blueprint $table) {
 
             $table->id();
 
@@ -22,6 +22,8 @@ return new class extends Migration
             // Clave foránea al producto maestro (wh_products)
             $table->foreignId('product_id')
                   ->constrained('wh_products');
+
+            $table->boolean('movement_type');
 
             // Campos de detalle
             $table->unsignedSmallInteger('quantity');
@@ -41,6 +43,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('wh_purchase_order_items');
+        Schema::dropIfExists('wh_kardex');
     }
 };

@@ -20,6 +20,7 @@ class Product extends Model
 
     protected $fillable = [
         'accounting_account_id',
+        'measure_id',
         'name',
         'description',
         'is_active',
@@ -32,6 +33,11 @@ class Product extends Model
     public function accountingAccount()
     {
         return $this->belongsTo(AccountingAccount::class, 'accounting_account_id');
+    }
+
+    public function measure()
+    {
+        return $this->belongsTo(Measure::class, 'measure_id');
     }
 
     public function getActivitylogOptions(): LogOptions

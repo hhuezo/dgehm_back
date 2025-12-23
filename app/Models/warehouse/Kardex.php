@@ -5,16 +5,14 @@ namespace App\Models\warehouse;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-use App\Models\warehouse\PurchaseOrder;
-use App\Models\warehouse\Product;
-
-class PurchaseOrderDetail extends Model
+class Kardex extends Model
 {
-    protected $table = 'wh_purchase_order_items';
+   protected $table = 'wh_kardex';
 
     protected $fillable = [
         'purchase_order_id',
         'product_id',
+        'movement_type',
         'quantity',
         'unit_price',
         'subtotal',
