@@ -4,10 +4,16 @@ namespace App\Http\Controllers\warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\warehouse\Office;
+use App\Models\warehouse\Product;
 use App\Models\warehouse\SupplyRequest;
+use App\Models\warehouse\SupplyRequestDetail;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Ramsey\Uuid\Type\Integer;
 
 class SupplyRequestController extends Controller
 {
@@ -145,42 +151,155 @@ class SupplyRequestController extends Controller
 
     public function finalize(string $id)
     {
+        DB::beginTransaction();
+
         try {
+
             $supplyRequest = SupplyRequest::findOrFail($id);
 
             if ($supplyRequest->status_id !== 2) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Solo se pueden aprobar solicitudes que están en estado Pendiente.',
-                ], 403); // HTTP_FORBIDDEN
+                throw ValidationException::withMessages([
+                    'status' => ['La solicitud no se encuentra en estado Pendiente.'],
+                ]);
             }
+
+            $details = SupplyRequestDetail::where('supply_request_id', $id)
+                ->where('delivered_quantity', '>', 0)
+                ->get();
+
+            $kardexToInsert = [];
+            $validationErrors = [];
+
+            foreach ($details as $detail) {
+
+                $product = Product::find($detail->product_id);
+                $productName = $product ? $product->name : 'Producto ID ' . $detail->product_id;
+
+                try {
+
+                    $distribution = $this->resolveKardexStock(
+                        $detail->product_id,
+                        $detail->delivered_quantity
+                    );
+
+                    foreach ($distribution as $item) {
+                        $kardexToInsert[] = [
+                            'purchase_order_id' => $item['purchase_order_id'],
+                            'product_id'        => $item['product_id'],
+                            'movement_type'     => 2,
+                            'quantity'          => $item['quantity'],
+                            'unit_price'        => $item['unit_price'],
+                            'subtotal'          => $item['subtotal'],
+                            'supply_request_id' => $id,
+                            'created_at'        => now(),
+                            'updated_at'        => now(),
+                        ];
+                    }
+                } catch (\Exception $e) {
+
+                    $validationErrors["products.{$detail->product_id}"][] =
+                        "Existencia insuficiente para el producto: {$productName}";
+                }
+            }
+
+            if (!empty($validationErrors)) {
+                DB::rollBack();
+                throw ValidationException::withMessages($validationErrors);
+            }
+
+            DB::table('wh_kardex')->insert($kardexToInsert);
 
             $supplyRequest->status_id = 3;
             $supplyRequest->save();
 
+            DB::commit();
+
             return response()->json([
                 'success' => true,
-                'message' => 'Solicitud de insumos aprobada correctamente. Estado: Aprobado.',
-                'data' => $supplyRequest,
-            ], 200); // HTTP_OK
+                'message' => 'Solicitud de insumos aprobada correctamente.',
+            ], 200);
+        } catch (ValidationException $e) {
 
+            DB::rollBack();
+            throw $e;
         } catch (ModelNotFoundException $e) {
+
+            DB::rollBack();
+
             return response()->json([
-                'success' => false,
-                'message' => 'La Solicitud de Insumos (ID: ' . $id . ') no fue encontrada.',
-            ], 404); // HTTP_NOT_FOUND
+                'message' => 'La Solicitud de Insumos no fue encontrada.',
+            ], 404);
         } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            Log::error('Error al aprobar la solicitud de insumos', [
+                'supply_request_id' => $id,
+                'exception'         => $e->getMessage(),
+                'file'              => $e->getFile(),
+                'line'              => $e->getLine(),
+                'trace'             => $e->getTraceAsString(),
+            ]);
+
             return response()->json([
-                'success' => false,
-                'error' => 'Error al aprobar la solicitud: ' . $e->getMessage(),
-            ], 500); // HTTP_INTERNAL_SERVER_ERROR
+                'message' => 'Error al aprobar la solicitud.',
+                'error'   => $e->getMessage(),
+            ], 500);
         }
     }
 
 
-    public function update(Request $request, string $id)
+
+    public function resolveKardexStock(string $id, int $delivered_quantity)
     {
-        //
+        $result = [];
+        $remaining = $delivered_quantity;
+
+        $orders = DB::table('wh_kardex')
+            ->select(
+                'purchase_order_id',
+                'product_id',
+                'unit_price',
+                DB::raw("
+                SUM(
+                    CASE
+                        WHEN movement_type = 1 THEN quantity
+                        WHEN movement_type = 2 THEN -quantity
+                        ELSE 0
+                    END
+                ) AS stock
+            ")
+            )
+            ->where('product_id', $id)
+            ->groupBy('purchase_order_id', 'product_id', 'unit_price')
+            ->havingRaw('stock > 0')
+            ->orderBy('purchase_order_id')
+            ->get();
+
+        foreach ($orders as $order) {
+
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $take = min($order->stock, $remaining);
+
+            $result[] = [
+                'purchase_order_id' => $order->purchase_order_id,
+                'product_id'        => $order->product_id,
+                'quantity'          => $take,
+                'unit_price'        => (float) $order->unit_price,
+                'subtotal'          => round($take * $order->unit_price, 4),
+            ];
+
+            $remaining -= $take;
+        }
+
+        if ($remaining > 0) {
+            throw new \Exception('Existencia insuficiente para el producto solicitado');
+        }
+
+        return $result;
     }
 
 

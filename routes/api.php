@@ -72,6 +72,8 @@ Route::get('supply_request/{id}', [SupplyRequestController::class, 'show']);
 Route::post('supply_request/approve/{id}', [SupplyRequestController::class, 'approve']);
 Route::post('supply_request/finalize/{id}', [SupplyRequestController::class, 'finalize']);
 
+Route::get('product/{id}/{quantity}', [SupplyRequestController::class, 'resolveKardexStock']);
+
 Route::get('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'show']);
 Route::post('supply_request_detail', [SupplyRequestDetailController::class, 'store']);
 Route::put('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'update']);

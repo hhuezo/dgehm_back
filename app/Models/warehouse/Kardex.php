@@ -16,6 +16,7 @@ class Kardex extends Model
         'quantity',
         'unit_price',
         'subtotal',
+        'supply_request_id',
     ];
 
     public function purchaseOrder(): BelongsTo

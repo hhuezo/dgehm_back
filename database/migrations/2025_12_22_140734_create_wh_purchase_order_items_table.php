@@ -19,6 +19,9 @@ return new class extends Migration
             $table->foreignId('purchase_order_id')
                   ->constrained('wh_purchase_order');
 
+            $table->foreignId('supply_request_id')
+                  ->constrained('wh_supply_request');
+
             // Clave foránea al producto maestro (wh_products)
             $table->foreignId('product_id')
                   ->constrained('wh_products');
@@ -31,8 +34,6 @@ return new class extends Migration
             $table->decimal('subtotal', 10, 4)->nullable();
 
 
-            // Índice único: No se repite el mismo producto en la misma orden
-            $table->unique(['purchase_order_id', 'product_id']);
 
             $table->timestamps();
         });
