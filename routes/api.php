@@ -9,6 +9,8 @@ use App\Http\Controllers\warehouse\ProductController;
 use App\Http\Controllers\warehouse\PurchaseOrderController;
 use App\Http\Controllers\warehouse\PurchaseOrderDetailController;
 use App\Http\Controllers\warehouse\SupplierController;
+use App\Http\Controllers\warehouse\SupplyRequestController;
+use App\Http\Controllers\warehouse\SupplyRequestDetailController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -62,4 +64,20 @@ Route::get('purchase_order_detail/{id}', [PurchaseOrderDetailController::class, 
 Route::post('purchase_order_detail', [PurchaseOrderDetailController::class, 'store']);
 Route::delete('purchase_order_detail/{id}', [PurchaseOrderDetailController::class, 'destroy']);
 Route::put('purchase_order_detail/{id}', [PurchaseOrderDetailController::class, 'update']);
+
+
+Route::get('supply_request', [SupplyRequestController::class, 'index']);
+Route::post('supply_request', [SupplyRequestController::class, 'store']);
+Route::get('supply_request/{id}', [SupplyRequestController::class, 'show']);
+Route::post('supply_request/approve/{id}', [SupplyRequestController::class, 'approve']);
+Route::post('supply_request/finalize/{id}', [SupplyRequestController::class, 'finalize']);
+
+Route::get('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'show']);
+Route::post('supply_request_detail', [SupplyRequestDetailController::class, 'store']);
+Route::put('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'update']);
+Route::delete('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'destroy']);
+
+
+Route::get('offices/{officeId}/bosses', [SupplyRequestController::class, 'getBoss']);
+
 

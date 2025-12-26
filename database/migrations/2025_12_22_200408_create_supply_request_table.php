@@ -14,18 +14,24 @@ return new class extends Migration
         Schema::create('wh_supply_request', function (Blueprint $table) {
             $table->id();
 
-            // Campos de la solicitud
-            $table->timestamp('request_date'); // date
-            $table->text('observation')->nullable(); // observation
+            $table->timestamp('date');
+            $table->text('observation')->nullable();
 
+            $table->foreignId('requester_id')->constrained('users');
 
-            $table->foreignId('requester_id')->constrained('users'); // solicitante
-            $table->text('immediate_boss_id')->nullable(); // jefe_inmediato
-            $table->text('delivered_by_id')->nullable(); // entregado_por
+             $table->foreignId('office_id')->constrained('wh_offices');
+
+            $table->foreignId('immediate_boss_id')
+                  ->nullable()
+                  ->constrained('users');
+
+            $table->foreignId('delivered_by_id')
+                  ->nullable()
+                  ->constrained('users');
 
             $table->foreignId('status_id')
-                  ->constrained('wh_request_status')
-                  ->default(1);
+                  ->default(1)
+                  ->constrained('wh_request_status');
 
             $table->timestamps();
         });
@@ -36,6 +42,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('supply_request');
+        Schema::dropIfExists('wh_supply_request');
     }
 };

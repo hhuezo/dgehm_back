@@ -5,6 +5,7 @@ namespace App\Http\Controllers\warehouse;
 use App\Http\Controllers\Controller;
 use App\Models\warehouse\PurchaseOrder;
 use App\Models\warehouse\PurchaseOrderDetail;
+use App\Models\warehouse\SupplyRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,11 +16,11 @@ class PurchaseOrderController extends Controller
 
     public function index()
     {
-        $orders = PurchaseOrder::with('supplier')->orderBy('id','desc')->get();
+        $purchase_orders = PurchaseOrder::with('supplier')->get();
 
         return response()->json([
             'success' => true,
-            'data'    => $orders,
+            'data'    => $purchase_orders,
         ]);
     }
 

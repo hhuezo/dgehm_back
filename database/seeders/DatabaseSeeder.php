@@ -179,5 +179,36 @@ class DatabaseSeeder extends Seeder
         );
 
         $almacenUser->assignRole('almacen-admin');
+
+
+        // =========================
+        // USUARIO SOLICITANTE
+        // =========================
+        $solicitanteUser = User::firstOrCreate(
+            ['email' => 'solicitante@mail.com'],
+            [
+                'name' => 'Maria',
+                'lastname' => 'Solicitante',
+                'username' => 'solicitante',
+                'password' => Hash::make('password123'),
+            ]
+        );
+
+        $solicitanteUser->assignRole('almacen-solicitante');
+
+        // =========================
+        // USUARIO JEFE DE ÁREA
+        // =========================
+        $jefeAreaUser = User::firstOrCreate(
+            ['email' => 'jefe.area@mail.com'],
+            [
+                'name' => 'Pedro',
+                'lastname' => 'Jefe',
+                'username' => 'jefe.area',
+                'password' => Hash::make('password123'),
+            ]
+        );
+
+        $jefeAreaUser->assignRole('almacen-jefe-area');
     }
 }
