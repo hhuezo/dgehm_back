@@ -4,6 +4,7 @@ namespace App\Http\Controllers\warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\warehouse\AccountingAccount;
+use Illuminate\Container\Attributes\DB;
 use Illuminate\Http\Request;
 
 class AccountingAccountController extends Controller
@@ -11,11 +12,13 @@ class AccountingAccountController extends Controller
 
     public function index()
     {
-        $acountings = AccountingAccount::select('id', 'code', 'name')->where('is_active', true)->get();
+        $accounts = AccountingAccount::select('id', 'code', 'name')
+            ->where('is_active', 1)
+            ->get();
 
         return response()->json([
             'success' => true,
-            'data'    => $acountings,
+            'data' => $accounts,
         ]);
     }
 
@@ -32,28 +35,22 @@ class AccountingAccountController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'code'        => 'required|string|max:50',
-            'name' => 'required|string|max:255',
+        $request->validate([
+            'name' => 'required|unique:wh_accounting_accounts,name',
+            'code' => 'required|integer|unique:wh_accounting_accounts,code',
         ]);
-        try {
-            $accounting = new AccountingAccount();
-            $accounting->code = $validated['code'];
-            $accounting->name = $validated['name'];
-            $accounting->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Cuenta contable creada correctamente.',
-                'data'    => $accounting,
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al crear la cuenta contable',
-                'error'   => $e->getMessage(),
-            ], 500);
-        }
+        $accounting = new AccountingAccount();
+        $accounting->code = $request->code;
+        $accounting->name = $request->name;
+        $accounting->is_active = 1;
+        $accounting->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cuenta contable creada correctamente.',
+            'data' => $accounting,
+        ], 201);
     }
 
     /**
@@ -77,38 +74,27 @@ class AccountingAccountController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $validated = $request->validate([
-            'code'        => 'required|string|max:50',
-            'name' => 'required|string|max:255',
+        $request->validate([
+            'name' => 'required|unique:wh_accounting_accounts,name,' . $id,
+            'code' => 'required|integer',
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.unique'   => 'Ya existe una cuenta contable con este nombre.',
+            'code.required' => 'El código es obligatorio.',
+            'code.integer'  => 'El código solo puede contener números.',
         ]);
 
-        try {
-            $accounting = AccountingAccount::find($id);
+        $accounting = AccountingAccount::findOrFail($id);
 
-            if (!$accounting) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cuenta contable no encontrada.',
-                ], 404);
-            }
+        $accounting->name = $request->name;
+        $accounting->code = $request->code;
+        $accounting->save();
 
-            $accounting->code        = $validated['code'];
-            $accounting->name = $validated['name'];
-            $accounting->save();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Cuenta contable actualizada correctamente.',
-                'data'    => $accounting,
-            ], 200);
-        } catch (\Exception $e) {
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al actualizar la cuenta contable',
-                'error'   => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Cuenta contable actualizada correctamente.',
+            'data'    => $accounting,
+        ], 200);
     }
 
     /**
@@ -119,9 +105,9 @@ class AccountingAccountController extends Controller
         $accounting = AccountingAccount::findOrFail($id);
         $accounting->delete();
 
-       return response()->json([
-    'success' => true,
-    'message' => 'Cuenta contable eliminada correctamente',
-], 200);
+        return response()->json([
+            'success' => true,
+            'message' => 'Cuenta contable eliminada correctamente',
+        ], 200);
     }
 }

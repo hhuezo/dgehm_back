@@ -13,7 +13,9 @@ class MeasuresController extends Controller
      */
     public function index()
     {
-         $measures = Measure::select('id', 'code', 'description')->where('is_active', true)->get();
+        $measures = Measure::select('id', 'name')
+            ->where('is_active', true)
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -34,6 +36,22 @@ class MeasuresController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'name' => 'required|unique:wh_measures,name',
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.unique'   => 'Ya existe una medida con este nombre.',
+        ]);
+        $measure = new Measure();
+        $measure->name = $request->name;
+        $measure->is_active = 1;
+        $measure->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Medida creada correctamente.',
+            'data' => $measure,
+        ], 201);
         //
     }
 
@@ -58,6 +76,23 @@ class MeasuresController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $request->validate([
+            'name' => 'required|unique:wh_measures,name,' . $id,
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.unique'   => 'Ya existe una medida con este nombre.',
+        ]);
+
+        $measure = Measure::findOrFail($id);
+
+        $measure->name = $request->name;
+        $measure->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Medida actualizada correctamente.',
+            'data'    => $measure,
+        ], 200);
         //
     }
 
@@ -66,6 +101,13 @@ class MeasuresController extends Controller
      */
     public function destroy(string $id)
     {
+        $measure = Measure::findOrFail($id);
+        $measure->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Medida eliminada correctamente',
+        ], 200);
         //
     }
 }

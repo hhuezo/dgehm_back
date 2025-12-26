@@ -20,7 +20,7 @@ class AccountingAccount extends Model
 
     protected $fillable = [
         'code',
-        'description',
+        'name',
         'is_active',
     ];
 
