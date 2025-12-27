@@ -5,12 +5,19 @@ use App\Http\Controllers\general\ImageController;
 use App\Http\Controllers\security\PermissionController;
 use App\Http\Controllers\security\RoleController;
 use App\Http\Controllers\warehouse\AccountingAccountController;
+<<<<<<< HEAD
 use App\Http\Controllers\warehouse\ProductController;
 use App\Http\Controllers\warehouse\PurchaseOrderController;
 use App\Http\Controllers\warehouse\PurchaseOrderDetailController;
 use App\Http\Controllers\warehouse\SupplierController;
 use App\Http\Controllers\warehouse\SupplyRequestController;
 use App\Http\Controllers\warehouse\SupplyRequestDetailController;
+=======
+use App\Http\Controllers\warehouse\MeasuresController;
+use App\Http\Controllers\warehouse\OfficeController;
+use App\Http\Controllers\warehouse\ProductsController;
+use App\Http\Controllers\warehouse\SupplierController;
+>>>>>>> c684374f505eaa6fb213ac3cf0c5e75073870cf1
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
+<<<<<<< HEAD
 Route::get('/accounting_account', [ProductController::class, 'index']);
 
 
@@ -81,5 +89,31 @@ Route::delete('supply_request_detail/{id}', [SupplyRequestDetailController::clas
 
 
 Route::get('offices/{officeId}/bosses', [SupplyRequestController::class, 'getBoss']);
+=======
+Route::get('/accounting_account', [AccountingAccountController::class, 'index']);
+Route::post('/accounting_account', [AccountingAccountController::class, 'store']);
+Route::put('/accounting_account/{id}', [AccountingAccountController::class, 'update']);
+Route::delete('/accounting_account/{id}', [AccountingAccountController::class, 'destroy']);
+
+Route::get('/measures', [MeasuresController::class, 'index']);
+Route::post('/measures', [MeasuresController::class, 'store']);
+Route::put('/measures/{id}', [MeasuresController::class, 'update']);
+Route::delete('/measures/{id}', [MeasuresController::class, 'destroy']);
+
+Route::get('/products', [ProductsController::class, 'index']);
+Route::post('/products', [ProductsController::class, 'store']);
+Route::put('/products/{id}', [ProductsController::class, 'update']);
+Route::delete('/products/{id}', [ProductsController::class, 'destroy']);
+
+Route::get('/offices', [OfficeController::class, 'index']);
+Route::post('/offices', [OfficeController::class, 'store']);
+Route::put('/offices/{id}', [OfficeController::class, 'update']);
+Route::delete('/offices/{id}', [OfficeController::class, 'destroy']);
+
+Route::get('/suppliers', [SupplierController::class, 'index']);
+Route::post('/suppliers', [SupplierController::class, 'store']);
+Route::put('/suppliers/{id}', [SupplierController::class, 'update']);
+Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy']);
+>>>>>>> c684374f505eaa6fb213ac3cf0c5e75073870cf1
 
 

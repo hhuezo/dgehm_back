@@ -4,6 +4,7 @@ namespace App\Http\Controllers\warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\warehouse\AccountingAccount;
+use Illuminate\Container\Attributes\DB;
 use Illuminate\Http\Request;
 
 class AccountingAccountController extends Controller
@@ -11,11 +12,13 @@ class AccountingAccountController extends Controller
 
     public function index()
     {
-        $acountings = AccountingAccount::select('id','code','description')->where('is_active',true)->get();
+        $accounts = AccountingAccount::select('id', 'code', 'name')
+            ->where('is_active', 1)
+            ->get();
 
         return response()->json([
             'success' => true,
-            'data'    => $acountings,
+            'data' => $accounts,
         ]);
     }
 
@@ -32,7 +35,22 @@ class AccountingAccountController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|unique:wh_accounting_accounts,name',
+            'code' => 'required|integer|unique:wh_accounting_accounts,code',
+        ]);
+
+        $accounting = new AccountingAccount();
+        $accounting->code = $request->code;
+        $accounting->name = $request->name;
+        $accounting->is_active = 1;
+        $accounting->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cuenta contable creada correctamente.',
+            'data' => $accounting,
+        ], 201);
     }
 
     /**
@@ -56,7 +74,27 @@ class AccountingAccountController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'name' => 'required|unique:wh_accounting_accounts,name,' . $id,
+            'code' => 'required|integer',
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.unique'   => 'Ya existe una cuenta contable con este nombre.',
+            'code.required' => 'El código es obligatorio.',
+            'code.integer'  => 'El código solo puede contener números.',
+        ]);
+
+        $accounting = AccountingAccount::findOrFail($id);
+
+        $accounting->name = $request->name;
+        $accounting->code = $request->code;
+        $accounting->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cuenta contable actualizada correctamente.',
+            'data'    => $accounting,
+        ], 200);
     }
 
     /**
@@ -64,6 +102,12 @@ class AccountingAccountController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $accounting = AccountingAccount::findOrFail($id);
+        $accounting->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cuenta contable eliminada correctamente',
+        ], 200);
     }
 }
