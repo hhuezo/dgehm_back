@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\general\ImageController;
 use App\Http\Controllers\security\PermissionController;
 use App\Http\Controllers\security\RoleController;
+use App\Http\Controllers\security\UserController;
 use App\Http\Controllers\warehouse\AccountingAccountController;
 use App\Http\Controllers\warehouse\MeasuresController;
 use App\Http\Controllers\warehouse\OfficeController;
@@ -45,14 +46,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/role/{id}', [RoleController::class, 'update']);
     Route::get('/role/{id}', [RoleController::class, 'show']);
     Route::post('/role/togglePermission', [RoleController::class, 'togglePermission']);
-});
 
-/*
-|--------------------------------------------------------------------------
-| General
-|--------------------------------------------------------------------------
-*/
+
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::get('/users/{id}', [UserController::class, 'show']);
+    Route::put('/users/{id}', [UserController::class, 'update']);
+    Route::patch('/users/{id}', [UserController::class, 'update']);
+    Route::post('/users/{id}/roles', [UserController::class, 'syncRoles']);
+    Route::post('/users/{id}/offices', [UserController::class, 'syncOffices']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+
+
+
 Route::get('general/images/{imgName}', [ImageController::class, 'getGeneralImage']);
+
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -90,11 +99,6 @@ Route::delete('supply_request_detail/{id}', [SupplyRequestDetailController::clas
 
 Route::get('offices/{officeId}/bosses', [SupplyRequestController::class, 'getBoss']);
 
-/*
-|--------------------------------------------------------------------------
-| Catalogs
-|--------------------------------------------------------------------------
-*/
 Route::get('/accounting_account', [AccountingAccountController::class, 'index']);
 Route::post('/accounting_account', [AccountingAccountController::class, 'store']);
 Route::put('/accounting_account/{id}', [AccountingAccountController::class, 'update']);
