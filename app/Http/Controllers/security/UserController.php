@@ -5,24 +5,15 @@ namespace App\Http\Controllers\security;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
     public function index()
     {
-        $users = User::with('roles')->get();
-
-        // Agregar información del rol al objeto de usuario para compatibilidad con el frontend
-        $users = $users->map(function ($user) {
-            $userArray = $user->toArray();
-            $userArray['role'] = $user->roles->first(); // Primer rol del usuario
-            $userArray['role_id'] = $user->roles->first()?->id; // ID del primer rol
-            return $userArray;
-        });
+        $users = User::get();
 
         return response()->json([
             'success' => true,
@@ -361,4 +352,5 @@ class UserController extends Controller
             'data'    => $users
         ]);
     }
+
 }
