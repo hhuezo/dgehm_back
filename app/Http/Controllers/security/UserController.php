@@ -23,7 +23,6 @@ class UserController extends Controller
             $userArray['role_id'] = $user->roles->first()?->id; // ID del primer rol
             return $userArray;
         });
-        $users = User::get();
 
         return response()->json([
             'success' => true,
@@ -362,5 +361,4 @@ class UserController extends Controller
             'data'    => $users
         ]);
     }
-
 }
