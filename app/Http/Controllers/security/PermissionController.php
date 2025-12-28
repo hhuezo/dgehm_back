@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Permission as ModelsPermission;
 
 class PermissionController extends Controller
@@ -22,14 +23,24 @@ class PermissionController extends Controller
 
     public function store(Request $request)
     {
+        $guardName = $request->guard_name ?? 'web';
+
         $validator = Validator::make(
             $request->all(),
             [
-                'name' => 'required|string|max:255|unique:permissions,name',
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('permissions')->where(function ($query) use ($guardName) {
+                        return $query->where('guard_name', $guardName);
+                    })
+                ],
+                'guard_name' => 'nullable|string|max:255',
             ],
             [
                 'name.required' => 'El nombre del permiso es obligatorio.',
-                'name.unique'   => 'Este permiso ya existe.',
+                'name.unique'   => 'Este permiso ya existe para este guard.',
             ]
         );
 
@@ -42,6 +53,7 @@ class PermissionController extends Controller
 
         $permission = ModelsPermission::create([
             'name' => $request->name,
+            'guard_name' => $guardName,
         ]);
 
         return response()->json([
@@ -62,14 +74,24 @@ class PermissionController extends Controller
             ], 404);
         }
 
+        $guardName = $request->guard_name ?? $permission->guard_name ?? 'web';
+
         $validator = Validator::make(
             $request->all(),
             [
-                'name' => 'required|string|max:255|unique:permissions,name,' . $permission->id,
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('permissions')->where(function ($query) use ($guardName) {
+                        return $query->where('guard_name', $guardName);
+                    })->ignore($permission->id)
+                ],
+                'guard_name' => 'nullable|string|max:255',
             ],
             [
                 'name.required' => 'El nombre del permiso es obligatorio.',
-                'name.unique'   => 'Este permiso ya existe.',
+                'name.unique'   => 'Este permiso ya existe para este guard.',
             ]
         );
 
@@ -82,6 +104,7 @@ class PermissionController extends Controller
 
         $permission->update([
             'name' => $request->name,
+            'guard_name' => $guardName,
         ]);
 
         return response()->json([

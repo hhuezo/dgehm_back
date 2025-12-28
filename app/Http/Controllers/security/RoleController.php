@@ -8,6 +8,7 @@ use App\Models\Role;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role as ModelsRole;
 
@@ -26,14 +27,24 @@ class RoleController extends Controller
 
     public function store(Request $request)
     {
+        $guardName = $request->guard_name ?? 'web';
+
         $validator = Validator::make(
             $request->all(),
             [
-                'name' => 'required|string|max:255|unique:roles,name',
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('roles')->where(function ($query) use ($guardName) {
+                        return $query->where('guard_name', $guardName);
+                    })
+                ],
+                'guard_name' => 'nullable|string|max:255',
             ],
             [
                 'name.required' => 'El nombre del rol es obligatorio.',
-                'name.unique'   => 'Este rol ya existe.',
+                'name.unique'   => 'Este rol ya existe para este guard.',
             ]
         );
 
@@ -44,7 +55,10 @@ class RoleController extends Controller
             ], 422);
         }
 
-        $role = ModelsRole::create(['name' => $request->name]);
+        $role = ModelsRole::create([
+            'name' => $request->name,
+            'guard_name' => $guardName,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -66,14 +80,24 @@ class RoleController extends Controller
             ], 404);
         }
 
+        $guardName = $request->guard_name ?? $role->guard_name ?? 'web';
+
         $validator = Validator::make(
             $request->all(),
             [
-                'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('roles')->where(function ($query) use ($guardName) {
+                        return $query->where('guard_name', $guardName);
+                    })->ignore($role->id)
+                ],
+                'guard_name' => 'nullable|string|max:255',
             ],
             [
                 'name.required' => 'El nombre del rol es obligatorio.',
-                'name.unique'   => 'Este rol ya existe.',
+                'name.unique'   => 'Este rol ya existe para este guard.',
             ]
         );
 
@@ -86,12 +110,13 @@ class RoleController extends Controller
 
         $role->update([
             'name' => $request->name,
+            'guard_name' => $guardName,
         ]);
 
         return response()->json([
             'success' => true,
             'data'    => $role,
-            'message' => 'Permiso actualizado correctamente.',
+            'message' => 'Rol actualizado correctamente.',
         ]);
     }
 
