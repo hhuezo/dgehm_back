@@ -59,9 +59,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 
-Route::get('general/images/{imgName}', [ImageController::class, 'getGeneralImage']);
+
 
 });
+
+Route::get('general/images/{imgName}', [ImageController::class, 'getGeneralImage']);
 
 /*
 |--------------------------------------------------------------------------
