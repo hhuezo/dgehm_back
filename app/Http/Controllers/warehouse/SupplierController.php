@@ -13,22 +13,15 @@ class SupplierController extends Controller
      */
     public function index()
     {
-<<<<<<< HEAD
-         $suppliers = Supplier::get();
-=======
         $suppliers = Supplier::select('id', 'name', 'contact_person', 'phone', 'email', 'address')
             ->where('is_active', true)
             ->get();
->>>>>>> c684374f505eaa6fb213ac3cf0c5e75073870cf1
 
         return response()->json([
             'success' => true,
             'data'    => $suppliers,
         ]);
-<<<<<<< HEAD
-=======
         //
->>>>>>> c684374f505eaa6fb213ac3cf0c5e75073870cf1
     }
 
     /**
@@ -44,8 +37,6 @@ class SupplierController extends Controller
      */
     public function store(Request $request)
     {
-<<<<<<< HEAD
-=======
         $request->validate([
             'name'           => 'required|unique:wh_suppliers,name',
             'contact_person' => 'required',
@@ -73,7 +64,6 @@ class SupplierController extends Controller
             'message' => 'Proveedor creado correctamente.',
             'data'    => $supplier,
         ], 201);
->>>>>>> c684374f505eaa6fb213ac3cf0c5e75073870cf1
         //
     }
 
@@ -98,9 +88,6 @@ class SupplierController extends Controller
      */
     public function update(Request $request, string $id)
     {
-<<<<<<< HEAD
-        //
-=======
         $request->validate([
             'name'           => 'required|unique:wh_suppliers,name,' . $id,
             'contact_person' => 'required',
@@ -127,7 +114,6 @@ class SupplierController extends Controller
             'message' => 'Proveedor actualizado correctamente.',
             'data'    => $supplier,
         ], 200);
->>>>>>> c684374f505eaa6fb213ac3cf0c5e75073870cf1
     }
 
     /**
@@ -135,8 +121,6 @@ class SupplierController extends Controller
      */
     public function destroy(string $id)
     {
-<<<<<<< HEAD
-=======
         $supplier = Supplier::findOrFail($id);
         $supplier->save();
 
@@ -144,7 +128,6 @@ class SupplierController extends Controller
             'success' => true,
             'message' => 'Proveedor eliminado correctamente.',
         ], 200);
->>>>>>> c684374f505eaa6fb213ac3cf0c5e75073870cf1
         //
     }
 }
