@@ -14,7 +14,7 @@ return new class extends Migration
 
             // Llaves Foráneas (Foreign Keys)
             $table->foreignId('returned_by_id')->constrained('users'); // La persona que devuelve
-            $table->foreignId('wh_offices')->constrained(); // Oficina de origen
+            $table->foreignId('wh_office_id')->constrained(); // Oficina de origen
             $table->foreignId('immediate_supervisor_id')->constrained('users'); // El jefe inmediato
             $table->foreignId('received_by_id')->constrained('users'); // Quien recibe en almacén
 
