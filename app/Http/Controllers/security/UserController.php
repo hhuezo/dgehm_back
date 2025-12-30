@@ -4,7 +4,6 @@ namespace App\Http\Controllers\security;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\warehouse\Office;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -13,9 +12,6 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $users = User::with('roles')->get();
@@ -34,9 +30,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $rules = [
@@ -102,9 +95,6 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $user = User::with(['roles', 'offices'])->find($id);
@@ -127,9 +117,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $user = User::find($id);
@@ -210,9 +197,6 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Sync roles for a user.
-     */
     public function syncRoles(Request $request, string $id)
     {
         $user = User::find($id);
@@ -266,9 +250,6 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Sync offices for a user.
-     */
     public function syncOffices(Request $request, string $id)
     {
         $user = User::find($id);
@@ -322,9 +303,6 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         $user = User::find($id);
@@ -354,5 +332,33 @@ class UserController extends Controller
                 'error'   => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function getAdministrativeTechnicians()
+    {
+        $users = User::whereHas('roles', function ($query) {
+            $query->where('id', 2);
+        })
+            ->where('status', 1)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $users
+        ]);
+    }
+
+    public function getAreaManagers()
+    {
+        $users = User::whereHas('roles', function ($query) {
+            $query->where('id', 4);
+        })
+            ->where('status', 1)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $users
+        ]);
     }
 }

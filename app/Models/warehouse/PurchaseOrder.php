@@ -5,7 +5,9 @@ namespace App\Models\warehouse;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\LogOptions;
+use App\Models\User;
 
 class PurchaseOrder extends Model
 {
@@ -29,7 +31,7 @@ class PurchaseOrder extends Model
         'invoice_date',
         'total_amount',
         'administrative_manager',
-        'administrative_technician',
+        'administrative_technician_id',
     ];
 
     protected $casts = [
@@ -40,14 +42,19 @@ class PurchaseOrder extends Model
     ];
 
 
-    public function supplier()
+    public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
+    public function administrativeTechnician(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'administrative_technician_id');
+    }
+
     public function details(): HasMany
     {
-        return $this->hasMany(PurchaseOrderDetail::class, 'purchase_order_id');
+        return $this->hasMany(Kardex::class, 'purchase_order_id');
     }
 
 

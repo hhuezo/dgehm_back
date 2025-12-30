@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 | Auth
 |--------------------------------------------------------------------------
 */
+
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('general/images/{imgName}', [ImageController::class, 'getGeneralImage']);
@@ -26,7 +27,7 @@ Route::get('general/images/{imgName}', [ImageController::class, 'getGeneralImage
 */
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::get('/user', fn (Request $request) => $request->user());
+    Route::get('/user', fn(Request $request) => $request->user());
     Route::post('/signout', [AuthController::class, 'signout']);
 
     // Permissions
@@ -54,9 +55,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 
-
-
 });
 
 
-
+Route::get('/administrative_technicians', [UserController::class, 'getAdministrativeTechnicians']);
+Route::get('/area-managers', [UserController::class, 'getAreaManagers']);
