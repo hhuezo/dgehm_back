@@ -24,6 +24,11 @@ class Kardex extends Model
         return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
 
+     public function supplierRequest(): BelongsTo
+    {
+        return $this->belongsTo(SupplyRequest::class, 'supply_request_id');
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'product_id');

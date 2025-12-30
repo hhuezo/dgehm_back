@@ -57,9 +57,12 @@ Route::put('measures/{id}', [MeasuresController::class, 'update']);
 Route::delete('measures/{id}', [MeasuresController::class, 'destroy']);
 
 Route::get('products', [ProductsController::class, 'index']);
+
 Route::post('products', [ProductsController::class, 'store']);
 Route::put('products/{id}', [ProductsController::class, 'update']);
 Route::delete('products/{id}', [ProductsController::class, 'destroy']);
+Route::get('products/{id}/kardex', [ProductsController::class, 'kardex']);
+Route::get('products/{id}/existencia', [ProductsController::class, 'existencia']);
 
 
 Route::get('offices', [OfficeController::class, 'index']);
