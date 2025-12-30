@@ -20,7 +20,7 @@ return new class extends Migration
                   ->constrained('wh_purchase_order');
 
             $table->foreignId('supply_request_id')
-                  ->constrained('wh_supply_request');
+                  ->constrained('wh_supply_request')->nullable();
 
             // Clave foránea al producto maestro (wh_products)
             $table->foreignId('product_id')

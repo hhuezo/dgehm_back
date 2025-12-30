@@ -28,7 +28,7 @@ return new class extends Migration
             $table->dateTime('acta_date');
 
             // Fecha y hora
-            $table->dateTime('reception_time');
+            $table->dateTime('reception_date');
 
             // Representante proveedor
             $table->string('supplier_representative', 150);

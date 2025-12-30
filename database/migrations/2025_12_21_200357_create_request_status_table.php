@@ -23,8 +23,8 @@ return new class extends Migration
         DB::table('wh_request_status')->insert([
             ['name' => 'Pendiente', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Aprobada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Rechazada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Completada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Rechazada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 

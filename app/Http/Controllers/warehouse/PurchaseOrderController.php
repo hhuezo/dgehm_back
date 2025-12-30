@@ -103,7 +103,7 @@ class PurchaseOrderController extends Controller
 
     public function show(string $id)
     {
-        $order = PurchaseOrder::with('supplier')->find($id);
+        $order = PurchaseOrder::with('supplier')->with('administrativeTechnician')->find($id);
 
         if (!$order) {
             return response()->json([
