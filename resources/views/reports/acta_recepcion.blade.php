@@ -6,10 +6,32 @@
     <title>Acta de Recepción de Insumos de Almacén</title>
 
     <style>
+        @page {
+            margin: 30px 30px 60px 30px;
+            /* espacio inferior para footer */
+        }
+
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px;
+            font-size: 13px;
             line-height: 1.6;
+        }
+
+        .header-logos {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-box {
+            width: 15%;
+            text-align: center;
+        }
+
+        .logo-box img {
+            max-width: 100%;
+            height: auto;
         }
 
         .center {
@@ -23,7 +45,7 @@
         .underline {
             border-bottom: 1px solid #000;
             display: inline-block;
-            min-width: 120px;
+            min-width: 30px;
             padding: 0 4px;
         }
 
@@ -35,22 +57,21 @@
         .signatures {
             margin-top: 40px;
             width: 100%;
+            font-size: 12px;
         }
 
-        .signature-box {
-            width: 45%;
-            display: inline-block;
+        .signatures td {
+            padding-right: 40px;
             vertical-align: top;
-            text-align: left;
         }
 
-        .signature-line {
-            border-bottom: 1px solid #000;
-            margin: 30px 0 5px 0;
-        }
-
+        /* FOOTER FIJO */
         .footer {
-            margin-top: 25px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px 30px;
             font-size: 11px;
         }
     </style>
@@ -58,11 +79,26 @@
 
 <body>
 
+    {{-- HEADER --}}
+    <table style="width:100%; margin-bottom:10px;">
+        <tr>
+            <td style="width:50%; text-align:left;">
+                <img src="{{ public_path('escudo.png') }}" width="50">
+            </td>
+
+            <td style="width:50%; text-align:right;">
+                <img src="{{ public_path('logo_azul.png') }}" height="50">
+            </td>
+        </tr>
+    </table>
+
+
+
     <div class="center bold">
-        ACTA DE RECEPCIÓN DE INSUMOS DE ALMACÉN<br>
-        DAF-F-GA-08
+        ACTA DE RECEPCIÓN DE INSUMOS DE ALMACÉN
     </div>
 
+    {{-- CUERPO --}}
     <div class="block">
         San Salvador Centro, a las
         <span class="underline">{{ $acta_time_part }}</span>
@@ -78,13 +114,16 @@
         ubicadas en Torre Futura Nivel 16 y 17, entre Calle el Mirador y 87 Avenida Norte,
         Colonia Escalón, Distrito de San Salvador Centro, Departamento de San Salvador;
         reunidos el(la) Sr(Sra.)
-        <span class="underline" style="min-width:200px;">{{ $order->supplier_representative }}</span>,
+        <span class="underline">{{ $order->supplier_representative }}</span>,
         en representación de
-        <span class="underline" style="min-width:180px;">{{ $order->supplier->name }}</span>;
+        <span class="underline">{{ $order->supplier->name ?? '' }}</span>;
         el(la) Sr.(Sra.)
-        <span class="underline" style="min-width:200px;">{{ $order->administrative_manager }}</span>,
+        <span class="underline">{{ $order->administrative_manager }}</span>,
         Gerente Administrativo(a) de la DGEHM; y el(la) Sr.(Sra.)
-        <span class="underline" style="min-width:200px;">{{ $order->administrative_technician }}</span>,
+        <span class="underline">
+            {{ $order->administrativeTechnician->name ?? '' }}
+            {{ $order->administrativeTechnician->lastname ?? '' }}
+        </span>,
         Técnico(a) Administrativo(a) de la DGEHM; para hacer constar la entrega por parte
         del(la) Primero(a) y la recepción por parte del(la) segundo(a) de los insumos
         adquiridos mediante el proceso de compra No.
@@ -105,42 +144,55 @@
         firman a satisfacción.
     </div>
 
+    {{-- FIRMAS --}}
     <table class="signatures">
         <tr>
-            <td class="signature-box">
-                ENTREGA:
-                <div class="signature-line"></div>
-                Nombre:
-                <div class="signature-line"></div>
-                Por Empresa:
-                <div class="signature-line"></div>
+            {{-- ENTREGA --}}
+            <td style="width:50%;">
+                <strong>ENTREGA:</strong><br><br>
+                F.__________________________________________<br>
+                Nombre: {{ $order->supplier_representative }}<br>
+                Por Empresa: {{ $order->supplier->name ?? '' }}<br>
                 Sello
             </td>
 
-            <td class="signature-box">
-                RECIBE:
-                <div class="signature-line"></div>
-                Nombre:
-                <div class="signature-line"></div>
+            {{-- RECIBE + POR ALMACÉN --}}
+            <td style="width:50%;">
+                <strong>RECIBE:</strong><br><br>
+                F.__________________________________________<br>
+                Nombre: {{ $order->administrative_manager }}<br>
                 Cargo: Gerente Administrativo(a)<br>
                 (Administrador de O/C)
+
+                <div style="margin-top:35px;">
+                    <strong>POR ALMACÉN:</strong><br><br>
+                    F.__________________________________________<br>
+                    Nombre: {{ $order->administrativeTechnician->name ?? '' }}
+                    {{ $order->administrativeTechnician->lastname ?? '' }}<br>
+                    Cargo: Técnico Administrativo (Encargado de Almacén)
+                </div>
             </td>
         </tr>
     </table>
 
-    <div class="block">
-        <strong>POR ALMACÉN:</strong>
-        <div class="signature-line" style="width:40%;"></div>
-        Nombre:
-        <div class="signature-line" style="width:40%;"></div>
-        Cargo: Técnico Administrativo (Encargado de Almacén)
-    </div>
+    {{-- FOOTER --}}
+    <table class="footer" style="width:100%; table-layout:fixed;">
+        <tr>
+            <td style="text-align:left;">
+                Original: Contabilidad
+            </td>
 
-    <div class="footer">
-        Original: Contabilidad &nbsp;&nbsp;
-        Duplicado: Administrador de Contrato &nbsp;&nbsp;
-        Triplicado: UCP u Orden de Compra
-    </div>
+            <td style="text-align:center;">
+                Duplicado: Administrador de Contrato<br>
+                u Orden de Compra
+            </td>
+
+            <td style="text-align:right;">
+                Triplicado: UCP
+            </td>
+        </tr>
+    </table>
+
 
 </body>
 

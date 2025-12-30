@@ -37,7 +37,7 @@ class PurchaseOrderController extends Controller
             'invoice_date'             => 'required|date_format:Y-m-d H:i:s',
             'total_amount'             => 'required|numeric|min:0.01|max:9999999999.99',
             'administrative_manager'   => 'required|string|max:150',
-            'administrative_technician' => 'required|string|max:150',
+            'administrative_technician_id' => 'required|integer|exists:users,id',
         ];
 
         $messages = [
@@ -46,13 +46,12 @@ class PurchaseOrderController extends Controller
             'date'     => 'El campo ":attribute" debe ser una fecha válida.',
             'numeric'  => 'El campo ":attribute" debe ser un número.',
             'min'      => 'El campo ":attribute" debe ser mayor a cero (0.00).',
-
             'supplier_id.exists'         => 'El proveedor seleccionado no es válido o no existe.',
             'order_number.unique'        => 'El número de Orden de Compra ya existe en el sistema.',
             'invoice_number.unique'      => 'El número de Factura ya existe en el sistema y debe ser único.',
             'date_format'                => 'El formato del campo ":attribute" debe ser AAAA-MM-DD HH:MM:SS.',
             'total_amount.min'           => 'El monto total debe ser mayor a cero (0.00).',
-
+            'administrative_technician_id.exists' => 'El técnico administrativo seleccionado no es válido o no existe.',
             'attributes' => [
                 'supplier_id'              => 'proveedor',
                 'order_number'             => 'número de orden',
@@ -64,15 +63,29 @@ class PurchaseOrderController extends Controller
                 'invoice_date'             => 'fecha y hora de la factura',
                 'total_amount'             => 'monto total',
                 'administrative_manager'   => 'gerente administrativo',
-                'administrative_technician' => 'técnico administrativo',
+                'administrative_technician_id' => 'técnico administrativo',
             ],
         ];
 
-        $request->validate($rules, $messages);
-
+        $data = $request->validate($rules, $messages);
 
         try {
-            $order = PurchaseOrder::create($request->all());
+            $order = new PurchaseOrder();
+
+            $order->supplier_id              = $data['supplier_id'];
+            $order->order_number             = $data['order_number'];
+            $order->invoice_number           = $data['invoice_number'];
+            $order->budget_commitment_number = $data['budget_commitment_number'];
+            $order->acta_date                = $data['acta_date'];
+            $order->reception_time           = $data['reception_time'];
+            $order->supplier_representative  = $data['supplier_representative'];
+            $order->invoice_date             = $data['invoice_date'];
+            $order->total_amount             = $data['total_amount'];
+            $order->administrative_manager   = $data['administrative_manager'];
+
+            $order->administrative_technician_id = $data['administrative_technician_id'];
+
+            $order->save();
 
             return response()->json([
                 'success' => true,
@@ -206,10 +219,13 @@ class PurchaseOrderController extends Controller
             'acta_year_part'    => $actaDate->format('Y'),
         ];
 
+        //return view('reports.acta_recepcion',$data);
+
         $pdf = PDF::loadView('reports.acta_recepcion', $data);
 
         $filename = 'Acta_Recepcion_' . $order->order_number . '.pdf';
 
+        //return $pdf->stream($filename);
         return $pdf->download($filename);
     }
 }
