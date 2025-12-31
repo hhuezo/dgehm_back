@@ -10,6 +10,7 @@ use App\Http\Controllers\warehouse\PurchaseOrderDetailController;
 use App\Http\Controllers\warehouse\SupplierController;
 use App\Http\Controllers\warehouse\SupplyRequestController;
 use App\Http\Controllers\warehouse\SupplyRequestDetailController;
+use App\Http\Controllers\warehouse\SupplyReturnController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +36,12 @@ Route::post('supply_request', [SupplyRequestController::class, 'store']);
 Route::get('supply_request/{id}', [SupplyRequestController::class, 'show']);
 Route::post('supply_request/approve/{id}', [SupplyRequestController::class, 'approve']);
 Route::post('supply_request/finalize/{id}', [SupplyRequestController::class, 'finalize']);
+
+
+Route::get('supply_return', [SupplyReturnController::class, 'index']);
+Route::post('supply_return', [SupplyReturnController::class, 'store']);
+Route::get('supply_return/{id}', [SupplyReturnController::class, 'show']);
+Route::put('supply_return/{id}', [SupplyReturnController::class, 'update']);
 
 
 
