@@ -11,6 +11,7 @@ use App\Http\Controllers\warehouse\SupplierController;
 use App\Http\Controllers\warehouse\SupplyRequestController;
 use App\Http\Controllers\warehouse\SupplyRequestDetailController;
 use App\Http\Controllers\warehouse\SupplyReturnController;
+use App\Http\Controllers\warehouse\SupplyReturnDetailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,14 +44,14 @@ Route::post('supply_return', [SupplyReturnController::class, 'store']);
 Route::get('supply_return/{id}', [SupplyReturnController::class, 'show']);
 Route::put('supply_return/{id}', [SupplyReturnController::class, 'update']);
 
-
-
-Route::get('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'show']);
-Route::post('supply_request_detail', [SupplyRequestDetailController::class, 'store']);
-Route::put('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'update']);
-Route::delete('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'destroy']);
-
 Route::get('offices/{officeId}/bosses', [SupplyRequestController::class, 'getBoss']);
+
+Route::get('supply_return_detail/{id}', [SupplyReturnDetailController::class, 'show']);
+Route::post('supply_return_detail', [SupplyReturnDetailController::class, 'store']);
+Route::put('supply_return_detail/{id}', [SupplyReturnDetailController::class, 'update']);
+Route::delete('supply_return_detail/{id}', [SupplyReturnDetailController::class, 'destroy']);
+
+
 
 // Catálogos
 Route::get('accounting_account', [AccountingAccountController::class, 'index']);
