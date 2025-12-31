@@ -44,4 +44,14 @@ class User extends Authenticatable
             'wh_office_id'
         )->withTimestamps();
     }
+
+    public function permissions()
+    {
+        return $this->belongsToMany(
+            Permission::class,
+            'model_has_permissions',
+            'model_id',
+            'permission_id'
+        )->wherePivot('model_type', self::class);
+    }
 }
