@@ -172,7 +172,8 @@ class ProductsController extends Controller
         }
 
         try {
-            $kardexMovements = Kardex::with('product')->with('purchaseOrder')->with('supplierRequest.office')->where('product_id', $id)
+            $kardexMovements = Kardex::with('product')->with('purchaseOrder')->with('supplierRequest.office')
+            ->with('supplierReturn.office')->where('product_id', $id)
                 ->whereDate('created_at', '>=', $startDate)
                 ->whereDate('created_at', '<=', $endDate)
                 //->orderBy('created_at', 'desc')

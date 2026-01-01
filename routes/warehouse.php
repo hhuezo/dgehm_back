@@ -51,6 +51,12 @@ Route::post('supply_return', [SupplyReturnController::class, 'store']);
 Route::get('supply_return/{id}', [SupplyReturnController::class, 'show']);
 Route::put('supply_return/{id}', [SupplyReturnController::class, 'update']);
 
+
+Route::post('supply_return/send/{id}', [SupplyReturnController::class, 'send']);
+Route::post('supply_return/approve/{id}', [SupplyReturnController::class, 'approve']);
+Route::post('supply_return/finalize/{id}', [SupplyReturnController::class, 'finalize']);
+Route::post('supply_return/reject/{id}', [SupplyReturnController::class, 'reject']);
+
 Route::get('offices/{officeId}/bosses', [SupplyRequestController::class, 'getBoss']);
 
 Route::get('supply_return_detail/{id}', [SupplyReturnDetailController::class, 'show']);

@@ -3,9 +3,14 @@
 namespace App\Http\Controllers\warehouse;
 
 use App\Http\Controllers\Controller;
+use App\Models\warehouse\Product;
 use App\Models\warehouse\SupplyReturn;
+use App\Models\warehouse\SupplyReturnDetail;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class SupplyReturnController extends Controller
 {
@@ -69,6 +74,7 @@ class SupplyReturnController extends Controller
 
             $supplyReturn->phone_extension = $request->input('phone_extension');
             $supplyReturn->general_observations = $request->input('general_observations');
+            $supplyReturn->status_id = 1;
 
             $supplyReturn->save();
 
@@ -93,7 +99,8 @@ class SupplyReturnController extends Controller
             'returnedBy:id,name,lastname',
             'office:id,name',
             'immediateSupervisor:id,name,lastname',
-            'receivedBy:id,name,lastname'
+            'receivedBy:id,name,lastname',
+            'status:id,name'
         ])->find($id);
 
         if (!$supplyReturn) {
@@ -210,5 +217,256 @@ class SupplyReturnController extends Controller
                 'error'   => $e->getMessage(),
             ], 500);
         }
+    }
+
+
+    public function send(string $id)
+    {
+        try {
+            $supplyReturn = SupplyReturn::findOrFail($id);
+
+
+            if ($supplyReturn->details->count() == 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La solicitud debe tener al menos un detalle antes de ser enviada.',
+                ], 403); // HTTP_FORBIDDEN
+            }
+
+            if ($supplyReturn->status_id !== 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo se pueden aprobar solicitudes que están en estado Pendiente.',
+                ], 403); // HTTP_FORBIDDEN
+            }
+
+            $supplyReturn->status_id = 2;
+            $supplyReturn->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Solicitud de insumos aprobada correctamente. Estado: Aprobado.',
+                'data' => $supplyReturn,
+            ], 200); // HTTP_OK
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La Solicitud de Insumos (ID: ' . $id . ') no fue encontrada.',
+            ], 404); // HTTP_NOT_FOUND
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al aprobar la solicitud: ' . $e->getMessage(),
+            ], 500); // HTTP_INTERNAL_SERVER_ERROR
+        }
+    }
+
+
+    public function approve(string $id)
+    {
+        try {
+            $supplyReturn = SupplyReturn::findOrFail($id);
+
+            if ($supplyReturn->status_id !== 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo se pueden aprobar solicitudes que están en estado Enviada.',
+                ], 403); // HTTP_FORBIDDEN
+            }
+
+            $supplyReturn->status_id = 3;
+            $supplyReturn->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Solicitud de insumos aprobada correctamente. Estado: Aprobado.',
+                'data' => $supplyReturn,
+            ], 200); // HTTP_OK
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La Solicitud de Insumos (ID: ' . $id . ') no fue encontrada.',
+            ], 404); // HTTP_NOT_FOUND
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al aprobar la solicitud: ' . $e->getMessage(),
+            ], 500); // HTTP_INTERNAL_SERVER_ERROR
+        }
+    }
+
+    public function reject(string $id)
+    {
+        try {
+            $supplyReturn = SupplyReturn::findOrFail($id);
+
+            if ($supplyReturn->status_id !== 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo se pueden rechazar solicitudes que están en estado Enviada.',
+                ], 403); // HTTP_FORBIDDEN
+            }
+
+            $supplyReturn->status_id = 5;
+            $supplyReturn->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Solicitud de insumos rechazada correctamente. Estado: Rechazado.',
+                'data' => $supplyReturn,
+            ], 200); // HTTP_OK
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La Solicitud de Insumos (ID: ' . $id . ') no fue encontrada.',
+            ], 404); // HTTP_NOT_FOUND
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al aprobar la solicitud: ' . $e->getMessage(),
+            ], 500); // HTTP_INTERNAL_SERVER_ERROR
+        }
+    }
+
+
+    public function finalize(string $id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $supplyReturn = SupplyReturn::findOrFail($id);
+
+            // Verifica que el estado sea Aprobado (ID 3)
+            if ($supplyReturn->status_id !== 3) {
+                throw ValidationException::withMessages([
+                    'status' => ['La devolución no se encuentra en estado Aprobado.'],
+                ]);
+            }
+
+            // Verifica que haya al menos un ítem con cantidad devuelta (> 0)
+            $detailsWithPositiveQuantity = $supplyReturn->details->where('returned_quantity', '>', 0)->count();
+
+            if ($supplyReturn->details->isEmpty() || $detailsWithPositiveQuantity === 0) {
+                throw ValidationException::withMessages([
+                    'error' => ['La devolución debe tener cantidades devueltas mayores a cero en al menos un ítem.'],
+                ]);
+            }
+
+            // Se usa supply_return_id para obtener los detalles
+            $details = SupplyReturnDetail::where('supply_return_id', $id)->get();
+
+            $kardexToInsert = [];
+            $validationErrors = [];
+
+            foreach ($details as $detail) {
+                if ($detail->returned_quantity <= 0) {
+                    continue;
+                }
+
+                $product = Product::find($detail->product_id);
+                $productName = $product ? $product->name : 'Producto ID ' . $detail->product_id;
+
+                try {
+                    // Obtiene la entrada de Kárdex para la devolución
+                    $kardexEntry = $this->resolveKardexReturn(
+                        $detail->product_id,
+                        $detail->returned_quantity, // Se usa returned_quantity
+                        (int) $id
+                    );
+
+                    // Prepara el registro de ENTRADA (movement_type = 1)
+                    $kardexToInsert[] = [
+                        'purchase_order_id' => $kardexEntry['purchase_order_id'],
+                        'product_id'        => $kardexEntry['product_id'],
+                        'movement_type'     => $kardexEntry['movement_type'],
+                        'quantity'          => $kardexEntry['quantity'],
+                        'unit_price'        => $kardexEntry['unit_price'],
+                        'subtotal'          => $kardexEntry['subtotal'],
+                        'supply_request_id' => null, // No aplica para devoluciones
+                        'supply_return_id'  => $kardexEntry['supply_return_id'],
+                        'created_at'        => now(),
+                        'updated_at'        => now(),
+                    ];
+                } catch (\Exception $e) {
+                    $validationErrors["products.{$detail->product_id}"][] =
+                        "Error de costeo/devolución para el producto: {$productName}. Error: " . $e->getMessage();
+                }
+            }
+
+            if (!empty($validationErrors)) {
+                DB::rollBack();
+                throw ValidationException::withMessages($validationErrors);
+            }
+
+            // Inserta las entradas de Kárdex
+            if (!empty($kardexToInsert)) {
+                DB::table('wh_kardex')->insert($kardexToInsert);
+            }
+
+            // Cambia el estado a Finalizado (ID 4)
+            $supplyReturn->status_id = 4;
+            $supplyReturn->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Devolución de insumos finalizada correctamente y stock actualizado.',
+            ], 200);
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            throw $e;
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'La Devolución de Insumos no fue encontrada.',
+            ], 404);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al finalizar la devolución de insumos', [
+                'supply_return_id' => $id,
+                'exception'        => $e->getMessage(),
+                'file'             => $e->getFile(),
+                'line'             => $e->getLine(),
+            ]);
+            return response()->json([
+                'message' => 'Error al finalizar la devolución.',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function resolveKardexReturn(string $productId, int $returnedQuantity, int $supplyReturnId)
+    {
+        // Busca el precio de costo de la última entrada (movement_type 1)
+        $lastEntry = DB::table('wh_kardex')
+            ->where('product_id', $productId)
+            ->where('movement_type', 1)
+            ->orderBy('created_at', 'desc')
+            ->select('purchase_order_id', 'unit_price')
+            ->first();
+
+        if (!$lastEntry) {
+            throw new \Exception("No se encontró precio de costo o Purchase Order previo para el Producto ID: {$productId}.");
+        }
+
+        $unitPrice = (float) $lastEntry->unit_price;
+        $purchaseOrderId = $lastEntry->purchase_order_id;
+
+        $result = [
+            'purchase_order_id' => $purchaseOrderId,
+            'supply_request_id' => null,
+            'supply_return_id'  => $supplyReturnId,
+            'product_id'        => (int) $productId,
+            'movement_type'     => 1, // Entrada al inventario
+            'quantity'          => $returnedQuantity,
+            'unit_price'        => $unitPrice,
+            'subtotal'          => round($returnedQuantity * $unitPrice, 4),
+        ];
+
+        return $result;
     }
 }

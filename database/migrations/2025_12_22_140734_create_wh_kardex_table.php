@@ -23,6 +23,10 @@ return new class extends Migration
                   ->nullable()
                   ->constrained('wh_supply_request');
 
+            $table->foreignId('supply_return_id')
+                  ->nullable()
+                  ->constrained('wh_supply_returns');
+
             // Clave foránea al producto maestro (wh_products)
             $table->foreignId('product_id')
                   ->constrained('wh_products');

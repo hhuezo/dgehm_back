@@ -24,6 +24,7 @@ class SupplyReturnDetail extends Model
         'product_id',
         'returned_quantity',
         'observation',
+        'supply_return_id'
     ];
 
     protected $casts = [

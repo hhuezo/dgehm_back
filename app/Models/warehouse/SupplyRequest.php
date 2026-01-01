@@ -47,7 +47,7 @@ class SupplyRequest extends Model
         return $this->belongsTo(User::class, 'immediate_boss_id');
     }
 
-     public function details()
+    public function details()
     {
         return $this->hasMany(SupplyRequestDetail::class, 'supply_request_id');
     }

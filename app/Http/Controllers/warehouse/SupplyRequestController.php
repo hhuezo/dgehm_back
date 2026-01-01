@@ -239,7 +239,7 @@ class SupplyRequestController extends Controller
                 ]);
             }
 
-             if ($supplyRequest->details->where('delivered_quantity',  0)->count() > 0 && $supplyRequest->details->where('delivered_quantity','>' , 0)->count() == 0) {
+            if ($supplyRequest->details->where('delivered_quantity',  0)->count() > 0 && $supplyRequest->details->where('delivered_quantity', '>', 0)->count() == 0) {
                 throw ValidationException::withMessages([
                     'error' => ['La solicitud debe tener cantidades entregadas mayores a cero en todos sus detalles.'],
                 ]);
@@ -386,6 +386,9 @@ class SupplyRequestController extends Controller
 
         return $result;
     }
+
+
+
 
 
     public function destroy(string $id)
