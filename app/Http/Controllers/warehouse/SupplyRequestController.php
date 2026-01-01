@@ -113,11 +113,18 @@ class SupplyRequestController extends Controller
         ]);
     }
 
-
-    public function approve(string $id)
+    public function send(string $id)
     {
         try {
             $supplyRequest = SupplyRequest::findOrFail($id);
+
+
+            if ($supplyRequest->details->count() == 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La solicitud debe tener al menos un detalle antes de ser enviada.',
+                ], 403); // HTTP_FORBIDDEN
+            }
 
             if ($supplyRequest->status_id !== 1) {
                 return response()->json([
@@ -149,6 +156,75 @@ class SupplyRequestController extends Controller
     }
 
 
+    public function approve(string $id)
+    {
+        try {
+            $supplyRequest = SupplyRequest::findOrFail($id);
+
+            if ($supplyRequest->status_id !== 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo se pueden aprobar solicitudes que están en estado Enviada.',
+                ], 403); // HTTP_FORBIDDEN
+            }
+
+            $supplyRequest->status_id = 3;
+            $supplyRequest->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Solicitud de insumos aprobada correctamente. Estado: Aprobado.',
+                'data' => $supplyRequest,
+            ], 200); // HTTP_OK
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La Solicitud de Insumos (ID: ' . $id . ') no fue encontrada.',
+            ], 404); // HTTP_NOT_FOUND
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al aprobar la solicitud: ' . $e->getMessage(),
+            ], 500); // HTTP_INTERNAL_SERVER_ERROR
+        }
+    }
+
+    public function reject(string $id)
+    {
+        try {
+            $supplyRequest = SupplyRequest::findOrFail($id);
+
+            if ($supplyRequest->status_id !== 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo se pueden rechazar solicitudes que están en estado Enviada.',
+                ], 403); // HTTP_FORBIDDEN
+            }
+
+            $supplyRequest->status_id = 5;
+            $supplyRequest->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Solicitud de insumos rechazada correctamente. Estado: Rechazado.',
+                'data' => $supplyRequest,
+            ], 200); // HTTP_OK
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La Solicitud de Insumos (ID: ' . $id . ') no fue encontrada.',
+            ], 404); // HTTP_NOT_FOUND
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al aprobar la solicitud: ' . $e->getMessage(),
+            ], 500); // HTTP_INTERNAL_SERVER_ERROR
+        }
+    }
+
+
     public function finalize(string $id)
     {
         DB::beginTransaction();
@@ -157,9 +233,15 @@ class SupplyRequestController extends Controller
 
             $supplyRequest = SupplyRequest::findOrFail($id);
 
-            if ($supplyRequest->status_id !== 2) {
+            if ($supplyRequest->status_id !== 3) {
                 throw ValidationException::withMessages([
-                    'status' => ['La solicitud no se encuentra en estado Pendiente.'],
+                    'status' => ['La solicitud no se encuentra en estado Aprobado.'],
+                ]);
+            }
+
+             if ($supplyRequest->details->where('delivered_quantity',  0)->count() > 0 && $supplyRequest->details->where('delivered_quantity','>' , 0)->count() == 0) {
+                throw ValidationException::withMessages([
+                    'error' => ['La solicitud debe tener cantidades entregadas mayores a cero en todos sus detalles.'],
                 ]);
             }
 
@@ -209,7 +291,7 @@ class SupplyRequestController extends Controller
 
             DB::table('wh_kardex')->insert($kardexToInsert);
 
-            $supplyRequest->status_id = 3;
+            $supplyRequest->status_id = 4;
             $supplyRequest->save();
 
             DB::commit();
@@ -247,6 +329,9 @@ class SupplyRequestController extends Controller
             ], 500);
         }
     }
+
+
+
 
 
 

@@ -36,8 +36,15 @@ Route::get('supply_request', [SupplyRequestController::class, 'index']);
 Route::post('supply_request', [SupplyRequestController::class, 'store']);
 Route::get('supply_request/{id}', [SupplyRequestController::class, 'show']);
 Route::post('supply_request/approve/{id}', [SupplyRequestController::class, 'approve']);
+Route::post('supply_request/send/{id}', [SupplyRequestController::class, 'send']);
 Route::post('supply_request/finalize/{id}', [SupplyRequestController::class, 'finalize']);
+Route::post('supply_request/reject/{id}', [SupplyRequestController::class, 'reject']);
 
+
+Route::get('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'show']);
+Route::post('supply_request_detail', [SupplyRequestDetailController::class, 'store']);
+Route::put('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'update']);
+Route::delete('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'destroy']);
 
 Route::get('supply_return', [SupplyReturnController::class, 'index']);
 Route::post('supply_return', [SupplyReturnController::class, 'store']);
