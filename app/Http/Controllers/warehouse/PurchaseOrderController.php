@@ -32,7 +32,7 @@ class PurchaseOrderController extends Controller
             'invoice_number'           => 'required|string|max:50|unique:wh_purchase_order,invoice_number',
             'budget_commitment_number' => 'required|string|max:50',
             'acta_date'                => 'required|date_format:Y-m-d H:i:s',
-            'reception_time'           => 'required|date_format:Y-m-d H:i:s',
+            'reception_date'           => 'required|date_format:Y-m-d H:i:s',
             'supplier_representative'  => 'required|string|max:150',
             'invoice_date'             => 'required|date_format:Y-m-d H:i:s',
             'total_amount'             => 'required|numeric|min:0.01|max:9999999999.99',
@@ -58,7 +58,7 @@ class PurchaseOrderController extends Controller
                 'invoice_number'           => 'número de factura',
                 'budget_commitment_number' => 'número de compromiso presupuestario',
                 'acta_date'                => 'fecha y hora del acta',
-                'reception_time'           => 'fecha y hora de recepción',
+                'reception_date'           => 'fecha y hora de recepción',
                 'supplier_representative'  => 'representante del proveedor',
                 'invoice_date'             => 'fecha y hora de la factura',
                 'total_amount'             => 'monto total',
@@ -77,7 +77,7 @@ class PurchaseOrderController extends Controller
             $order->invoice_number           = $data['invoice_number'];
             $order->budget_commitment_number = $data['budget_commitment_number'];
             $order->acta_date                = $data['acta_date'];
-            $order->reception_time           = $data['reception_time'];
+            $order->reception_date           = $data['reception_date'];
             $order->supplier_representative  = $data['supplier_representative'];
             $order->invoice_date             = $data['invoice_date'];
             $order->total_amount             = $data['total_amount'];
@@ -140,16 +140,31 @@ class PurchaseOrderController extends Controller
             'invoice_number'          => ['required', 'string', 'max:50', Rule::unique('wh_purchase_order')->ignore($order->id)],
             'budget_commitment_number' => 'nullable|string|max:50',
             'acta_date'               => 'required|date',
-            'reception_time'          => 'required|date_format:Y-m-d H:i:s',
+            'reception_date'          => 'required|date_format:Y-m-d H:i:s',
             'supplier_representative' => 'required|string|max:150',
             'invoice_date'            => 'required|date',
             'total_amount'            => 'required|numeric|min:0|max:9999999999.99',
             'administrative_manager'  => 'required|string|max:150',
             'administrative_technician' => 'required|string|max:150',
+            'administrative_technician_id' => 'required|integer|exists:users,id',
         ]);
 
         try {
-            $order->update($request->all());
+
+            $order->supplier_id              = $request->supplier_id;
+            $order->order_number             = $request->order_number;
+            $order->invoice_number           = $request->invoice_number;
+            $order->budget_commitment_number = $request->budget_commitment_number;
+            $order->acta_date                = $request->acta_date;
+            $order->reception_date           = $request->reception_date;
+            $order->supplier_representative  = $request->supplier_representative;
+            $order->invoice_date             = $request->invoice_date;
+            $order->total_amount             = $request->total_amount;
+            $order->administrative_manager   = $request->administrative_manager;
+
+            $order->administrative_technician_id = $request->administrative_technician_id;
+
+            $order->save();
 
             return response()->json([
                 'success' => true,
