@@ -38,15 +38,20 @@ class ProductsController extends Controller
     public function store(Request $request)
     {
 
-        $request->validate([
-            'name' => 'required|unique:wh_products,name',
+        $rules = [
+            'name'                  => 'required|unique:wh_products,name',
             'accounting_account_id' => 'required|exists:wh_accounting_accounts,id',
-        ], [
+        ];
+
+        $messages = [
             'name.required' => 'El nombre es obligatorio.',
-            'name.unique' => 'Ya existe un producto con este nombre.',
+            'name.unique'   => 'Ya existe un producto con este nombre.',
+
             'accounting_account_id.required' => 'Debe seleccionar una cuenta contable.',
-            'accounting_account_id.exists' => 'La cuenta contable seleccionada no existe.',
-        ]);
+            'accounting_account_id.exists'   => 'La cuenta contable seleccionada no existe.',
+        ];
+
+        $data = $request->validate($rules, $messages);
 
         $product = new Product();
         $product->name = $request->name;
@@ -110,15 +115,21 @@ class ProductsController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'name' => 'required|unique:wh_products,name,' . $id,
+        $rules = [
+            'name'                  => 'required|unique:wh_products,name,' . $id,
             'accounting_account_id' => 'required|exists:wh_accounting_accounts,id',
-        ], [
+        ];
+
+        $messages = [
             'name.required' => 'El nombre es obligatorio.',
-            'name.unique' => 'Ya existe un producto con este nombre.',
+            'name.unique'   => 'Ya existe un producto con este nombre.',
+
             'accounting_account_id.required' => 'Debe seleccionar una cuenta contable.',
-            'accounting_account_id.exists' => 'La cuenta contable seleccionada no existe.',
-        ]);
+            'accounting_account_id.exists'   => 'La cuenta contable seleccionada no existe.',
+        ];
+
+        $data = $request->validate($rules, $messages);
+
 
         $product = Product::findOrFail($id);
         $product->name = $request->name;

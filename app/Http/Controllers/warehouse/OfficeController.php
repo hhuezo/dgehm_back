@@ -36,16 +36,21 @@ class OfficeController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'name'  => 'required|unique:wh_offices,name',
             'phone' => 'required|regex:/^[0-9]{4}-[0-9]{4}$/|unique:wh_offices,phone',
-        ], [
+        ];
+
+        $messages = [
             'name.required'  => 'El nombre es obligatorio.',
             'name.unique'    => 'Ya existe una oficina con este nombre.',
             'phone.required' => 'El teléfono es obligatorio.',
             'phone.regex'    => 'El teléfono debe tener el formato 0000-0000.',
             'phone.unique'   => 'Ya existe una oficina con este teléfono.',
-        ]);
+        ];
+
+        $data = $request->validate($rules, $messages);
+
 
 
         $office = new Office();
@@ -83,16 +88,21 @@ class OfficeController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'name' => 'required|unique:wh_offices,name,' . $id,
+        $rules = [
+            'name'  => 'required|unique:wh_offices,name,' . $id,
             'phone' => 'required|regex:/^[0-9]{4}-[0-9]{4}$/|unique:wh_offices,phone,' . $id,
-        ], [
+        ];
+
+        $messages = [
             'name.required'  => 'El nombre es obligatorio.',
             'name.unique'    => 'Ya existe una oficina con este nombre.',
+
             'phone.required' => 'El teléfono es obligatorio.',
             'phone.regex'    => 'El teléfono debe tener el formato 0000-0000.',
             'phone.unique'   => 'Ya existe una oficina con este teléfono.',
-        ]);
+        ];
+
+        $data = $request->validate($rules, $messages);
 
         $office = Office::findOrFail($id);
 
