@@ -1,19 +1,18 @@
 <table>
     <thead>
         <tr>
-            <th colspan="7" style="font-weight:bold;">
+            <th colspan="6" style="font-weight:bold;">
                 REPORTE DE LIQUIDACIÓN DE INVENTARIO
             </th>
         </tr>
         <tr>
-            <th colspan="7">
+            <th colspan="6">
                 Desde: {{ $startDate }} | Hasta: {{ $endDate }}
             </th>
         </tr>
         <tr>
             <th>Código</th>
             <th>Concepto</th>
-            <th>Producto</th>
             <th>Cantidad</th>
             <th>Unidad</th>
             <th>Precio Unitario</th>
@@ -24,9 +23,12 @@
     <tbody>
     @foreach ($accounts as $account)
 
+        {{-- ENCABEZADO DE CUENTA --}}
         <tr>
             <td>{{ $account->account_code }}</td>
-            <td colspan="6"><strong>{{ $account->account_name }}</strong></td>
+            <td colspan="5">
+                <strong>{{ $account->account_name }}</strong>
+            </td>
         </tr>
 
         @php
@@ -36,21 +38,26 @@
             );
         @endphp
 
+        {{-- PRODUCTOS --}}
         @foreach ($productsByAccount as $product)
             <tr>
                 <td></td>
-                <td></td>
                 <td>{{ $product->product_name }}</td>
-                <td>{{ $product->quantity }}</td>
+                <td>{{ number_format($product->quantity, 0) }}</td>
                 <td>{{ $product->measure_name }}</td>
-                <td>{{ $product->unit_price }}</td>
-                <td>{{ $product->product_total }}</td>
+                <td>${{ number_format($product->unit_price, 2) }}</td>
+                <td>${{ number_format($product->product_total, 2) }}</td>
             </tr>
         @endforeach
 
+        {{-- SUBTOTAL POR CUENTA --}}
         <tr>
-            <td colspan="6"><strong>SUB TOTAL POR ESPECÍFICO</strong></td>
-            <td><strong>{{ $account->subtotal }}</strong></td>
+            <td colspan="5">
+                <strong>SUB TOTAL POR ESPECÍFICO</strong>
+            </td>
+            <td>
+                <strong>${{ number_format($account->subtotal, 2) }}</strong>
+            </td>
         </tr>
 
     @endforeach

@@ -59,12 +59,11 @@
         <thead>
             <tr>
                 <th style="width: 7%">Código</th>
-                <th style="width: 23%">Concepto</th>
-                <th style="width: 28%">Producto</th>
+                <th style="width: 51%">Concepto</th>
                 <th style="width: 8%">Cantidad</th>
                 <th style="width: 8%">Unidad</th>
                 <th style="width: 10%">Precio Unitario</th>
-                <th style="width: 12%">Valor</th>
+                <th style="width: 16%">Valor</th>
             </tr>
         </thead>
 
@@ -76,7 +75,7 @@
                 <td class="text-center">
                     {{ $account->account_code }}
                 </td>
-                <td colspan="6">
+                <td colspan="5">
                     {{ $account->account_name }}
                 </td>
             </tr>
@@ -91,7 +90,6 @@
             {{-- PRODUCTOS --}}
             @foreach ($productsByAccount as $product)
                 <tr>
-                    <td></td>
                     <td></td>
                     <td>{{ $product->product_name }}</td>
                     <td class="text-right">
@@ -111,7 +109,7 @@
 
             {{-- SUBTOTAL POR CUENTA --}}
             <tr class="subtotal">
-                <td colspan="6" class="text-right">
+                <td colspan="5" class="text-right">
                     SUB TOTAL POR ESPECÍFICO:
                 </td>
                 <td class="text-right">
