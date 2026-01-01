@@ -332,6 +332,68 @@ class SupplyReturnController extends Controller
     }
 
 
+    public function resolveKardexReturn(
+        int $productId,
+        int $returnedQuantity,
+        int $supplyReturnId
+    ) {
+        $result = [];
+        $remaining = $returnedQuantity;
+
+        // 1. Obtener SALIDAS del producto, desde la más reciente a la más antigua
+        //    Agrupadas por ORDEN DE COMPRA
+        $outputs = DB::table('wh_kardex')
+            ->select(
+                'purchase_order_id',
+                'unit_price',
+                DB::raw('SUM(quantity) as total_quantity'),
+                DB::raw('MAX(id) as last_kardex_id')
+            )
+            ->where('product_id', $productId)
+            ->where('movement_type', 2) // SALIDA
+            ->groupBy('purchase_order_id', 'unit_price')
+            ->orderByDesc('last_kardex_id') // últimas salidas primero
+            ->get();
+
+        if ($outputs->isEmpty()) {
+            throw new \Exception('No existen salidas previas para este producto');
+        }
+
+        // 2. Consumir salidas desde la OC más reciente hacia atrás
+        foreach ($outputs as $output) {
+
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $take = min($output->total_quantity, $remaining);
+
+            $result[] = [
+                'purchase_order_id' => $output->purchase_order_id,
+                'product_id'        => $productId,
+                'movement_type'     => 1, // ENTRADA (DEVOLUCIÓN)
+                'quantity'          => $take,
+                'unit_price'        => (float) $output->unit_price,
+                'subtotal'          => round($take * (float) $output->unit_price, 4),
+                'supply_request_id' => null,
+                'supply_return_id'  => $supplyReturnId,
+            ];
+
+            $remaining -= $take;
+        }
+
+        // 3. Validación final
+        if ($remaining > 0) {
+            throw new \Exception(
+                'La cantidad devuelta excede el total de unidades despachadas históricamente'
+            );
+        }
+
+        return $result;
+    }
+
+
+
     public function finalize(string $id)
     {
         DB::beginTransaction();
@@ -370,26 +432,33 @@ class SupplyReturnController extends Controller
                 $productName = $product ? $product->name : 'Producto ID ' . $detail->product_id;
 
                 try {
-                    // Obtiene la entrada de Kárdex para la devolución
-                    $kardexEntry = $this->resolveKardexReturn(
+                    // Obtiene las entradas de Kárdex para la devolución (será un array de registros)
+                    $kardexEntries = $this->resolveKardexReturn(
                         $detail->product_id,
                         $detail->returned_quantity, // Se usa returned_quantity
                         (int) $id
                     );
 
-                    // Prepara el registro de ENTRADA (movement_type = 1)
-                    $kardexToInsert[] = [
-                        'purchase_order_id' => $kardexEntry['purchase_order_id'],
-                        'product_id'        => $kardexEntry['product_id'],
-                        'movement_type'     => $kardexEntry['movement_type'],
-                        'quantity'          => $kardexEntry['quantity'],
-                        'unit_price'        => $kardexEntry['unit_price'],
-                        'subtotal'          => $kardexEntry['subtotal'],
-                        'supply_request_id' => null, // No aplica para devoluciones
-                        'supply_return_id'  => $kardexEntry['supply_return_id'],
-                        'created_at'        => now(),
-                        'updated_at'        => now(),
-                    ];
+                    // Iteramos sobre las entradas devueltas (aunque solo sea una línea)
+                    foreach ($kardexEntries as $kardexEntry) {
+                        // Prepara el registro de ENTRADA (movement_type = 1)
+                        // **AQUÍ ESTÁ LA OTRA POSIBLE FUENTE DE ERROR:**
+                        // Si resolveKardexReturn devuelve un array y no un objeto, debe acceder con []
+
+                        // ACCESO SEGURO A CLAVES DE ARRAY PARA INSERCIÓN
+                        $kardexToInsert[] = [
+                            'purchase_order_id' => $kardexEntry['purchase_order_id'] ?? null,
+                            'product_id'        => $kardexEntry['product_id'] ?? $detail->product_id,
+                            'movement_type'     => $kardexEntry['movement_type'] ?? 1,
+                            'quantity'          => $kardexEntry['quantity'] ?? $detail->returned_quantity,
+                            'unit_price'        => $kardexEntry['unit_price'] ?? 0.0,
+                            'subtotal'          => $kardexEntry['subtotal'] ?? 0.0,
+                            'supply_request_id' => null,
+                            'supply_return_id'  => $kardexEntry['supply_return_id'] ?? $id,
+                            'created_at'        => now(),
+                            'updated_at'        => now(),
+                        ];
+                    }
                 } catch (\Exception $e) {
                     $validationErrors["products.{$detail->product_id}"][] =
                         "Error de costeo/devolución para el producto: {$productName}. Error: " . $e->getMessage();
@@ -437,36 +506,5 @@ class SupplyReturnController extends Controller
                 'error'   => $e->getMessage(),
             ], 500);
         }
-    }
-
-    public function resolveKardexReturn(string $productId, int $returnedQuantity, int $supplyReturnId)
-    {
-        // Busca el precio de costo de la última entrada (movement_type 1)
-        $lastEntry = DB::table('wh_kardex')
-            ->where('product_id', $productId)
-            ->where('movement_type', 1)
-            ->orderBy('created_at', 'desc')
-            ->select('purchase_order_id', 'unit_price')
-            ->first();
-
-        if (!$lastEntry) {
-            throw new \Exception("No se encontró precio de costo o Purchase Order previo para el Producto ID: {$productId}.");
-        }
-
-        $unitPrice = (float) $lastEntry->unit_price;
-        $purchaseOrderId = $lastEntry->purchase_order_id;
-
-        $result = [
-            'purchase_order_id' => $purchaseOrderId,
-            'supply_request_id' => null,
-            'supply_return_id'  => $supplyReturnId,
-            'product_id'        => (int) $productId,
-            'movement_type'     => 1, // Entrada al inventario
-            'quantity'          => $returnedQuantity,
-            'unit_price'        => $unitPrice,
-            'subtotal'          => round($returnedQuantity * $unitPrice, 4),
-        ];
-
-        return $result;
     }
 }
