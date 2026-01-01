@@ -238,9 +238,6 @@ class PurchaseOrderController extends Controller
 
         $pdf = PDF::loadView('reports.acta_recepcion', $data);
 
-        $filename = 'Acta_Recepcion_' . $order->order_number . '.pdf';
-
-        //return $pdf->stream($filename);
-        return $pdf->download($filename);
+        return $pdf->download("Acta_Recepcion_{$id}.pdf");
     }
 }

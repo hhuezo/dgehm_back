@@ -40,12 +40,13 @@ Route::post('supply_request/approve/{id}', [SupplyRequestController::class, 'app
 Route::post('supply_request/send/{id}', [SupplyRequestController::class, 'send']);
 Route::post('supply_request/finalize/{id}', [SupplyRequestController::class, 'finalize']);
 Route::post('supply_request/reject/{id}', [SupplyRequestController::class, 'reject']);
-
+Route::get('supply_request/reports/{id}', [SupplyRequestController::class, 'RequestFormReport']);
 
 Route::get('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'show']);
 Route::post('supply_request_detail', [SupplyRequestDetailController::class, 'store']);
 Route::put('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'update']);
 Route::delete('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'destroy']);
+
 
 Route::get('supply_return', [SupplyReturnController::class, 'index']);
 Route::post('supply_return', [SupplyReturnController::class, 'store']);
@@ -57,7 +58,7 @@ Route::post('supply_return/send/{id}', [SupplyReturnController::class, 'send']);
 Route::post('supply_return/approve/{id}', [SupplyReturnController::class, 'approve']);
 Route::post('supply_return/finalize/{id}', [SupplyReturnController::class, 'finalize']);
 Route::post('supply_return/reject/{id}', [SupplyReturnController::class, 'reject']);
-
+Route::get('supply_return/reports/{id}', [SupplyReturnController::class, 'ReturntFormReport']);
 Route::get('offices/{officeId}/bosses', [SupplyRequestController::class, 'getBoss']);
 
 Route::get('supply_return_detail/{id}', [SupplyReturnDetailController::class, 'show']);

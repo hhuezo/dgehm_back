@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\warehouse\Product;
 use App\Models\warehouse\SupplyReturn;
 use App\Models\warehouse\SupplyReturnDetail;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -509,5 +510,56 @@ class SupplyReturnController extends Controller
                 'error'   => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function ReturntFormReport(string $id)
+    {
+        // 1. DEVOLUCIÓN (CABECERA)
+        $return = DB::table('wh_supply_returns')
+            ->join('users as returned', 'wh_supply_returns.returned_by_id', '=', 'returned.id')
+            ->leftJoin('users as supervisor', 'wh_supply_returns.immediate_supervisor_id', '=', 'supervisor.id')
+            ->leftJoin('users as received', 'wh_supply_returns.received_by_id', '=', 'received.id')
+            ->join('wh_offices', 'wh_supply_returns.wh_office_id', '=', 'wh_offices.id')
+            ->select(
+                'wh_supply_returns.*',
+                DB::raw("CONCAT(returned.name,' ',returned.lastname) as returned_name"),
+                DB::raw("CONCAT(supervisor.name,' ',supervisor.lastname) as supervisor_name"),
+                DB::raw("CONCAT(received.name,' ',received.lastname) as received_name"),
+                'wh_offices.name as office_name'
+            )
+            ->where('wh_supply_returns.id', $id)
+            ->first();
+
+        if (!$return) {
+            abort(404, 'Devolución no encontrada');
+        }
+
+        // 2. DETALLE DE PRODUCTOS DEVUELTOS
+        $products = DB::table('wh_supply_returns_detail')
+            ->join('wh_products', 'wh_supply_returns_detail.product_id', '=', 'wh_products.id')
+            ->join('wh_measures', 'wh_products.measure_id', '=', 'wh_measures.id')
+            ->select(
+                'wh_products.name as product_name',
+                'wh_measures.name as measure_name',
+                'wh_supply_returns_detail.returned_quantity',
+                'wh_supply_returns_detail.observation'
+            )
+            ->where('wh_supply_returns_detail.supply_return_id', $id)
+            ->orderBy('wh_products.name')
+            ->get();
+
+            /*return view('reports.return_form', [
+                'return'   => $return,
+                'products' => $products,
+            ]);*/
+
+        // 3. PDF
+        $pdf = Pdf::loadView('reports.return_form', [
+            'return'   => $return,
+            'products' => $products,
+        ])
+            ->setPaper('A4', 'portrait');
+
+        return $pdf->download("Devolucion_Insumos_{$id}.pdf");
     }
 }

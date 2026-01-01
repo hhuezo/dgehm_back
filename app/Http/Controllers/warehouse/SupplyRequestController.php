@@ -7,6 +7,7 @@ use App\Models\warehouse\Office;
 use App\Models\warehouse\Product;
 use App\Models\warehouse\SupplyRequest;
 use App\Models\warehouse\SupplyRequestDetail;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -394,8 +395,49 @@ class SupplyRequestController extends Controller
 
 
 
-    public function destroy(string $id)
+    public function RequestFormReport(string $id)
     {
-        //
+        // 1. Solicitud (CABECERA)
+        $request = DB::table('wh_supply_request')
+            ->join('users as requester', 'wh_supply_request.requester_id', '=', 'requester.id')
+            ->leftJoin('users as boss', 'wh_supply_request.immediate_boss_id', '=', 'boss.id')
+            ->leftJoin('users as delivered', 'wh_supply_request.delivered_by_id', '=', 'delivered.id')
+            ->join('wh_offices', 'wh_supply_request.office_id', '=', 'wh_offices.id')
+            ->select(
+                'wh_supply_request.*',
+                DB::raw("CONCAT(requester.name,' ',requester.lastname) as requester_name"),
+                DB::raw("CONCAT(boss.name,' ',boss.lastname) as boss_name"),
+                DB::raw("CONCAT(delivered.name,' ',delivered.lastname) as delivered_name"),
+                'wh_offices.name as office_name'
+            )
+            ->where('wh_supply_request.id', $id)
+            ->first();
+
+        if (!$request) {
+            abort(404, 'Solicitud no encontrada');
+        }
+
+        // 2. PRODUCTOS DE LA SOLICITUD (TABLA CORRECTA)
+        $products = DB::table('wh_supply_request_detail')
+            ->join('wh_products', 'wh_supply_request_detail.product_id', '=', 'wh_products.id')
+            ->join('wh_measures', 'wh_products.measure_id', '=', 'wh_measures.id')
+            ->select(
+                'wh_products.name as product_name',
+                'wh_measures.name as measure_name',
+                'wh_supply_request_detail.quantity as requested_quantity',
+                'wh_supply_request_detail.delivered_quantity'
+            )
+            ->where('wh_supply_request_detail.supply_request_id', $id)
+            ->orderBy('wh_products.name')
+            ->get();
+
+        // 3. PDF
+        $pdf = Pdf::loadView('reports.request_form', [
+            'request'  => $request,
+            'products' => $products,
+        ])
+            ->setPaper('A4', 'portrait');
+
+        return $pdf->download("Solicitud_Insumos_{$id}.pdf");
     }
 }
