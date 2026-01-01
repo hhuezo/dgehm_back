@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\warehouse;
 
+use App\Exports\DeliveryReportExport;
 use App\Exports\LiquidationReportExport;
 use App\Exports\StockReportExport;
 use App\Http\Controllers\Controller;
@@ -182,6 +183,72 @@ class ReportsController extends Controller
 
         return $pdf->download(
             'Existencias_' . $date . '.pdf'
+        );
+    }
+
+    public function deliveryReport(Request $request)
+    {
+        $request->validate([
+            'startDate' => 'required|date',
+            'endDate'   => 'required|date',
+        ]);
+
+        $startDate   = $request->startDate;
+        $endDate     = $request->endDate;
+        $exportExcel = $request->boolean('exportExcel', false);
+
+        // 1. Oficinas (columnas)
+        $offices = DB::table('wh_offices')
+            ->where('is_active', 1)
+            ->orderBy('name')
+            ->get();
+
+        // 2. Datos base (producto + oficina + cantidad)
+        $data = DB::table('wh_kardex')
+            ->join('wh_products', 'wh_kardex.product_id', '=', 'wh_products.id')
+            ->join('wh_supply_request', 'wh_kardex.supply_request_id', '=', 'wh_supply_request.id')
+            ->join('wh_measures', 'wh_products.measure_id', '=', 'wh_measures.id')
+            ->select(
+                'wh_products.id as product_id',
+                'wh_products.name as product_name',
+                'wh_measures.name as measure_name',
+                'wh_supply_request.office_id',
+                DB::raw('SUM(wh_kardex.quantity) as quantity')
+            )
+            ->where('wh_kardex.movement_type', 2)
+            ->whereBetween('wh_supply_request.delivery_date', [$startDate, $endDate])
+            ->groupBy(
+                'wh_products.id',
+                'wh_products.name',
+                'wh_measures.name',
+                'wh_supply_request.office_id'
+            )
+            ->orderBy('wh_products.name')
+            ->get();
+
+        // 3. Agrupar por producto (para la matriz)
+        $products = $data->groupBy('product_id');
+
+        /* =========================
+            EXPORTAR EXCEL
+            ========================== */
+        if ($exportExcel) {
+            return Excel::download(
+                new DeliveryReportExport($products, $offices, $startDate, $endDate),
+                "Entrega_Productos_{$startDate}_{$endDate}.xlsx"
+            );
+        }
+
+        $pdf = Pdf::loadView('reports.delivery', [
+            'products'  => $products,
+            'offices'   => $offices,
+            'startDate' => $startDate,
+            'endDate'   => $endDate,
+        ])
+            ->setPaper('A4', 'landscape');
+
+        return $pdf->download(
+            "Entrega_Productos_{$startDate}_{$endDate}.pdf"
         );
     }
 }
