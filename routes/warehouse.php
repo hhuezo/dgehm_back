@@ -7,6 +7,7 @@ use App\Http\Controllers\warehouse\OfficeController;
 use App\Http\Controllers\warehouse\ProductsController;
 use App\Http\Controllers\warehouse\PurchaseOrderController;
 use App\Http\Controllers\warehouse\PurchaseOrderDetailController;
+use App\Http\Controllers\warehouse\ReportsController;
 use App\Http\Controllers\warehouse\SupplierController;
 use App\Http\Controllers\warehouse\SupplyRequestController;
 use App\Http\Controllers\warehouse\SupplyRequestDetailController;
@@ -95,3 +96,7 @@ Route::get('suppliers', [SupplierController::class, 'index']);
 Route::post('suppliers', [SupplierController::class, 'store']);
 Route::put('suppliers/{id}', [SupplierController::class, 'update']);
 Route::delete('suppliers/{id}', [SupplierController::class, 'destroy']);
+
+//reportes
+Route::post('warehouse/reports/liquidation', [ReportsController::class, 'liquidationReport']);
+Route::post('warehouse/reports/stock', [ReportsController::class, 'stockReport']);
