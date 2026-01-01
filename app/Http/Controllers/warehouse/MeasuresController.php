@@ -36,12 +36,17 @@ class MeasuresController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'name' => 'required|unique:wh_measures,name',
-        ], [
+        ];
+
+        $messages = [
             'name.required' => 'El nombre es obligatorio.',
             'name.unique'   => 'Ya existe una medida con este nombre.',
-        ]);
+        ];
+
+        $data = $request->validate($rules, $messages);
+
         $measure = new Measure();
         $measure->name = $request->name;
         $measure->is_active = 1;
@@ -76,12 +81,17 @@ class MeasuresController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
+        $rules = [
             'name' => 'required|unique:wh_measures,name,' . $id,
-        ], [
+        ];
+
+        $messages = [
             'name.required' => 'El nombre es obligatorio.',
             'name.unique'   => 'Ya existe una medida con este nombre.',
-        ]);
+        ];
+
+        $data = $request->validate($rules, $messages);
+
 
         $measure = Measure::findOrFail($id);
 

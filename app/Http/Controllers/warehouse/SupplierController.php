@@ -37,18 +37,25 @@ class SupplierController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'name'           => 'required|unique:wh_suppliers,name',
             'contact_person' => 'required',
             'phone'          => 'required',
             'email'          => 'nullable|email',
             'address'        => 'nullable',
-        ], [
-            'name.required' => 'El nombre es obligatorio.',
-            'name.unique'   => 'Ya existe un proveedor con este nombre.',
-            'phone.required' => 'El teléfono es obligatorio.',
-            'email.email'   => 'El correo no es válido.',
-        ]);
+        ];
+
+        $messages = [
+            'name.required'           => 'El nombre es obligatorio.',
+            'name.unique'             => 'Ya existe un proveedor con este nombre.',
+
+            'contact_person.required' => 'El contacto es obligatorio.',
+            'phone.required'          => 'El teléfono es obligatorio.',
+
+            'email.email'             => 'El correo no es válido.',
+        ];
+
+        $data = $request->validate($rules, $messages);
 
         $supplier = new Supplier();
         $supplier->name           = $request->name;
@@ -88,18 +95,25 @@ class SupplierController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
+        $rules = [
             'name'           => 'required|unique:wh_suppliers,name,' . $id,
             'contact_person' => 'required',
             'phone'          => 'required',
             'email'          => 'nullable|email',
             'address'        => 'nullable',
-        ], [
-            'name.required' => 'El nombre es obligatorio.',
-            'name.unique'   => 'Ya existe un proveedor con este nombre.',
-            'phone.required' => 'El teléfono es obligatorio.',
-            'email.email'   => 'El correo no es válido.',
-        ]);
+        ];
+
+        $messages = [
+            'name.required'           => 'El nombre es obligatorio.',
+            'name.unique'             => 'Ya existe un proveedor con este nombre.',
+
+            'contact_person.required' => 'El contacto es obligatorio.',
+            'phone.required'          => 'El teléfono es obligatorio.',
+
+            'email.email'             => 'El correo no es válido.',
+        ];
+
+        $data = $request->validate($rules, $messages);
 
         $supplier = Supplier::findOrFail($id);
         $supplier->name           = $request->name;
