@@ -102,7 +102,9 @@ class ReportsController extends Controller
 
     public function stockReport(Request $request)
     {
-        $fecha = $request->input('fecha');
+        $date = $request->input('date');
+
+        dd($date);
 
         return response()->json(['message' => 'Stock report generated']);
     }

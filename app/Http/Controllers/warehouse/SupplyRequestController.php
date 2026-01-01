@@ -156,7 +156,7 @@ class SupplyRequestController extends Controller
     }
 
 
-    public function approve(string $id)
+    public function approve(Request $request, string $id)
     {
         try {
             $supplyRequest = SupplyRequest::findOrFail($id);
@@ -168,6 +168,7 @@ class SupplyRequestController extends Controller
                 ], 403); // HTTP_FORBIDDEN
             }
 
+            $supplyRequest->approved_by_id = $request->userId;
             $supplyRequest->status_id = 3;
             $supplyRequest->save();
 
@@ -190,7 +191,7 @@ class SupplyRequestController extends Controller
         }
     }
 
-    public function reject(string $id)
+    public function reject(Request $request, string $id)
     {
         try {
             $supplyRequest = SupplyRequest::findOrFail($id);
@@ -201,7 +202,7 @@ class SupplyRequestController extends Controller
                     'message' => 'Solo se pueden rechazar solicitudes que están en estado Enviada.',
                 ], 403); // HTTP_FORBIDDEN
             }
-
+            $supplyRequest->rejected_by_id = $request->userId;
             $supplyRequest->status_id = 5;
             $supplyRequest->save();
 
@@ -225,7 +226,7 @@ class SupplyRequestController extends Controller
     }
 
 
-    public function finalize(string $id)
+    public function finalize(Request $request, string $id)
     {
         DB::beginTransaction();
 
@@ -291,6 +292,8 @@ class SupplyRequestController extends Controller
 
             DB::table('wh_kardex')->insert($kardexToInsert);
 
+            $supplyRequest->delivery_date = $request->delivery_date;
+            $supplyRequest->delivered_by_id = $request->userId;
             $supplyRequest->status_id = 4;
             $supplyRequest->save();
 

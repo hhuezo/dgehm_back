@@ -13,13 +13,16 @@ class SupplyRequest extends Model
 
     protected $table = 'wh_supply_request';
 
-    protected $fillable = [
-        'request_date',
+      protected $fillable = [
+        'date',
+        'delivery_date',
         'observation',
         'requester_id',
         'office_id',
-        'immediate_boss',
-        'delivered_by',
+        'immediate_boss_id',
+        'delivered_by_id',
+        'approved_by_id',
+        'rejected_by_id',
         'status_id',
     ];
 

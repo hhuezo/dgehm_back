@@ -263,7 +263,7 @@ class SupplyReturnController extends Controller
     }
 
 
-    public function approve(string $id)
+    public function approve(Request $request, string $id)
     {
         try {
             $supplyReturn = SupplyReturn::findOrFail($id);
@@ -275,6 +275,7 @@ class SupplyReturnController extends Controller
                 ], 403); // HTTP_FORBIDDEN
             }
 
+            $supplyReturn->approved_by_id = $request->userId;
             $supplyReturn->status_id = 3;
             $supplyReturn->save();
 
@@ -297,7 +298,7 @@ class SupplyReturnController extends Controller
         }
     }
 
-    public function reject(string $id)
+    public function reject(Request $request, string $id)
     {
         try {
             $supplyReturn = SupplyReturn::findOrFail($id);
@@ -309,6 +310,7 @@ class SupplyReturnController extends Controller
                 ], 403); // HTTP_FORBIDDEN
             }
 
+            $supplyReturn->rejected_by_id = $request->userId;
             $supplyReturn->status_id = 5;
             $supplyReturn->save();
 
@@ -394,7 +396,7 @@ class SupplyReturnController extends Controller
 
 
 
-    public function finalize(string $id)
+    public function finalize(Request $request, string $id)
     {
         DB::beginTransaction();
 
@@ -475,7 +477,8 @@ class SupplyReturnController extends Controller
                 DB::table('wh_kardex')->insert($kardexToInsert);
             }
 
-            // Cambia el estado a Finalizado (ID 4)
+            $supplyReturn->received_date = $request->received_date;
+            $supplyReturn->received_by_id = $request->userId;
             $supplyReturn->status_id = 4;
             $supplyReturn->save();
 

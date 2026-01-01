@@ -99,4 +99,4 @@ Route::delete('suppliers/{id}', [SupplierController::class, 'destroy']);
 
 //reportes
 Route::post('warehouse/reports/liquidation', [ReportsController::class, 'liquidationReport']);
-Route::post('warehouse/reports/stock', [ReportsController::class, 'stockReport']);
+Route::get('warehouse/reports/stock', [ReportsController::class, 'stockReport']);
