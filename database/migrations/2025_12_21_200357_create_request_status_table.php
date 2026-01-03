@@ -22,9 +22,10 @@ return new class extends Migration
         // Opcional: Insertar los estados iniciales de ejemplo
         DB::table('wh_request_status')->insert([
             ['name' => 'Pendiente', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Enviada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Aprobada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Rechazada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Completada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Rechazada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 
@@ -33,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('request_status');
+        Schema::dropIfExists('wh_request_status');
     }
 };

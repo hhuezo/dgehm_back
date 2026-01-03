@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
 
             // Proveedor
-            $table->foreignId('supplier_id')->constrained('wh_suppliers')->restrictOnDelete();
+            $table->foreignId('supplier_id')->constrained('wh_suppliers');
 
             // Número de orden de compra
             $table->string('order_number', 50)->unique();
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->dateTime('acta_date');
 
             // Fecha y hora
-            $table->dateTime('reception_time');
+            $table->dateTime('reception_date');
 
             // Representante proveedor
             $table->string('supplier_representative', 150);
@@ -46,7 +46,7 @@ return new class extends Migration
             $table->string('administrative_manager', 150);
 
             // Tecnico administrativo
-            $table->string('administrative_technician', 150);
+            $table->foreignId('administrative_technician_id')->nullable()->constrained('users');
 
             $table->timestamps();
         });

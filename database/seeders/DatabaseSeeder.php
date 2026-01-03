@@ -109,8 +109,8 @@ class DatabaseSeeder extends Seeder
         $cuentaId = $cuentaId ?: 1;
 
         //measures_id
-       $products = [
-             ['name' => 'AZUCAR DE 1 LIBRA DEL CAÑAL', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+        $products = [
+            ['name' => 'AZUCAR DE 1 LIBRA DEL CAÑAL', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'AZUCAR BLANCA GRANULADA EN SOBRE BOLSA DE 1000 UNIDADES', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'CAFE MOLIDO MAJADA ORO, BOLSA DE 1 LIBRA CON EMPAQUE METALIZADO CON VALVULA', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'CREMORA EN SOBRE BOLSA DE 200 UNIDADES, MARCA CREMAFE', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
@@ -149,6 +149,17 @@ class DatabaseSeeder extends Seeder
         $almacenRole = Role::firstOrCreate([
             'name' => 'almacen-admin',
         ]);
+
+        $almacenRole = Role::firstOrCreate([
+            'name' => 'almacen-solicitante',
+        ]);
+
+        $almacenRole = Role::firstOrCreate([
+            'name' => 'almacen-jefe-area',
+        ]);
+
+
+
 
         // =========================
         // USUARIO ADMIN

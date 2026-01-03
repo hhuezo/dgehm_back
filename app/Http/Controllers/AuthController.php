@@ -59,6 +59,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'offices' => $user->offices,
                 'roles' => $user->getRoleNames(),
+                'permissions' => $user->getAllPermissions()->pluck('name'),
             ],
         ]);
     }

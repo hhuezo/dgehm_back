@@ -20,7 +20,12 @@ return new class extends Migration
                   ->constrained('wh_purchase_order');
 
             $table->foreignId('supply_request_id')
+                  ->nullable()
                   ->constrained('wh_supply_request');
+
+            $table->foreignId('supply_return_id')
+                  ->nullable()
+                  ->constrained('wh_supply_returns');
 
             // Clave foránea al producto maestro (wh_products)
             $table->foreignId('product_id')
@@ -32,8 +37,6 @@ return new class extends Migration
             $table->unsignedSmallInteger('quantity');
             $table->decimal('unit_price', 10, 4);
             $table->decimal('subtotal', 10, 4)->nullable();
-
-
 
             $table->timestamps();
         });

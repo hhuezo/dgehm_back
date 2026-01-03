@@ -35,10 +35,21 @@ class AccountingAccountController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'name' => 'required|unique:wh_accounting_accounts,name',
             'code' => 'required|integer|unique:wh_accounting_accounts,code',
-        ]);
+        ];
+
+        $messages = [
+            'name.required' => 'El nombre de la cuenta es obligatorio.',
+            'name.unique'   => 'Ya existe una cuenta contable con este nombre.',
+
+            'code.required' => 'El código de la cuenta es obligatorio.',
+            'code.integer'  => 'El código de la cuenta debe ser un número entero.',
+            'code.unique'   => 'Ya existe una cuenta contable con este código.',
+        ];
+
+        $data = $request->validate($rules, $messages);
 
         $accounting = new AccountingAccount();
         $accounting->code = $request->code;
@@ -74,16 +85,21 @@ class AccountingAccountController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
+        $rules = [
             'name' => 'required|unique:wh_accounting_accounts,name,' . $id,
-            'code' => 'required|integer',
-        ], [
+            'code' => 'required|integer|unique:wh_accounting_accounts,code,' . $id,
+        ];
+
+        $messages = [
             'name.required' => 'El nombre es obligatorio.',
             'name.unique'   => 'Ya existe una cuenta contable con este nombre.',
+
             'code.required' => 'El código es obligatorio.',
             'code.integer'  => 'El código solo puede contener números.',
-        ]);
+            'code.unique'   => 'Ya existe una cuenta contable con este código.',
+        ];
 
+        $data = $request->validate($rules, $messages);
         $accounting = AccountingAccount::findOrFail($id);
 
         $accounting->name = $request->name;
