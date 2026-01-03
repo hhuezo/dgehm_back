@@ -4,6 +4,7 @@ namespace App\Models\warehouse;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\LogOptions;
 
 class Kardex extends Model
 {
@@ -18,6 +19,15 @@ class Kardex extends Model
         'subtotal',
         'supply_request_id',
     ];
+
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('functional_positions')
+            ->logAll()
+            ->logOnlyDirty();
+    }
 
     public function purchaseOrder(): BelongsTo
     {
