@@ -12,12 +12,8 @@ class ProductsController extends Controller
 {
     public function index()
     {
-        $products = Product::select('id', 'name', 'accounting_account_id', 'measure_id')
-        ->with([
-            'accountingAccount:id,name',
-            'measure:id,name',
-        ])->get();
-
+        $products = Product::select('id', 'name', 'accounting_account_id', 'measure_id', 'description')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -47,6 +43,7 @@ class ProductsController extends Controller
         $product->name = $request->name;
         $product->accounting_account_id = $request->accounting_account_id;
         $product->measure_id = $request->measure_id;
+        $product->description = $request->description;
         $product->is_active = 1;
         $product->save();
 
@@ -115,6 +112,7 @@ class ProductsController extends Controller
         $product->name = $request->name;
         $product->accounting_account_id = $request->accounting_account_id;
         $product->measure_id = $request->measure_id;
+        $product->description = $request->description;
         $product->save();
 
         return response()->json([
