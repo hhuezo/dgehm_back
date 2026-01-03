@@ -15,7 +15,7 @@ class ProductsController extends Controller
      */
     public function index()
     {
-        $products = Product::select('id', 'name', 'accounting_account_id', 'measure_id', 'description')
+        $products = Product::select('id', 'name', 'accounting_account_id', 'measure_id')
             ->get();
 
         return response()->json([
