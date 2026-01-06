@@ -25,7 +25,7 @@ class PurchaseOrder extends Model
         'order_number',
         'budget_commitment_number',
         'acta_date',
-        'reception_time',
+        'reception_date',
         'supplier_representative',
         'invoice_number',
         'invoice_date',
@@ -35,11 +35,10 @@ class PurchaseOrder extends Model
     ];
 
     protected $casts = [
-        'acta_date' => 'datetime',
-        'reception_time' => 'datetime',
-        'invoice_date' => 'date',
         'total_amount' => 'decimal:2',
     ];
+
+
 
 
     public function supplier(): BelongsTo

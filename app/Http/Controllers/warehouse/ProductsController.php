@@ -15,7 +15,7 @@ class ProductsController extends Controller
      */
     public function index()
     {
-        $products = Product::select('id', 'name', 'accounting_account_id')
+        $products = Product::select('id', 'name', 'accounting_account_id', 'measure_id')
             ->get();
 
         return response()->json([
@@ -56,6 +56,8 @@ class ProductsController extends Controller
         $product = new Product();
         $product->name = $request->name;
         $product->accounting_account_id = $request->accounting_account_id;
+        $product->measure_id = $request->measure_id;
+        $product->description = $request->description;
         $product->is_active = 1;
         $product->save();
 
@@ -134,6 +136,8 @@ class ProductsController extends Controller
         $product = Product::findOrFail($id);
         $product->name = $request->name;
         $product->accounting_account_id = $request->accounting_account_id;
+        $product->measure_id = $request->measure_id;
+        $product->description = $request->description;
         $product->save();
 
         return response()->json([
@@ -172,7 +176,8 @@ class ProductsController extends Controller
         }
 
         try {
-            $kardexMovements = Kardex::with('product')->with('purchaseOrder')->with('supplierRequest.office')->where('product_id', $id)
+            $kardexMovements = Kardex::with('product')->with('purchaseOrder')->with('supplierRequest.office')
+            ->with('supplierReturn.office')->where('product_id', $id)
                 ->whereDate('created_at', '>=', $startDate)
                 ->whereDate('created_at', '<=', $endDate)
                 //->orderBy('created_at', 'desc')

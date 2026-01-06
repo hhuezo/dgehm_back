@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\warehouse\SupplyReturn;
 use App\Models\warehouse\Product;
+use Spatie\Activitylog\LogOptions;
 
 class SupplyReturnDetail extends Model
 {
@@ -24,6 +25,7 @@ class SupplyReturnDetail extends Model
         'product_id',
         'returned_quantity',
         'observation',
+        'supply_return_id'
     ];
 
     protected $casts = [
@@ -31,6 +33,15 @@ class SupplyReturnDetail extends Model
         'created_at'        => 'datetime',
         'updated_at'        => 'datetime',
     ];
+
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('functional_positions')
+            ->logAll()
+            ->logOnlyDirty();
+    }
 
 
     public function supplyReturn()

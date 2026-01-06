@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\warehouse\RequestStatus;
+use Spatie\Activitylog\LogOptions;
 
 class SupplyRequest extends Model
 {
@@ -14,18 +15,29 @@ class SupplyRequest extends Model
     protected $table = 'wh_supply_request';
 
     protected $fillable = [
-        'request_date',
+        'date',
+        'delivery_date',
         'observation',
         'requester_id',
         'office_id',
-        'immediate_boss',
-        'delivered_by',
+        'immediate_boss_id',
+        'delivered_by_id',
+        'approved_by_id',
+        'rejected_by_id',
         'status_id',
     ];
 
     protected $casts = [
         'request_date' => 'datetime',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('functional_positions')
+            ->logAll()
+            ->logOnlyDirty();
+    }
 
     public function status()
     {
@@ -45,5 +57,10 @@ class SupplyRequest extends Model
     public function immediateBoss()
     {
         return $this->belongsTo(User::class, 'immediate_boss_id');
+    }
+
+    public function details()
+    {
+        return $this->hasMany(SupplyRequestDetail::class, 'supply_request_id');
     }
 }

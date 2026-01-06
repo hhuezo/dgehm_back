@@ -7,6 +7,7 @@ use App\Models\warehouse\Office;
 use App\Models\warehouse\Product;
 use App\Models\warehouse\SupplyRequest;
 use App\Models\warehouse\SupplyRequestDetail;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -113,11 +114,18 @@ class SupplyRequestController extends Controller
         ]);
     }
 
-
-    public function approve(string $id)
+    public function send(string $id)
     {
         try {
             $supplyRequest = SupplyRequest::findOrFail($id);
+
+
+            if ($supplyRequest->details->count() == 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La solicitud debe tener al menos un detalle antes de ser enviada.',
+                ], 403); // HTTP_FORBIDDEN
+            }
 
             if ($supplyRequest->status_id !== 1) {
                 return response()->json([
@@ -149,7 +157,77 @@ class SupplyRequestController extends Controller
     }
 
 
-    public function finalize(string $id)
+    public function approve(Request $request, string $id)
+    {
+        try {
+            $supplyRequest = SupplyRequest::findOrFail($id);
+
+            if ($supplyRequest->status_id !== 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo se pueden aprobar solicitudes que están en estado Enviada.',
+                ], 403); // HTTP_FORBIDDEN
+            }
+
+            $supplyRequest->approved_by_id = $request->userId;
+            $supplyRequest->status_id = 3;
+            $supplyRequest->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Solicitud de insumos aprobada correctamente. Estado: Aprobado.',
+                'data' => $supplyRequest,
+            ], 200); // HTTP_OK
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La Solicitud de Insumos (ID: ' . $id . ') no fue encontrada.',
+            ], 404); // HTTP_NOT_FOUND
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al aprobar la solicitud: ' . $e->getMessage(),
+            ], 500); // HTTP_INTERNAL_SERVER_ERROR
+        }
+    }
+
+    public function reject(Request $request, string $id)
+    {
+        try {
+            $supplyRequest = SupplyRequest::findOrFail($id);
+
+            if ($supplyRequest->status_id !== 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo se pueden rechazar solicitudes que están en estado Enviada.',
+                ], 403); // HTTP_FORBIDDEN
+            }
+            $supplyRequest->rejected_by_id = $request->userId;
+            $supplyRequest->status_id = 5;
+            $supplyRequest->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Solicitud de insumos rechazada correctamente. Estado: Rechazado.',
+                'data' => $supplyRequest,
+            ], 200); // HTTP_OK
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La Solicitud de Insumos (ID: ' . $id . ') no fue encontrada.',
+            ], 404); // HTTP_NOT_FOUND
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al aprobar la solicitud: ' . $e->getMessage(),
+            ], 500); // HTTP_INTERNAL_SERVER_ERROR
+        }
+    }
+
+
+    public function finalize(Request $request, string $id)
     {
         DB::beginTransaction();
 
@@ -157,9 +235,15 @@ class SupplyRequestController extends Controller
 
             $supplyRequest = SupplyRequest::findOrFail($id);
 
-            if ($supplyRequest->status_id !== 2) {
+            if ($supplyRequest->status_id !== 3) {
                 throw ValidationException::withMessages([
-                    'status' => ['La solicitud no se encuentra en estado Pendiente.'],
+                    'status' => ['La solicitud no se encuentra en estado Aprobado.'],
+                ]);
+            }
+
+            if ($supplyRequest->details->where('delivered_quantity',  0)->count() > 0 && $supplyRequest->details->where('delivered_quantity', '>', 0)->count() == 0) {
+                throw ValidationException::withMessages([
+                    'error' => ['La solicitud debe tener cantidades entregadas mayores a cero en todos sus detalles.'],
                 ]);
             }
 
@@ -209,7 +293,9 @@ class SupplyRequestController extends Controller
 
             DB::table('wh_kardex')->insert($kardexToInsert);
 
-            $supplyRequest->status_id = 3;
+            $supplyRequest->delivery_date = $request->delivery_date;
+            $supplyRequest->delivered_by_id = $request->userId;
+            $supplyRequest->status_id = 4;
             $supplyRequest->save();
 
             DB::commit();
@@ -247,6 +333,9 @@ class SupplyRequestController extends Controller
             ], 500);
         }
     }
+
+
+
 
 
 
@@ -303,8 +392,52 @@ class SupplyRequestController extends Controller
     }
 
 
-    public function destroy(string $id)
+
+
+
+    public function RequestFormReport(string $id)
     {
-        //
+        // 1. Solicitud (CABECERA)
+        $request = DB::table('wh_supply_request')
+            ->join('users as requester', 'wh_supply_request.requester_id', '=', 'requester.id')
+            ->leftJoin('users as boss', 'wh_supply_request.immediate_boss_id', '=', 'boss.id')
+            ->leftJoin('users as delivered', 'wh_supply_request.delivered_by_id', '=', 'delivered.id')
+            ->join('wh_offices', 'wh_supply_request.office_id', '=', 'wh_offices.id')
+            ->select(
+                'wh_supply_request.*',
+                DB::raw("CONCAT(requester.name,' ',requester.lastname) as requester_name"),
+                DB::raw("CONCAT(boss.name,' ',boss.lastname) as boss_name"),
+                DB::raw("CONCAT(delivered.name,' ',delivered.lastname) as delivered_name"),
+                'wh_offices.name as office_name'
+            )
+            ->where('wh_supply_request.id', $id)
+            ->first();
+
+        if (!$request) {
+            abort(404, 'Solicitud no encontrada');
+        }
+
+        // 2. PRODUCTOS DE LA SOLICITUD (TABLA CORRECTA)
+        $products = DB::table('wh_supply_request_detail')
+            ->join('wh_products', 'wh_supply_request_detail.product_id', '=', 'wh_products.id')
+            ->join('wh_measures', 'wh_products.measure_id', '=', 'wh_measures.id')
+            ->select(
+                'wh_products.name as product_name',
+                'wh_measures.name as measure_name',
+                'wh_supply_request_detail.quantity as requested_quantity',
+                'wh_supply_request_detail.delivered_quantity'
+            )
+            ->where('wh_supply_request_detail.supply_request_id', $id)
+            ->orderBy('wh_products.name')
+            ->get();
+
+        // 3. PDF
+        $pdf = Pdf::loadView('reports.request_form', [
+            'request'  => $request,
+            'products' => $products,
+        ])
+            ->setPaper('A4', 'portrait');
+
+        return $pdf->download("Solicitud_Insumos_{$id}.pdf");
     }
 }

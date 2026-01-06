@@ -87,7 +87,7 @@ class SupplyRequestDetailController extends Controller
                     'quantity.numeric' => 'La Cantidad solicitada debe ser un valor numérico.',
                     'quantity.min' => 'La Cantidad mínima solicitada debe ser 1 o superior.',
                 ];
-            } elseif ($requestStatusId === 2) { // Estado 2: Aprobado (Modifica la cantidad entregada)
+            } elseif ($requestStatusId === 3) { // Estado 3: Aprobado (Modifica la cantidad entregada)
                 $rules = [
                     'delivered_quantity' => [
                         'required',
@@ -118,7 +118,7 @@ class SupplyRequestDetailController extends Controller
             if ($requestStatusId === 1) {
                 // Actualiza la cantidad solicitada
                 $item->quantity = $validated['quantity'];
-            } elseif ($requestStatusId === 2) {
+            } elseif ($requestStatusId === 3) {
                 // Actualiza la cantidad entregada
                 $item->delivered_quantity = $validated['delivered_quantity'];
             }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
 use App\Models\warehouse\Office;
+use Spatie\Activitylog\LogOptions;
 
 class SupplyReturn extends Model
 {
@@ -35,7 +36,18 @@ class SupplyReturn extends Model
         'updated_at'  => 'datetime',
     ];
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('functional_positions')
+            ->logAll()
+            ->logOnlyDirty();
+    }
 
+    public function status()
+    {
+        return $this->belongsTo(RequestStatus::class, 'status_id');
+    }
 
     public function returnedBy()
     {
@@ -55,5 +67,10 @@ class SupplyReturn extends Model
     public function office()
     {
         return $this->belongsTo(Office::class, 'wh_office_id');
+    }
+
+    public function details()
+    {
+        return $this->hasMany(SupplyReturnDetail::class, 'supply_return_id');
     }
 }

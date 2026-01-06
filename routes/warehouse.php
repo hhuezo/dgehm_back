@@ -7,9 +7,12 @@ use App\Http\Controllers\warehouse\OfficeController;
 use App\Http\Controllers\warehouse\ProductsController;
 use App\Http\Controllers\warehouse\PurchaseOrderController;
 use App\Http\Controllers\warehouse\PurchaseOrderDetailController;
+use App\Http\Controllers\warehouse\ReportsController;
 use App\Http\Controllers\warehouse\SupplierController;
 use App\Http\Controllers\warehouse\SupplyRequestController;
 use App\Http\Controllers\warehouse\SupplyRequestDetailController;
+use App\Http\Controllers\warehouse\SupplyReturnController;
+use App\Http\Controllers\warehouse\SupplyReturnDetailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,16 +37,36 @@ Route::get('supply_request', [SupplyRequestController::class, 'index']);
 Route::post('supply_request', [SupplyRequestController::class, 'store']);
 Route::get('supply_request/{id}', [SupplyRequestController::class, 'show']);
 Route::post('supply_request/approve/{id}', [SupplyRequestController::class, 'approve']);
+Route::post('supply_request/send/{id}', [SupplyRequestController::class, 'send']);
 Route::post('supply_request/finalize/{id}', [SupplyRequestController::class, 'finalize']);
-
-
+Route::post('supply_request/reject/{id}', [SupplyRequestController::class, 'reject']);
+Route::get('supply_request/reports/{id}', [SupplyRequestController::class, 'RequestFormReport']);
 
 Route::get('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'show']);
 Route::post('supply_request_detail', [SupplyRequestDetailController::class, 'store']);
 Route::put('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'update']);
 Route::delete('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'destroy']);
 
+
+Route::get('supply_return', [SupplyReturnController::class, 'index']);
+Route::post('supply_return', [SupplyReturnController::class, 'store']);
+Route::get('supply_return/{id}', [SupplyReturnController::class, 'show']);
+Route::put('supply_return/{id}', [SupplyReturnController::class, 'update']);
+
+
+Route::post('supply_return/send/{id}', [SupplyReturnController::class, 'send']);
+Route::post('supply_return/approve/{id}', [SupplyReturnController::class, 'approve']);
+Route::post('supply_return/finalize/{id}', [SupplyReturnController::class, 'finalize']);
+Route::post('supply_return/reject/{id}', [SupplyReturnController::class, 'reject']);
+Route::get('supply_return/reports/{id}', [SupplyReturnController::class, 'ReturntFormReport']);
 Route::get('offices/{officeId}/bosses', [SupplyRequestController::class, 'getBoss']);
+
+Route::get('supply_return_detail/{id}', [SupplyReturnDetailController::class, 'show']);
+Route::post('supply_return_detail', [SupplyReturnDetailController::class, 'store']);
+Route::put('supply_return_detail/{id}', [SupplyReturnDetailController::class, 'update']);
+Route::delete('supply_return_detail/{id}', [SupplyReturnDetailController::class, 'destroy']);
+
+
 
 // Catálogos
 Route::get('accounting_account', [AccountingAccountController::class, 'index']);
@@ -74,3 +97,8 @@ Route::get('suppliers', [SupplierController::class, 'index']);
 Route::post('suppliers', [SupplierController::class, 'store']);
 Route::put('suppliers/{id}', [SupplierController::class, 'update']);
 Route::delete('suppliers/{id}', [SupplierController::class, 'destroy']);
+
+//reportes
+Route::post('warehouse/reports/liquidation', [ReportsController::class, 'liquidationReport']);
+Route::post('warehouse/reports/stock', [ReportsController::class, 'stockReport']);
+Route::post('warehouse/reports/delivery', [ReportsController::class, 'deliveryReport']);
