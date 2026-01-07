@@ -10,13 +10,14 @@ use Illuminate\Support\Facades\DB;
 
 class ProductsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $products = Product::select('id', 'name', 'accounting_account_id', 'measure_id')
-            ->get();
+        ->with([
+            'accountingAccount:id,name',
+            'measure:id,name',
+        ])->get();
+
 
         return response()->json([
             'success' => true,
@@ -24,17 +25,6 @@ class ProductsController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
 
@@ -57,7 +47,6 @@ class ProductsController extends Controller
         $product->name = $request->name;
         $product->accounting_account_id = $request->accounting_account_id;
         $product->measure_id = $request->measure_id;
-        $product->description = $request->description;
         $product->is_active = 1;
         $product->save();
 
@@ -104,17 +93,6 @@ class ProductsController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $rules = [
@@ -137,7 +115,6 @@ class ProductsController extends Controller
         $product->name = $request->name;
         $product->accounting_account_id = $request->accounting_account_id;
         $product->measure_id = $request->measure_id;
-        $product->description = $request->description;
         $product->save();
 
         return response()->json([
@@ -177,7 +154,7 @@ class ProductsController extends Controller
 
         try {
             $kardexMovements = Kardex::with('product')->with('purchaseOrder')->with('supplierRequest.office')
-            ->with('supplierReturn.office')->where('product_id', $id)
+                ->with('supplierReturn.office')->where('product_id', $id)
                 ->whereDate('created_at', '>=', $startDate)
                 ->whereDate('created_at', '<=', $endDate)
                 //->orderBy('created_at', 'desc')
