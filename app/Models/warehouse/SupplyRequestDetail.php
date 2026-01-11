@@ -4,6 +4,7 @@ namespace App\Models\warehouse;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\LogOptions;
 
 class SupplyRequestDetail extends Model
 {
@@ -20,6 +21,14 @@ class SupplyRequestDetail extends Model
         'quantity' => 'decimal:2',
         'delivered_quantity' => 'decimal:2',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('functional_positions')
+            ->logAll()
+            ->logOnlyDirty();
+    }
 
     public function supplyRequest(): BelongsTo
     {

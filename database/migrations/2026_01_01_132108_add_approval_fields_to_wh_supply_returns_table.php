@@ -14,7 +14,6 @@ return new class extends Migration {
 
             $table->foreignId('approved_by_id')
                 ->nullable()
-                ->after('delivery_date')
                 ->constrained('users');
 
             $table->foreignId('rejected_by_id')

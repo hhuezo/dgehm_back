@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\warehouse\RequestStatus;
+use Spatie\Activitylog\LogOptions;
 
 class SupplyRequest extends Model
 {
@@ -13,7 +14,7 @@ class SupplyRequest extends Model
 
     protected $table = 'wh_supply_request';
 
-      protected $fillable = [
+    protected $fillable = [
         'date',
         'delivery_date',
         'observation',
@@ -29,6 +30,14 @@ class SupplyRequest extends Model
     protected $casts = [
         'request_date' => 'datetime',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('functional_positions')
+            ->logAll()
+            ->logOnlyDirty();
+    }
 
     public function status()
     {

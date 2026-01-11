@@ -2,6 +2,13 @@
 
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\fixedasset\AccountingCategoryController;
+use App\Http\Controllers\fixedasset\AdministrativeUnitController;
+use App\Http\Controllers\fixedasset\CategoryController;
+use App\Http\Controllers\fixedasset\OriginController;
+use App\Http\Controllers\fixedasset\PhysicalConditionController;
+use App\Http\Controllers\fixedasset\SubcategoryController;
+use App\Http\Controllers\fixedasset\VehicleBrandController;
 use App\Http\Controllers\general\ImageController;
 use App\Http\Controllers\security\PermissionController;
 use App\Http\Controllers\security\RoleController;
@@ -52,10 +59,44 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/users/{id}/roles', [UserController::class, 'syncRoles']);
     Route::post('/users/{id}/offices', [UserController::class, 'syncOffices']);
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
-
-
-
 });
+
+
+Route::get('/accounting_categories', [AccountingCategoryController::class, 'index']);
+Route::post('/accounting_categories', [AccountingCategoryController::class, 'store']);
+Route::put('/accounting_categories/{id}', [AccountingCategoryController::class, 'update']);
+Route::delete('/accounting_categories/{id}', [AccountingCategoryController::class, 'destroy']);
+
+Route::get('/administrative_units', [AdministrativeUnitController::class, 'index']);
+Route::post('/administrative_units', [AdministrativeUnitController::class, 'store']);
+Route::put('/administrative_units/{id}', [AdministrativeUnitController::class, 'update']);
+Route::delete('/administrative_units/{id}', [AdministrativeUnitController::class, 'destroy']);
+
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::post('/categories', [CategoryController::class, 'store']);
+Route::put('/categories/{id}', [CategoryController::class, 'update']);
+Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+
+Route::get('/origins', [OriginController::class, 'index']);
+Route::post('/origins', [OriginController::class, 'store']);
+Route::put('/origins/{id}', [OriginController::class, 'update']);
+Route::delete('/origins/{id}', [OriginController::class, 'destroy']);
+
+Route::get('/physical_conditions', [PhysicalConditionController::class, 'index']);
+Route::post('/physical_conditions', [PhysicalConditionController::class, 'store']);
+Route::put('/physical_conditions/{id}', [PhysicalConditionController::class, 'update']);
+Route::delete('/physical_conditions/{id}', [PhysicalConditionController::class, 'destroy']);
+
+Route::get('/subcategories', [SubcategoryController::class, 'index']);
+Route::post('/subcategories', [SubcategoryController::class, 'store']);
+Route::put('/subcategories/{id}', [SubcategoryController::class, 'update']);
+Route::delete('/subcategories/{id}', [SubcategoryController::class, 'destroy']);
+
+Route::get('/vehicle_brands', [VehicleBrandController::class, 'index']);
+Route::post('/vehicle_brands', [VehicleBrandController::class, 'store']);
+Route::put('/vehicle_brands/{id}', [VehicleBrandController::class, 'update']);
+Route::delete('/vehicle_brands/{id}', [VehicleBrandController::class, 'destroy']);
+
 
 
 Route::get('/administrative_technicians', [UserController::class, 'getAdministrativeTechnicians']);
