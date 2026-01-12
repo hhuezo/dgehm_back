@@ -140,22 +140,34 @@ class DatabaseSeeder extends Seeder
 
 
         // =====================
-        // ROLES
+        // PERMISOS
+        // =====================
+        $this->call([
+            PermissionsSeeder::class, // Crea todos los permisos
+            RolesPermissionsSeeder::class, // Asigna permisos a los roles
+        ]);
+
+        // =====================
+        // ROLES (ya creados por RolesPermissionsSeeder, pero los obtenemos)
         // =====================
         $adminRole = Role::firstOrCreate([
             'name' => 'admin',
+            'guard_name' => 'web',
         ]);
 
-        $almacenRole = Role::firstOrCreate([
+        $almacenAdminRole = Role::firstOrCreate([
             'name' => 'almacen-admin',
+            'guard_name' => 'web',
         ]);
 
-        $almacenRole = Role::firstOrCreate([
+        $almacenSolicitanteRole = Role::firstOrCreate([
             'name' => 'almacen-solicitante',
+            'guard_name' => 'web',
         ]);
 
-        $almacenRole = Role::firstOrCreate([
+        $almacenJefeAreaRole = Role::firstOrCreate([
             'name' => 'almacen-jefe-area',
+            'guard_name' => 'web',
         ]);
 
 
