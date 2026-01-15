@@ -9,11 +9,16 @@ use App\Http\Controllers\fixedasset\OriginController;
 use App\Http\Controllers\fixedasset\PhysicalConditionController;
 use App\Http\Controllers\fixedasset\SubcategoryController;
 use App\Http\Controllers\fixedasset\VehicleBrandController;
+use App\Http\Controllers\fixedasset\VehicleClassController;
+use App\Http\Controllers\fixedasset\VehicleClasseController;
+use App\Http\Controllers\fixedasset\VehicleColorController;
+use App\Http\Controllers\fixedasset\VehicleDriveTypeController;
+use App\Http\Controllers\fixedasset\VehicleTypeController;
 use App\Http\Controllers\general\ImageController;
 use App\Http\Controllers\security\PermissionController;
 use App\Http\Controllers\security\RoleController;
 use App\Http\Controllers\security\UserController;
-
+use App\Models\fixedasset\VehicleClass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -96,6 +101,26 @@ Route::get('/vehicle_brands', [VehicleBrandController::class, 'index']);
 Route::post('/vehicle_brands', [VehicleBrandController::class, 'store']);
 Route::put('/vehicle_brands/{id}', [VehicleBrandController::class, 'update']);
 Route::delete('/vehicle_brands/{id}', [VehicleBrandController::class, 'destroy']);
+
+Route::get('/vehicle_classes', [VehicleClassController::class, 'index']);
+Route::post('/vehicle_classes', [VehicleClassController::class, 'store']);
+Route::put('/vehicle_classes/{id}', [VehicleClassController::class, 'update']);
+Route::delete('/vehicle_classes/{id}', [VehicleClassController::class, 'destroy']);
+
+Route::get('/vehicle_colors', [VehicleColorController::class, 'index']);
+Route::post('/vehicle_colors', [VehicleColorController::class, 'store']);
+Route::put('/vehicle_colors/{id}', [VehicleColorController::class, 'update']);
+Route::delete('/vehicle_colors/{id}', [VehicleColorController::class, 'destroy']);
+
+Route::get('/vehicle_drive_types', [VehicleDriveTypeController::class, 'index']);
+Route::post('/vehicle_drive_types', [VehicleDriveTypeController::class, 'store']);
+Route::put('/vehicle_drive_types/{id}', [VehicleDriveTypeController::class, 'update']);
+Route::delete('/vehicle_drive_types/{id}', [VehicleDriveTypeController::class, 'destroy']);
+
+Route::get('/vehicle_types', [VehicleTypeController::class, 'index']);
+Route::post('/vehicle_types', [VehicleTypeController::class, 'store']);
+Route::put('/vehicle_types/{id}', [VehicleTypeController::class, 'update']);
+Route::delete('/vehicle_types/{id}', [VehicleTypeController::class, 'destroy']);
 
 
 
