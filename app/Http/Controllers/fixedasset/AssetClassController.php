@@ -3,32 +3,24 @@
 namespace App\Http\Controllers\fixedasset;
 
 use App\Http\Controllers\Controller;
-use App\Models\fixedasset\AccountingCategory;
+use App\Models\fixedasset\AssetClass;
 use Illuminate\Http\Request;
 
-class AccountingCategoryController extends Controller
+class AssetClassController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $accountings = AccountingCategory::select('id', 'name')
+        $classes = AssetClass::select('id', 'name')
+            ->where('is_active', true)
             ->get();
 
         return response()->json([
             'success' => true,
-            'data' => $accountings,
+            'data' => $classes,
         ], 200);
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -37,42 +29,26 @@ class AccountingCategoryController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'name' => 'required|unique:fa_accounting_categories,name',
+            'name' => 'required|unique:fa_classes,name',
         ];
 
         $messages = [
             'name.required' => 'El nombre es obligatorio.',
-            'name.unique'   => 'Ya existe una categoría con este nombre.',
+            'name.unique'   => 'Ya existe una clase con este nombre.',
         ];
 
         $data = $request->validate($rules, $messages);
 
-        $accounting = new AccountingCategory();
-        $accounting->name = $request->name;
-        $accounting->save();
+        $assetClass = new AssetClass();
+        $assetClass->name = $data['name'];
+        $assetClass->is_active = true;
+        $assetClass->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Registro creado correctamente.',
-            'data' => $accounting,
+            'data' => $assetClass,
         ], 201);
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
     }
 
     /**
@@ -81,28 +57,25 @@ class AccountingCategoryController extends Controller
     public function update(Request $request, string $id)
     {
         $rules = [
-            'name' => 'required|unique:fa_accounting_categories,name,' . $id . ',id',
+            'name' => 'required|unique:fa_classes,name,' . $id . ',id',
         ];
 
         $messages = [
             'name.required' => 'El nombre es obligatorio.',
-            'name.unique'   => 'Ya existe una categoría contable con este nombre.',
+            'name.unique'   => 'Ya existe una clase con este nombre.',
         ];
 
         $data = $request->validate($rules, $messages);
 
-        $accounting = AccountingCategory::findOrFail($id);
-        $accounting->name = $data['name'];
-        $accounting->save();
+        $assetClass = AssetClass::findOrFail($id);
+        $assetClass->name = $data['name'];
+        $assetClass->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Registro actualizado correctamente.',
-            'data' => $accounting,
+            'data' => $assetClass,
         ], 200);
-
-
-        //
     }
 
     /**
@@ -110,13 +83,13 @@ class AccountingCategoryController extends Controller
      */
     public function destroy(string $id)
     {
-        $accounting = AccountingCategory::findOrFail($id);
-        $accounting->delete();
+        $assetClass = AssetClass::findOrFail($id);
+        $assetClass->is_active = false;
+        $assetClass->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Registro eliminado correctamente',
+            'message' => 'Registro deshabilitado correctamente',
         ], 200);
-        //
     }
 }

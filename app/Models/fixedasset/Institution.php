@@ -5,9 +5,9 @@ namespace App\Models\fixedasset;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 
-class AdministrativeUnit extends Model
+class Institution extends Model
 {
-    protected $table = 'fa_administrative_units';
+    protected $table = 'fa_institutions';
 
     protected $primaryKey = 'id';
 
@@ -17,7 +17,7 @@ class AdministrativeUnit extends Model
 
     protected $fillable = [
         'name',
-
+        'name_en',
         'is_active',
     ];
 
@@ -28,9 +28,8 @@ class AdministrativeUnit extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->useLogName('functional_positions')
+            ->useLogName('institutions')
             ->logAll()
             ->logOnlyDirty();
     }
-    //
 }

@@ -5,9 +5,9 @@ namespace App\Models\fixedasset;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 
-class SubCategory extends Model
+class AssetClass extends Model
 {
-    protected $table = 'fa_subcategories';
+    protected $table = 'fa_classes';
 
     protected $primaryKey = 'id';
 
@@ -16,7 +16,6 @@ class SubCategory extends Model
     public $incrementing = true;
 
     protected $fillable = [
-        'code',
         'name',
         'is_active',
     ];
@@ -28,9 +27,8 @@ class SubCategory extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->useLogName('functional_positions')
+            ->useLogName('classes')
             ->logAll()
             ->logOnlyDirty();
     }
-    //
 }

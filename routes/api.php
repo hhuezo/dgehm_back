@@ -2,12 +2,12 @@
 
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\fixedasset\AccountingCategoryController;
-use App\Http\Controllers\fixedasset\AdministrativeUnitController;
+use App\Http\Controllers\fixedasset\AssetClassController;
+use App\Http\Controllers\fixedasset\InstitutionController;
 use App\Http\Controllers\fixedasset\CategoryController;
 use App\Http\Controllers\fixedasset\OriginController;
 use App\Http\Controllers\fixedasset\PhysicalConditionController;
-use App\Http\Controllers\fixedasset\SubcategoryController;
+use App\Http\Controllers\fixedasset\SpecificController;
 use App\Http\Controllers\fixedasset\VehicleBrandController;
 use App\Http\Controllers\fixedasset\VehicleClassController;
 use App\Http\Controllers\fixedasset\VehicleColorController;
@@ -74,15 +74,15 @@ Route::post('/users/{id}/offices', [UserController::class, 'syncOffices']);
 Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
 
-Route::get('/accounting_categories', [AccountingCategoryController::class, 'index']);
-Route::post('/accounting_categories', [AccountingCategoryController::class, 'store']);
-Route::put('/accounting_categories/{id}', [AccountingCategoryController::class, 'update']);
-Route::delete('/accounting_categories/{id}', [AccountingCategoryController::class, 'destroy']);
+Route::get('/classes', [AssetClassController::class, 'index']);
+Route::post('/classes', [AssetClassController::class, 'store']);
+Route::put('/classes/{id}', [AssetClassController::class, 'update']);
+Route::delete('/classes/{id}', [AssetClassController::class, 'destroy']);
 
-Route::get('/administrative_units', [AdministrativeUnitController::class, 'index']);
-Route::post('/administrative_units', [AdministrativeUnitController::class, 'store']);
-Route::put('/administrative_units/{id}', [AdministrativeUnitController::class, 'update']);
-Route::delete('/administrative_units/{id}', [AdministrativeUnitController::class, 'destroy']);
+Route::get('/institutions', [InstitutionController::class, 'index']);
+Route::post('/institutions', [InstitutionController::class, 'store']);
+Route::put('/institutions/{id}', [InstitutionController::class, 'update']);
+Route::delete('/institutions/{id}', [InstitutionController::class, 'destroy']);
 
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::post('/categories', [CategoryController::class, 'store']);
@@ -99,10 +99,10 @@ Route::post('/physical_conditions', [PhysicalConditionController::class, 'store'
 Route::put('/physical_conditions/{id}', [PhysicalConditionController::class, 'update']);
 Route::delete('/physical_conditions/{id}', [PhysicalConditionController::class, 'destroy']);
 
-Route::get('/subcategories', [SubcategoryController::class, 'index']);
-Route::post('/subcategories', [SubcategoryController::class, 'store']);
-Route::put('/subcategories/{id}', [SubcategoryController::class, 'update']);
-Route::delete('/subcategories/{id}', [SubcategoryController::class, 'destroy']);
+Route::get('/specifics', [SpecificController::class, 'index']);
+Route::post('/specifics', [SpecificController::class, 'store']);
+Route::put('/specifics/{id}', [SpecificController::class, 'update']);
+Route::delete('/specifics/{id}', [SpecificController::class, 'destroy']);
 
 Route::get('/vehicle_brands', [VehicleBrandController::class, 'index']);
 Route::post('/vehicle_brands', [VehicleBrandController::class, 'store']);

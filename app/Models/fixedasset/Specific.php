@@ -5,9 +5,9 @@ namespace App\Models\fixedasset;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 
-class AccountingCategory extends Model
+class Specific extends Model
 {
-    protected $table = 'fa_accounting_categories';
+    protected $table = 'fa_specifics';
 
     protected $primaryKey = 'id';
 
@@ -17,7 +17,7 @@ class AccountingCategory extends Model
 
     protected $fillable = [
         'name',
-
+        'code',
         'is_active',
     ];
 
@@ -28,10 +28,8 @@ class AccountingCategory extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->useLogName('functional_positions')
+            ->useLogName('specifics')
             ->logAll()
             ->logOnlyDirty();
     }
-
-    //
 }

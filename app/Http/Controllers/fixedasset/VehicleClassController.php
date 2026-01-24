@@ -14,6 +14,7 @@ class VehicleClassController extends Controller
     public function index()
     {
         $vehicleClasses = VehicleClass::select('id', 'name')
+            ->where('is_active', true)
             ->get();
 
         return response()->json([
@@ -49,6 +50,7 @@ class VehicleClassController extends Controller
 
         $vehicleClass = new VehicleClass();
         $vehicleClass->name = $request->name;
+        $vehicleClass->is_active = true;
         $vehicleClass->save();
 
         return response()->json([
@@ -109,11 +111,12 @@ class VehicleClassController extends Controller
     public function destroy(string $id)
     {
         $vehicleClass = VehicleClass::findOrFail($id);
-        $vehicleClass->delete();
+        $vehicleClass->is_active = false;
+        $vehicleClass->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Registro eliminado correctamente',
+            'message' => 'Registro deshabilitado correctamente',
         ], 200);
         //
     }
