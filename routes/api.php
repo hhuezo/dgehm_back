@@ -5,6 +5,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\fixedasset\AssetClassController;
 use App\Http\Controllers\fixedasset\InstitutionController;
 use App\Http\Controllers\fixedasset\CategoryController;
+use App\Http\Controllers\fixedasset\OrganizationalUnitController;
+use App\Http\Controllers\fixedasset\OrganizationalUnitTypeController;
 use App\Http\Controllers\fixedasset\OriginController;
 use App\Http\Controllers\fixedasset\PhysicalConditionController;
 use App\Http\Controllers\fixedasset\SpecificController;
@@ -88,6 +90,16 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::post('/categories', [CategoryController::class, 'store']);
 Route::put('/categories/{id}', [CategoryController::class, 'update']);
 Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+
+Route::get('/organizational_unit_types', [OrganizationalUnitTypeController::class, 'index']);
+Route::post('/organizational_unit_types', [OrganizationalUnitTypeController::class, 'store']);
+Route::put('/organizational_unit_types/{id}', [OrganizationalUnitTypeController::class, 'update']);
+Route::delete('/organizational_unit_types/{id}', [OrganizationalUnitTypeController::class, 'destroy']);
+
+Route::get('/organizational_units', [OrganizationalUnitController::class, 'index']);
+Route::post('/organizational_units', [OrganizationalUnitController::class, 'store']);
+Route::put('/organizational_units/{id}', [OrganizationalUnitController::class, 'update']);
+Route::delete('/organizational_units/{id}', [OrganizationalUnitController::class, 'destroy']);
 
 Route::get('/origins', [OriginController::class, 'index']);
 Route::post('/origins', [OriginController::class, 'store']);

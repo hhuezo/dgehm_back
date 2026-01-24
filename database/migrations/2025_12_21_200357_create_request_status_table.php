@@ -15,17 +15,16 @@ return new class extends Migration
         Schema::create('wh_request_status', function (Blueprint $table) {
             $table->id();
             $table->string('name', 50)->unique();
-            $table->boolean('active')->default(true); // Campo active con valor por defecto true
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
 
-        // Opcional: Insertar los estados iniciales de ejemplo
         DB::table('wh_request_status')->insert([
-            ['name' => 'Pendiente', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Enviada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Aprobada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Completada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Rechazada', 'active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Pendiente', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Enviada', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Aprobada', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Completada', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Rechazada', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 
