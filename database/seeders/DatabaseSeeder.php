@@ -19,6 +19,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // -----------------------------------------------------
+        // Permisos y roles (invocar primero)
+        // -----------------------------------------------------
+        $this->call(PermissionsSeeder::class);
+        $this->call(RolesPermissionsSeeder::class);
+
+        // -----------------------------------------------------
         // 1. CUENTAS CONTABLES (wh_accounting_accounts)
         // -----------------------------------------------------
         DB::table('wh_accounting_accounts')->delete();
@@ -135,17 +141,6 @@ class DatabaseSeeder extends Seeder
         // 6. ORDENES DE COMPRA (purchase_order)
         // No se insertan datos, ya que es una tabla transaccional.
         // -----------------------------------------------------
-
-
-
-
-        // =====================
-        // PERMISOS
-        // =====================
-        $this->call([
-            PermissionsSeeder::class, // Crea todos los permisos
-            RolesPermissionsSeeder::class, // Asigna permisos a los roles
-        ]);
 
         // =====================
         // ROLES (ya creados por RolesPermissionsSeeder, pero los obtenemos)

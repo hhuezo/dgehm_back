@@ -13,7 +13,7 @@ class InstitutionController extends Controller
      */
     public function index()
     {
-        $institutions = Institution::select('id', 'name', 'name_en')
+        $institutions = Institution::select('id', 'name', 'code')
             ->where('is_active', true)
             ->get();
 
@@ -30,21 +30,21 @@ class InstitutionController extends Controller
     {
         $rules = [
             'name' => 'required|unique:fa_institutions,name',
-            'name_en' => 'required|unique:fa_institutions,name_en',
+            'code' => 'required|unique:fa_institutions,code',
         ];
 
         $messages = [
             'name.required' => 'El nombre es obligatorio.',
             'name.unique'   => 'Ya existe una institución con este nombre.',
-            'name_en.required' => 'El nombre en inglés es obligatorio.',
-            'name_en.unique'   => 'Ya existe una institución con este nombre en inglés.',
+            'code.required' => 'El código es obligatorio.',
+            'code.unique'   => 'Ya existe una institución con este código.',
         ];
 
         $data = $request->validate($rules, $messages);
 
         $institution = new Institution();
         $institution->name = $data['name'];
-        $institution->name_en = $data['name_en'];
+        $institution->code = $data['code'];
         $institution->is_active = true;
         $institution->save();
 
@@ -62,21 +62,21 @@ class InstitutionController extends Controller
     {
         $rules = [
             'name' => 'required|unique:fa_institutions,name,' . $id . ',id',
-            'name_en' => 'required|unique:fa_institutions,name_en,' . $id . ',id',
+            'code' => 'required|unique:fa_institutions,code,' . $id . ',id',
         ];
 
         $messages = [
             'name.required' => 'El nombre es obligatorio.',
             'name.unique'   => 'Ya existe una institución con este nombre.',
-            'name_en.required' => 'El nombre en inglés es obligatorio.',
-            'name_en.unique'   => 'Ya existe una institución con este nombre en inglés.',
+            'code.required' => 'El código es obligatorio.',
+            'code.unique'   => 'Ya existe una institución con este código.',
         ];
 
         $data = $request->validate($rules, $messages);
 
         $institution = Institution::findOrFail($id);
         $institution->name = $data['name'];
-        $institution->name_en = $data['name_en'];
+        $institution->code = $data['code'];
         $institution->save();
 
         return response()->json([
