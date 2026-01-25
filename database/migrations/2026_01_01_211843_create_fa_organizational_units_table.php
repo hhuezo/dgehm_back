@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('fa_organizational_units', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->string('abbreviation')->nullable()->unique();
+            $table->string('abbreviation')->nullable();
             $table->string('code', 32)->nullable();
             $table->boolean('is_active')->default(true);
             $table->foreignId('fa_organizational_unit_type_id')->constrained();

@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('fa_vehicle_classes', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 150);
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
+        Schema::table('fa_classes', function (Blueprint $table) {
+            $table->integer('useful_life')->nullable()->after('name');
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('fa_vehicle_classes');
+        Schema::table('fa_classes', function (Blueprint $table) {
+            $table->dropColumn('useful_life');
+        });
     }
 };

@@ -25,6 +25,56 @@ class DatabaseSeeder extends Seeder
         $this->call(RolesPermissionsSeeder::class);
 
         // -----------------------------------------------------
+        // Unidades organizativas
+        // -----------------------------------------------------
+        $this->call(OrganizationalUnitsSeeder::class);
+
+        // -----------------------------------------------------
+        // Instituciones (fa_institutions)
+        // -----------------------------------------------------
+        $this->call(InstitutionsSeeder::class);
+
+        // -----------------------------------------------------
+        // Específicos (fa_specifics)
+        // -----------------------------------------------------
+        $this->call(SpecificsSeeder::class);
+
+        // -----------------------------------------------------
+        // Clases (fa_classes)
+        // -----------------------------------------------------
+        $this->call(ClassesSeeder::class);
+
+        // -----------------------------------------------------
+        // Orígenes (fa_origins)
+        // -----------------------------------------------------
+        $this->call(OriginsSeeder::class);
+
+        // -----------------------------------------------------
+        // Condiciones físicas (fa_physical_conditions)
+        // -----------------------------------------------------
+        $this->call(PhysicalConditionsSeeder::class);
+
+        // -----------------------------------------------------
+        // Marcas de vehículos (fa_vehicle_brands)
+        // -----------------------------------------------------
+        $this->call(VehicleBrandsSeeder::class);
+
+        // -----------------------------------------------------
+        // Tipos de vehículos (fa_vehicle_types)
+        // -----------------------------------------------------
+        $this->call(VehicleTypesSeeder::class);
+
+        // -----------------------------------------------------
+        // Tipos de tracción de vehículos (fa_vehicle_drive_types)
+        // -----------------------------------------------------
+        $this->call(VehicleDriveTypesSeeder::class);
+
+        // -----------------------------------------------------
+        // Colores de vehículos (fa_vehicle_colors)
+        // -----------------------------------------------------
+        $this->call(VehicleColorsSeeder::class);
+
+        // -----------------------------------------------------
         // 1. CUENTAS CONTABLES (wh_accounting_accounts)
         // -----------------------------------------------------
         DB::table('wh_accounting_accounts')->delete();

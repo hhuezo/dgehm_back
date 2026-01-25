@@ -16,12 +16,11 @@ class OrganizationalUnitController extends Controller
         $units = OrganizationalUnit::select(
             'id',
             'name',
-            'abbreviation',
-            'code',
+            'abbreviation' , 'code',
             'fa_organizational_unit_type_id',
             'fa_organizational_unit_id'
         )
-            ->with(['type:id,name,staff', 'parent:id,name'])
+            ->with(['type:id,name', 'parent:id,name'])
             ->where('is_active', true)
             ->get();
 
@@ -65,7 +64,7 @@ class OrganizationalUnitController extends Controller
         $unit->is_active = true;
         $unit->save();
 
-        $unit->load(['type:id,name,staff', 'parent:id,name']);
+        $unit->load(['type:id,name', 'parent:id,name']);
 
         return response()->json([
             'success' => true,
@@ -107,7 +106,7 @@ class OrganizationalUnitController extends Controller
         $unit->fa_organizational_unit_id = $data['fa_organizational_unit_id'] ?? null;
         $unit->save();
 
-        $unit->load(['type:id,name,staff', 'parent:id,name']);
+        $unit->load(['type:id,name', 'parent:id,name']);
 
         return response()->json([
             'success' => true,
