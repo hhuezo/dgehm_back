@@ -13,6 +13,7 @@ use App\Http\Controllers\fixedasset\VehicleBrandController;
 use App\Http\Controllers\fixedasset\VehicleColorController;
 use App\Http\Controllers\fixedasset\VehicleDriveTypeController;
 use App\Http\Controllers\fixedasset\VehicleTypeController;
+use App\Http\Controllers\fixedasset\FixedAssetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -80,3 +81,8 @@ Route::get('/vehicle_types', [VehicleTypeController::class, 'index']);
 Route::post('/vehicle_types', [VehicleTypeController::class, 'store']);
 Route::put('/vehicle_types/{id}', [VehicleTypeController::class, 'update']);
 Route::delete('/vehicle_types/{id}', [VehicleTypeController::class, 'destroy']);
+
+Route::get('/fixed_assets', [FixedAssetController::class, 'index']);
+Route::post('/fixed_assets', [FixedAssetController::class, 'store']);
+Route::put('/fixed_assets/{id}', [FixedAssetController::class, 'update']);
+Route::delete('/fixed_assets/{id}', [FixedAssetController::class, 'destroy']);
