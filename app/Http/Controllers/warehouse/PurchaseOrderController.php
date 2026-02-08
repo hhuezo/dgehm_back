@@ -8,7 +8,9 @@ use App\Models\warehouse\PurchaseOrderDetail;
 use App\Models\warehouse\SupplyRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use App\Services\WarehouseInventoryImportService;
 use PDF;
 
 class PurchaseOrderController extends Controller
@@ -97,6 +99,46 @@ class PurchaseOrderController extends Controller
                 'success' => false,
                 'message' => 'Error al crear la Orden de Compra.',
                 'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Importar inventario desde archivo Excel.
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+        ], [
+            'file.required' => 'El archivo es obligatorio.',
+            'file.mimes' => 'El archivo debe ser Excel (.xlsx, .xls) o CSV.',
+        ]);
+
+        try {
+            $file = $request->file('file');
+            $path = $file->store('temp', 'local');
+            $fullPath = storage_path('app/' . $path);
+
+            $service = new WarehouseInventoryImportService();
+            $service->import($fullPath);
+
+            Storage::disk('local')->delete($path);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Importación completada.',
+                'data' => [
+                    'imported' => $service->imported,
+                    'skipped' => $service->skipped,
+                    'purchase_order_id' => $service->purchaseOrderId,
+                    'errors' => $service->errors,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al importar: ' . $e->getMessage(),
             ], 500);
         }
     }

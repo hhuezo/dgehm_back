@@ -86,3 +86,6 @@ Route::get('/fixed_assets', [FixedAssetController::class, 'index']);
 Route::post('/fixed_assets', [FixedAssetController::class, 'store']);
 Route::put('/fixed_assets/{id}', [FixedAssetController::class, 'update']);
 Route::delete('/fixed_assets/{id}', [FixedAssetController::class, 'destroy']);
+
+
+Route::post('/fixed_assets/import', [FixedAssetController::class, 'import']);

@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\fixedasset;
 
 use App\Http\Controllers\Controller;
+use App\Imports\FixedAssetImport;
 use App\Models\fixedasset\AssetClass;
 use App\Models\fixedasset\FixedAsset;
 use App\Models\fixedasset\Institution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class FixedAssetController extends Controller
 {
@@ -309,6 +311,41 @@ class FixedAssetController extends Controller
             'success' => true,
             'message' => 'Activo fijo eliminado correctamente.',
         ], 200);
+    }
+
+    /**
+     * Importar activos fijos desde archivo Excel.
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // Max 10MB
+        ], [
+            'file.required' => 'El archivo es obligatorio.',
+            'file.file' => 'Debe ser un archivo válido.',
+            'file.mimes' => 'El archivo debe ser de tipo Excel (.xlsx, .xls) o CSV.',
+            'file.max' => 'El archivo no puede superar los 10MB.',
+        ]);
+
+        try {
+            $import = new FixedAssetImport();
+            Excel::import($import, $request->file('file'));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Importación completada.',
+                'data' => [
+                    'imported' => $import->imported,
+                    'skipped' => $import->skipped,
+                    'errors' => $import->errors,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al importar el archivo: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
 
