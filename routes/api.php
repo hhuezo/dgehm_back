@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\general\ImageController;
 use App\Http\Controllers\security\PermissionController;
+use App\Http\Controllers\security\PermissionTypeController;
 use App\Http\Controllers\security\RoleController;
 use App\Http\Controllers\security\UserController;
 use Illuminate\Http\Request;
@@ -38,6 +39,17 @@ Route::get('/permission', [PermissionController::class, 'index']);
 Route::post('/permission', [PermissionController::class, 'store']);
 Route::put('/permission/{id}', [PermissionController::class, 'update']);
 Route::delete('/permission/{id}', [PermissionController::class, 'destroy']);
+
+/*
+|--------------------------------------------------------------------------
+| Tipos de permiso
+|--------------------------------------------------------------------------
+*/
+Route::get('/permission_type', [PermissionTypeController::class, 'index']);
+Route::post('/permission_type', [PermissionTypeController::class, 'store']);
+Route::get('/permission_type/{id}', [PermissionTypeController::class, 'show']);
+Route::put('/permission_type/{id}', [PermissionTypeController::class, 'update']);
+Route::delete('/permission_type/{id}', [PermissionTypeController::class, 'destroy']);
 
 /*
 |--------------------------------------------------------------------------

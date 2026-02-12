@@ -103,49 +103,43 @@ class ReportsController extends Controller
         $date        = $request->input('date');
         $exportExcel = $request->boolean('exportExcel', false);
 
+        // Existencias a la fecha: solo entradas (reception_date <= fecha) y salidas (delivery_date <= fecha)
         $stock = DB::table('wh_kardex')
             ->join('wh_products', 'wh_kardex.product_id', '=', 'wh_products.id')
             ->join('wh_accounting_accounts', 'wh_products.accounting_account_id', '=', 'wh_accounting_accounts.id')
             ->join('wh_measures', 'wh_products.measure_id', '=', 'wh_measures.id')
-
-            // ENTRADAS
-            ->leftJoin('wh_purchase_order', function ($join) use ($date) {
-                $join->on('wh_kardex.purchase_order_id', '=', 'wh_purchase_order.id')
-                    ->where('wh_kardex.movement_type', 1)
-                    ->whereDate('wh_purchase_order.reception_date', '<=', $date);
-            })
-
-            // SALIDAS
-            ->leftJoin('wh_supply_request', function ($join) use ($date) {
-                $join->on('wh_kardex.supply_request_id', '=', 'wh_supply_request.id')
-                    ->where('wh_kardex.movement_type', 2)
-                    ->whereDate('wh_supply_request.delivery_date', '<=', $date);
-            })
-
+            ->leftJoin('wh_purchase_order', 'wh_kardex.purchase_order_id', '=', 'wh_purchase_order.id')
+            ->leftJoin('wh_supply_request', 'wh_kardex.supply_request_id', '=', 'wh_supply_request.id')
             ->select(
                 'wh_products.accounting_account_id',
                 'wh_accounting_accounts.code as account_code',
                 'wh_accounting_accounts.name as account_name',
-
                 'wh_products.id as product_id',
                 'wh_products.name as product_name',
                 'wh_measures.name as measure_name',
-
-                DB::raw('ROUND(wh_kardex.unit_price, 2) as unit_price'),
-
-                DB::raw("
+                DB::raw('ROUND(wh_kardex.unit_price, 2) as unit_price')
+            )
+            ->selectRaw("
                 SUM(
-                    CASE WHEN wh_kardex.movement_type = 1
-                    THEN wh_kardex.quantity ELSE 0 END
+                    CASE
+                        WHEN wh_kardex.movement_type = 1
+                             AND wh_purchase_order.reception_date IS NOT NULL
+                             AND DATE(wh_purchase_order.reception_date) <= ?
+                        THEN wh_kardex.quantity
+                        ELSE 0
+                    END
                 )
                 -
                 SUM(
-                    CASE WHEN wh_kardex.movement_type = 2
-                    THEN wh_kardex.quantity ELSE 0 END
+                    CASE
+                        WHEN wh_kardex.movement_type = 2
+                             AND wh_supply_request.delivery_date IS NOT NULL
+                             AND DATE(wh_supply_request.delivery_date) <= ?
+                        THEN wh_kardex.quantity
+                        ELSE 0
+                    END
                 ) AS stock_quantity
-            ")
-            )
-
+            ", [$date, $date])
             ->groupBy(
                 'wh_products.accounting_account_id',
                 'wh_accounting_accounts.code',
@@ -155,7 +149,6 @@ class ReportsController extends Controller
                 'wh_measures.name',
                 'wh_kardex.unit_price'
             )
-
             ->having('stock_quantity', '>', 0)
             ->orderBy('wh_accounting_accounts.code')
             ->orderBy('wh_products.name')

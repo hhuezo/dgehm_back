@@ -3,6 +3,7 @@
 namespace App\Models\fixedasset;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
 
 class OrganizationalUnit extends Model

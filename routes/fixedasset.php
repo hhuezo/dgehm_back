@@ -43,8 +43,10 @@ Route::put('/organizational_unit_types/{id}', [OrganizationalUnitTypeController:
 Route::delete('/organizational_unit_types/{id}', [OrganizationalUnitTypeController::class, 'destroy']);
 
 Route::get('/organizational_units', [OrganizationalUnitController::class, 'index']);
+Route::get('/organizational_units/tree', [OrganizationalUnitController::class, 'indexTree']);
 Route::post('/organizational_units', [OrganizationalUnitController::class, 'store']);
 Route::put('/organizational_units/{id}', [OrganizationalUnitController::class, 'update']);
+Route::put('/organizational_units/{id}/parent', [OrganizationalUnitController::class, 'assignParent']);
 Route::delete('/organizational_units/{id}', [OrganizationalUnitController::class, 'destroy']);
 
 Route::get('/origins', [OriginController::class, 'index']);

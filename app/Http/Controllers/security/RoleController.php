@@ -124,7 +124,6 @@ class RoleController extends Controller
     {
         $role = Role::with('permissions')->find($id);
 
-
         if (!$role) {
             return response()->json([
                 'success' => false,
@@ -132,10 +131,22 @@ class RoleController extends Controller
             ], 404);
         }
 
+        // Un solo bloque: todos los permisos agrupados por tipo (para asignar al rol)
+        $allPermissions = Permission::query()
+            ->with('permissionType')
+            ->orderBy('permission_type_id')
+            ->orderBy('name')
+            ->get();
+        $grouped = $allPermissions->groupBy(fn ($p) => $p->permissionType?->name ?? 'Sin tipo');
+        $role->all_permissions_by_section = $grouped->map(fn ($items) => $items->values()->all())->sortKeys()->all();
+
+        // El otro bloque: solo los permisos asignados a este rol (lista plana)
+        $role->setRelation('permissions', $role->permissions->makeHidden('pivot'));
+
         return response()->json([
             'success' => true,
             'data'    => $role,
-            'message' => 'Permiso encontrado correctamente.',
+            'message' => 'Rol encontrado correctamente.',
         ]);
     }
 

@@ -109,8 +109,9 @@
                     <th style="
                         width: 3%;
                         writing-mode: vertical-rl;
-                        transform: rotate(180deg);
+                        text-orientation: upright;
                         font-size: 10px;
+                        letter-spacing: 1px;
                     ">
                         {{ strtoupper($office->name) }}
                     </th>

@@ -18,8 +18,13 @@ class Permission extends Model
     protected $fillable = [
         'name',
         'guard_name',
+        'permission_type_id',
     ];
 
+    public function permissionType()
+    {
+        return $this->belongsTo(PermissionType::class, 'permission_type_id');
+    }
 
     public function roles()
     {
