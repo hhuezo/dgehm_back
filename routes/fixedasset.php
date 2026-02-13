@@ -14,6 +14,7 @@ use App\Http\Controllers\fixedasset\VehicleColorController;
 use App\Http\Controllers\fixedasset\VehicleDriveTypeController;
 use App\Http\Controllers\fixedasset\VehicleTypeController;
 use App\Http\Controllers\fixedasset\FixedAssetController;
+use App\Http\Controllers\fixedasset\DepreciationReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -91,3 +92,7 @@ Route::delete('/fixed_assets/{id}', [FixedAssetController::class, 'destroy']);
 
 
 Route::post('/fixed_assets/import', [FixedAssetController::class, 'import']);
+
+// Reporte de depreciación (parámetro: date; opcional: pdf=true para descargar PDF)
+Route::post('/fixed_assets/reports/depreciation', [DepreciationReportController::class, 'report']);
+Route::get('/fixed_assets/reports/depreciation', [DepreciationReportController::class, 'report']);
