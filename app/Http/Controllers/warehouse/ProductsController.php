@@ -12,13 +12,21 @@ class ProductsController extends Controller
 {
     public function index()
     {
-        $products = Product::select('id', 'name', 'accounting_account_id', 'measure_id', 'description')
+        $data = Product::query()
+            ->select('id', 'name', 'description', 'measure_id', 'accounting_account_id')
+            ->with([
+                'measure:id,name',
+                'accountingAccount:id,name',
+            ])
+            ->orderBy('id')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'data'    => $products,
-        ]);
+        return response()
+            ->json([
+                'success' => true,
+                'data'    => $data,
+            ])
+            ->header('X-Products-Index', 'wh-with-v1');
     }
 
     public function store(Request $request)
