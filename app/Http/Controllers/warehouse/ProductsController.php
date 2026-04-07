@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\warehouse\Kardex;
 use App\Models\warehouse\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class ProductsController extends Controller
@@ -150,31 +151,57 @@ class ProductsController extends Controller
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
 
-
         if (!$startDate || !$endDate) {
             return response()->json([
                 'success' => false,
-                'message' => 'Las fechas de inicio y fin son obligatorias para generar el Kardex.'
+                'message' => 'Las fechas de inicio y fin son obligatorias para generar el Kardex.',
             ], 400);
         }
 
+        $tz = config('app.timezone', 'UTC');
+
         try {
-            $kardexMovements = Kardex::with('product')->with('purchaseOrder')->with('supplierRequest.office')
-                ->with('supplierReturn.office')->where('product_id', $id)
-                ->whereDate('created_at', '>=', $startDate)
-                ->whereDate('created_at', '<=', $endDate)
-                //->orderBy('created_at', 'desc')
-                ->orderBy('id', 'desc')
+            $start = Carbon::parse($startDate, $tz)->startOfDay();
+            $end = Carbon::parse($endDate, $tz)->endOfDay();
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Formato de fecha inválido. Use YYYY-MM-DD.',
+            ], 422);
+        }
+
+        if ($start->greaterThan($end)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La fecha de inicio no puede ser posterior a la fecha fin.',
+            ], 422);
+        }
+
+        try {
+            // Fecha del movimiento: devolución → fecha solicitud → recepción OC → registro en kardex.
+            // `date` entrecomillado: palabra reservada en MySQL.
+            $movementAt = 'COALESCE(sret.return_date, sreq.`date`, po.reception_date, wh_kardex.created_at)';
+
+            $kardexMovements = Kardex::query()
+                ->select('wh_kardex.*')
+                ->leftJoin('wh_purchase_order as po', 'wh_kardex.purchase_order_id', '=', 'po.id')
+                ->leftJoin('wh_supply_request as sreq', 'wh_kardex.supply_request_id', '=', 'sreq.id')
+                ->leftJoin('wh_supply_returns as sret', 'wh_kardex.supply_return_id', '=', 'sret.id')
+                ->with(['product', 'purchaseOrder', 'supplierRequest.office', 'supplierReturn.office'])
+                ->where('wh_kardex.product_id', (int) $id)
+                ->whereRaw("{$movementAt} >= ?", [$start->format('Y-m-d H:i:s')])
+                ->whereRaw("{$movementAt} <= ?", [$end->format('Y-m-d H:i:s')])
+                ->orderByDesc('wh_kardex.id')
                 ->get();
 
             return response()->json([
                 'success' => true,
-                'data' => $kardexMovements
+                'data'    => $kardexMovements,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error interno al procesar la solicitud del Kardex: ' . $e->getMessage()
+                'message' => 'Error interno al procesar la solicitud del Kardex: ' . $e->getMessage(),
             ], 500);
         }
     }
