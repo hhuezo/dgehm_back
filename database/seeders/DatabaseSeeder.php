@@ -25,6 +25,11 @@ class DatabaseSeeder extends Seeder
         $this->call(RolesPermissionsSeeder::class);
 
         // -----------------------------------------------------
+        // Catálogo administrativo: géneros y estado civil (adm_*)
+        // -----------------------------------------------------
+        $this->call(AdmGendersMaritalStatusesSeeder::class);
+
+        // -----------------------------------------------------
         // Unidades organizativas
         // -----------------------------------------------------
         $this->call(OrganizationalUnitsSeeder::class);
@@ -278,5 +283,10 @@ class DatabaseSeeder extends Seeder
         );
 
         $jefeAreaUser->assignRole('almacen-jefe-area');
+
+        // -----------------------------------------------------
+        // Empleado administrador (adm_employees), ligado al user admin
+        // -----------------------------------------------------
+        $this->call(AdmEmployeesSeeder::class);
     }
 }
