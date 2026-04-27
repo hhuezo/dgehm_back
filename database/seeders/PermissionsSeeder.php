@@ -40,6 +40,11 @@ class PermissionsSeeder extends Seeder
                 'users show',
                 'users update',
                 'users delete',
+                'employees view',
+                'employees create',
+                'employees show',
+                'employees update',
+                'employees delete',
             ],
             'Warehouse' => [
                 'purchase_order view',

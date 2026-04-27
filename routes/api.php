@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\general\ImageController;
+use App\Http\Controllers\security\EmployeeController;
 use App\Http\Controllers\security\PermissionController;
 use App\Http\Controllers\security\PermissionTypeController;
 use App\Http\Controllers\security\RoleController;
@@ -75,6 +76,18 @@ Route::patch('/users/{id}', [UserController::class, 'update']);
 Route::post('/users/{id}/roles', [UserController::class, 'syncRoles']);
 Route::post('/users/{id}/offices', [UserController::class, 'syncOffices']);
 Route::delete('/users/{id}', [UserController::class, 'destroy']);
+
+/*
+|--------------------------------------------------------------------------
+| Empleados (adm_employees)
+|--------------------------------------------------------------------------
+*/
+Route::get('/employees/form-options', [EmployeeController::class, 'formOptions']);
+Route::get('/employees', [EmployeeController::class, 'index']);
+Route::post('/employees', [EmployeeController::class, 'store']);
+Route::get('/employees/{id}', [EmployeeController::class, 'show']);
+Route::put('/employees/{id}', [EmployeeController::class, 'update']);
+Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
 
 Route::get('/administrative_technicians', [UserController::class, 'getAdministrativeTechnicians']);
 Route::get('/area-managers', [UserController::class, 'getAreaManagers']);
