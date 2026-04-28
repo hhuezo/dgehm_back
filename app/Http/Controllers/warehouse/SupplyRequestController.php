@@ -20,7 +20,10 @@ class SupplyRequestController extends Controller
 {
     public function index()
     {
-        $supplyRequests = SupplyRequest::with('status')->with('requester')->with('immediateBoss')->get();
+        $supplyRequests = SupplyRequest::with('status')->with('requester')
+        ->with('immediateBoss')
+        ->orderBy('id', 'desc')
+        ->get();
 
         return response()->json([
             'success' => true,
@@ -106,7 +109,13 @@ class SupplyRequestController extends Controller
 
     public function show(string $id)
     {
-        $supplyRequest = SupplyRequest::with('status')->with('requester')->with('office')->with('immediateBoss')->find($id);
+        $supplyRequest = SupplyRequest::with([
+            'status',
+            'requester',
+            'office',
+            'immediateBoss',
+            'details.product.measure',
+        ])->find($id);
 
         return response()->json([
             'success' => true,
