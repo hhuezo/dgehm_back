@@ -101,7 +101,8 @@ class SupplyReturnController extends Controller
             'office:id,name',
             'immediateSupervisor:id,name,lastname',
             'receivedBy:id,name,lastname',
-            'status:id,name'
+            'status:id,name',
+            'details.product.measure',
         ])->find($id);
 
         if (!$supplyReturn) {

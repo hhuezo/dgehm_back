@@ -52,7 +52,10 @@ class SupplyRequestDetailController extends Controller
             $item = new SupplyRequestDetail();
             $item->supply_request_id = $validated['supply_request_id'];
             $item->product_id = $validated['product_id'];
-            $item->quantity = $validated['quantity'];
+            $qty = $validated['quantity'];
+            $item->quantity = $qty;
+            // Al crear: entregado = solicitado; solo difiere al editar entregado con solicitud aprobada.
+            $item->delivered_quantity = $qty;
             $item->save();
 
             return response()->json([
@@ -116,8 +119,9 @@ class SupplyRequestDetailController extends Controller
             // --- LÓGICA DE ACTUALIZACIÓN ---
 
             if ($requestStatusId === 1) {
-                // Actualiza la cantidad solicitada
+                // Actualiza la cantidad solicitada y mantiene entregado igual mientras esté pendiente
                 $item->quantity = $validated['quantity'];
+                $item->delivered_quantity = $validated['quantity'];
             } elseif ($requestStatusId === 3) {
                 // Actualiza la cantidad entregada
                 $item->delivered_quantity = $validated['delivered_quantity'];
