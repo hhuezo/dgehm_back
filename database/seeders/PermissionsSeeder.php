@@ -109,8 +109,6 @@ class PermissionsSeeder extends Seeder
                 'organizational_units create',
                 'organizational_units update',
                 'organizational_units delete',
-                'organizational_units assign-parent',
-                'organizational_units tree',
                 'origins view',
                 'origins create',
                 'origins update',
