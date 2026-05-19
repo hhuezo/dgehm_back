@@ -68,7 +68,7 @@ class SupplyRequestController extends Controller
             'office_id.required'      => 'La oficina solicitante es obligatoria.',
             'immediate_boss_id.required' => 'El jefe inmediato es obligatorio.',
             'requester_id.required'      => 'El ID del solicitante es obligatorio.',
-            'observation.required'       => 'La observación es obligatoria.', // Aunque 'observation' es nullable, la regla 'required' aquí aplicaría si la hubieras puesto. La mantengo por si la regla de negocio cambia.
+            //'observation.required'       => 'La observación es obligatoria.', // Aunque 'observation' es nullable, la regla 'required' aquí aplicaría si la hubieras puesto. La mantengo por si la regla de negocio cambia.
 
             // Mensajes directos para reglas de formato y existencia
             'date.date'                  => 'La fecha de solicitud debe tener un formato de fecha válido.',
@@ -91,7 +91,7 @@ class SupplyRequestController extends Controller
             $supplyRequest->requester_id = $requesterId;
             $supplyRequest->immediate_boss_id = $request->input('immediate_boss_id');
             $supplyRequest->office_id = $request->input('office_id');
-            $supplyRequest->status_id = 1;
+            $supplyRequest->status_id = 2;
 
             $supplyRequest->save();
 
