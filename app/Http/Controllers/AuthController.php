@@ -32,9 +32,9 @@ class AuthController extends Controller
         }
 
         $user = User::with([
-            'offices' => function ($query) {
-                $query->select('wh_offices.id', 'wh_offices.name');
-            }
+            'organizationalUnits' => function ($query) {
+                $query->select('fa_organizational_units.id', 'fa_organizational_units.name');
+            },
         ])->where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
@@ -57,7 +57,7 @@ class AuthController extends Controller
                 'id'    => $user->id,
                 'name'  => $user->name,
                 'email' => $user->email,
-                'offices' => $user->offices,
+                'organizational_units' => $user->organizationalUnits,
                 'roles' => $user->getRoleNames(),
                 'permissions' => $user->getAllPermissions()->pluck('name'),
             ],

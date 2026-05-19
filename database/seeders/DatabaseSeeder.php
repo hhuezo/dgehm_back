@@ -118,21 +118,7 @@ class DatabaseSeeder extends Seeder
         DB::table('wh_measures')->insert($units);
 
         // -----------------------------------------------------
-        // 3. OFICINAS/DEPENDENCIAS (wh_offices) - USANDO 'name'
-        // -----------------------------------------------------
-        DB::table('wh_offices')->delete();
-
-        $offices = [
-            ['name' => 'GERENCIA ADMINISTRATIVA / SERVICIOS GENERALES', 'phone' => '2200-0001', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'LABORATORIO DE ACAJUTLA', 'phone' => '2200-0002', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'UNIDAD DE TECNOLOGIA E INFORMACION', 'phone' => '2200-0003', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'GERENCIA FINANCIERA', 'phone' => '2200-0009', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'GERENCIA LEGAL', 'phone' => '2200-0015', 'created_at' => now(), 'updated_at' => now()],
-        ];
-        DB::table('wh_offices')->insert($offices);
-
-        // -----------------------------------------------------
-        // 4. PROVEEDORES (wh_suppliers) - ¡CORREGIDO según tu migración!
+        // 3. PROVEEDORES (wh_suppliers)
         // -----------------------------------------------------
         DB::table('wh_suppliers')->delete();
 

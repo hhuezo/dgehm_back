@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\warehouse\Office;
+use App\Models\fixedasset\OrganizationalUnit;
 use App\Models\warehouse\Product;
 use App\Models\warehouse\SupplyRequest;
 use App\Models\warehouse\SupplyRequestDetail;
@@ -60,9 +60,12 @@ class WarehouseSupplyRequestImportService
 
         foreach ($officeColumns as $officeName => $columns) {
             try {
-                $office = Office::firstOrCreate(
+                $organizationalUnit = OrganizationalUnit::firstOrCreate(
                     ['name' => $officeName],
-                    ['is_active' => true]
+                    [
+                        'is_active' => true,
+                        'fa_organizational_unit_type_id' => DB::table('fa_organizational_unit_types')->value('id') ?? 1,
+                    ]
                 );
 
                 $requestDate = $this->randomDateInJanuary2025();
@@ -71,7 +74,7 @@ class WarehouseSupplyRequestImportService
                     'date' => $requestDate->format('Y-m-d H:i:s'),
                     'observation' => 'Importación desde Excel - ' . $officeName,
                     'requester_id' => $userId,
-                    'office_id' => $office->id,
+                    'fa_organizational_unit_id' => $organizationalUnit->id,
                     'immediate_boss_id' => $userId,
                     'status_id' => 1,
                 ]);
@@ -91,7 +94,7 @@ class WarehouseSupplyRequestImportService
 
                     $product = $this->findProduct($productName);
                     if (!$product) {
-                        $this->errors[] = "Producto no encontrado: {$productName} (oficina: {$officeName})";
+                        $this->errors[] = "Producto no encontrado: {$productName} (unidad: {$officeName})";
                         $this->skipped++;
                         continue;
                     }
@@ -117,7 +120,7 @@ class WarehouseSupplyRequestImportService
                 $this->finalizeSupplyRequest($supplyRequest->id, $requestDate);
                 $this->requestsCreated++;
             } catch (\Exception $e) {
-                $this->errors[] = "Oficina {$officeName}: " . $e->getMessage();
+                $this->errors[] = "Unidad organizativa {$officeName}: " . $e->getMessage();
                 $this->skipped++;
             }
         }

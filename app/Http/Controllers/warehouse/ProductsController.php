@@ -220,7 +220,7 @@ class ProductsController extends Controller
                 ->leftJoin('wh_purchase_order as po', 'wh_kardex.purchase_order_id', '=', 'po.id')
                 ->leftJoin('wh_supply_request as sreq', 'wh_kardex.supply_request_id', '=', 'sreq.id')
                 ->leftJoin('wh_supply_returns as sret', 'wh_kardex.supply_return_id', '=', 'sret.id')
-                ->with(['product', 'purchaseOrder', 'supplierRequest.office', 'supplierReturn.office'])
+                ->with(['product', 'purchaseOrder', 'supplierRequest.organizationalUnit', 'supplierReturn.organizationalUnit'])
                 ->where('wh_kardex.product_id', (int) $id)
                 ->whereRaw("{$movementAt} >= ?", [$start->format('Y-m-d H:i:s')])
                 ->whereRaw("{$movementAt} <= ?", [$end->format('Y-m-d H:i:s')])

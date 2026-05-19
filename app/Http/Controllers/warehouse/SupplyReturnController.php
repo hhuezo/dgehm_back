@@ -19,7 +19,7 @@ class SupplyReturnController extends Controller
     {
         $supplyReturns = SupplyReturn::with([
             'returnedBy:id,name,lastname',
-            'office:id,name',
+            'organizationalUnit:id,name',
             'immediateSupervisor:id,name,lastname',
             'receivedBy:id,name,lastname'
         ])->get();
@@ -35,7 +35,7 @@ class SupplyReturnController extends Controller
         $rules = [
             'return_date'            => 'required|date',
             'returned_by_id'         => 'required|exists:users,id',
-            'wh_office_id'           => 'required|exists:wh_offices,id',
+            'fa_organizational_unit_id' => 'required|exists:fa_organizational_units,id',
             'immediate_supervisor_id' => 'required|exists:users,id',
             'received_by_id'         => 'required|exists:users,id',
             'phone_extension'        => 'nullable|string|max:10',
@@ -47,12 +47,12 @@ class SupplyReturnController extends Controller
             'return_date.date'                 => 'La fecha de devolución debe tener un formato de fecha válido.',
 
             'returned_by_id.required'          => 'El usuario que devuelve el suministro es obligatorio.',
-            'wh_office_id.required'            => 'La oficina a la que pertenece la devolución es obligatoria.',
+            'fa_organizational_unit_id.required' => 'La unidad organizativa es obligatoria.',
             'immediate_supervisor_id.required' => 'El supervisor inmediato es obligatorio.',
             'received_by_id.required'          => 'El usuario que recibe la devolución es obligatorio.',
 
             'returned_by_id.exists'            => 'El usuario que devuelve no existe en el sistema.',
-            'wh_office_id.exists'              => 'La oficina seleccionada no es válida.',
+            'fa_organizational_unit_id.exists' => 'La unidad organizativa seleccionada no es válida.',
             'immediate_supervisor_id.exists'   => 'El supervisor inmediato seleccionado no existe.',
             'received_by_id.exists'            => 'El usuario receptor seleccionado no existe.',
 
@@ -69,7 +69,7 @@ class SupplyReturnController extends Controller
 
             $supplyReturn->return_date = $request->input('return_date');
             $supplyReturn->returned_by_id = $request->input('returned_by_id');
-            $supplyReturn->wh_office_id = $request->input('wh_office_id');
+            $supplyReturn->fa_organizational_unit_id = $request->input('fa_organizational_unit_id');
             $supplyReturn->immediate_supervisor_id = $request->input('immediate_supervisor_id');
             $supplyReturn->received_by_id = $request->input('received_by_id');
 
@@ -98,7 +98,7 @@ class SupplyReturnController extends Controller
     {
         $supplyReturn = SupplyReturn::with([
             'returnedBy:id,name,lastname',
-            'office:id,name',
+            'organizationalUnit:id,name',
             'immediateSupervisor:id,name,lastname',
             'receivedBy:id,name,lastname',
             'status:id,name',
@@ -137,7 +137,7 @@ class SupplyReturnController extends Controller
         $rules = [
             'return_date'            => 'required|date',
             'returned_by_id'         => 'required|exists:users,id',
-            'wh_office_id'           => 'required|exists:wh_offices,id',
+            'fa_organizational_unit_id' => 'required|exists:fa_organizational_units,id',
             'immediate_supervisor_id' => 'required|exists:users,id',
             'received_by_id'         => 'required|exists:users,id',
             'phone_extension'        => 'nullable|string|max:10',
@@ -149,12 +149,12 @@ class SupplyReturnController extends Controller
             'return_date.date'                 => 'La fecha de devolución debe tener un formato de fecha válido.',
 
             'returned_by_id.required'          => 'El usuario que devuelve el suministro es obligatorio.',
-            'wh_office_id.required'            => 'La oficina a la que pertenece la devolución es obligatoria.',
+            'fa_organizational_unit_id.required' => 'La unidad organizativa es obligatoria.',
             'immediate_supervisor_id.required' => 'El supervisor inmediato es obligatorio.',
             'received_by_id.required'          => 'El usuario que recibe la devolución es obligatorio.',
 
             'returned_by_id.exists'            => 'El usuario que devuelve no existe en el sistema.',
-            'wh_office_id.exists'              => 'La oficina seleccionada no es válida.',
+            'fa_organizational_unit_id.exists' => 'La unidad organizativa seleccionada no es válida.',
             'immediate_supervisor_id.exists'   => 'El supervisor inmediato seleccionado no existe.',
             'received_by_id.exists'            => 'El usuario receptor seleccionado no existe.',
 
@@ -169,7 +169,7 @@ class SupplyReturnController extends Controller
         try {
             $supplyReturn->return_date = $request->input('return_date');
             $supplyReturn->returned_by_id = $request->input('returned_by_id');
-            $supplyReturn->wh_office_id = $request->input('wh_office_id');
+            $supplyReturn->fa_organizational_unit_id = $request->input('fa_organizational_unit_id');
             $supplyReturn->immediate_supervisor_id = $request->input('immediate_supervisor_id');
             $supplyReturn->received_by_id = $request->input('received_by_id');
 
@@ -520,13 +520,13 @@ class SupplyReturnController extends Controller
             ->join('users as returned', 'wh_supply_returns.returned_by_id', '=', 'returned.id')
             ->leftJoin('users as supervisor', 'wh_supply_returns.immediate_supervisor_id', '=', 'supervisor.id')
             ->leftJoin('users as received', 'wh_supply_returns.received_by_id', '=', 'received.id')
-            ->join('wh_offices', 'wh_supply_returns.wh_office_id', '=', 'wh_offices.id')
+            ->join('fa_organizational_units', 'wh_supply_returns.fa_organizational_unit_id', '=', 'fa_organizational_units.id')
             ->select(
                 'wh_supply_returns.*',
                 DB::raw("CONCAT(returned.name,' ',returned.lastname) as returned_name"),
                 DB::raw("CONCAT(supervisor.name,' ',supervisor.lastname) as supervisor_name"),
                 DB::raw("CONCAT(received.name,' ',received.lastname) as received_name"),
-                'wh_offices.name as office_name'
+                'fa_organizational_units.name as organizational_unit_name'
             )
             ->where('wh_supply_returns.id', $id)
             ->first();

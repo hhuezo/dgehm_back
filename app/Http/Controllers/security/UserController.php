@@ -100,7 +100,7 @@ class UserController extends Controller
 
     public function show(string $id)
     {
-        $user = User::with(['roles', 'offices'])->find($id);
+        $user = User::with(['roles', 'organizationalUnits'])->find($id);
 
         if (!$user) {
             return response()->json([
@@ -253,7 +253,7 @@ class UserController extends Controller
         }
     }
 
-    public function syncOffices(Request $request, string $id)
+    public function syncOrganizationalUnits(Request $request, string $id)
     {
         $user = User::find($id);
 
@@ -267,13 +267,13 @@ class UserController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'office_ids' => 'required|array',
-                'office_ids.*' => 'exists:wh_offices,id',
+                'organizational_unit_ids' => 'required|array',
+                'organizational_unit_ids.*' => 'exists:fa_organizational_units,id',
             ],
             [
-                'office_ids.required' => 'Debe proporcionar un array de oficinas (puede estar vacío).',
-                'office_ids.array'    => 'Las oficinas deben ser un array.',
-                'office_ids.*.exists' => 'Uno o más oficinas no existen.',
+                'organizational_unit_ids.required' => 'Debe proporcionar un array de unidades organizativas (puede estar vacío).',
+                'organizational_unit_ids.array' => 'Las unidades organizativas deben ser un array.',
+                'organizational_unit_ids.*.exists' => 'Una o más unidades organizativas no existen.',
             ]
         );
 
@@ -281,27 +281,24 @@ class UserController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error de validación.',
-                'errors'  => $validator->errors(),
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         try {
-            // Sincronizar oficinas (asignar y remover según el array proporcionado)
-            $user->offices()->sync($request->office_ids);
-
-            // Cargar el usuario con sus oficinas
-            $user->load('offices');
+            $user->organizationalUnits()->sync($request->organizational_unit_ids);
+            $user->load('organizationalUnits');
 
             return response()->json([
                 'success' => true,
-                'message' => 'Oficinas actualizadas correctamente.',
-                'data'    => $user,
+                'message' => 'Unidades organizativas actualizadas correctamente.',
+                'data' => $user,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al actualizar las oficinas.',
-                'error'   => $e->getMessage(),
+                'message' => 'Error al actualizar las unidades organizativas.',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -436,7 +433,7 @@ class UserController extends Controller
 
     public function show(string $id)
     {
-        $user = User::with(['roles', 'offices'])->find($id);
+        $user = User::with(['roles', 'organizationalUnits'])->find($id);
 
         if (!$user) {
             return response()->json([
@@ -586,60 +583,6 @@ class UserController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al actualizar los roles.',
-                'error'   => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-
-    public function syncOffices(Request $request, string $id)
-    {
-        $user = User::find($id);
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Usuario no encontrado.',
-            ], 404);
-        }
-
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'office_ids' => 'required|array',
-                'office_ids.*' => 'exists:wh_offices,id',
-            ],
-            [
-                'office_ids.required' => 'Debe proporcionar un array de oficinas (puede estar vacío).',
-                'office_ids.array'    => 'Las oficinas deben ser un array.',
-                'office_ids.*.exists' => 'Uno o más oficinas no existen.',
-            ]
-        );
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error de validación.',
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
-
-        try {
-            // Sincronizar oficinas (asignar y remover según el array proporcionado)
-            $user->offices()->sync($request->office_ids);
-
-            // Cargar el usuario con sus oficinas
-            $user->load('offices');
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Oficinas actualizadas correctamente.',
-                'data'    => $user,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al actualizar las oficinas.',
                 'error'   => $e->getMessage(),
             ], 500);
         }

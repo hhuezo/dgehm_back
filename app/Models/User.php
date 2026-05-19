@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\warehouse\Office;
+use App\Models\fixedasset\OrganizationalUnit;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -36,13 +36,13 @@ class User extends Authenticatable
     }
 
 
-    public function offices()
+    public function organizationalUnits()
     {
         return $this->belongsToMany(
-            Office::class,
-            'user_wh_office',
+            OrganizationalUnit::class,
+            'user_fa_organizational_unit',
             'user_id',
-            'wh_office_id'
+            'fa_organizational_unit_id'
         )->withTimestamps();
     }
 

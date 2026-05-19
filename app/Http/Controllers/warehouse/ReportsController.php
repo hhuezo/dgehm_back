@@ -190,8 +190,8 @@ class ReportsController extends Controller
         $endDate     = $request->endDate;
         $exportExcel = $request->boolean('exportExcel', false);
 
-        // 1. Oficinas (columnas)
-        $offices = DB::table('wh_offices')
+        // 1. Unidades organizativas (columnas)
+        $organizationalUnits = DB::table('fa_organizational_units')
             ->where('is_active', 1)
             ->orderBy('name')
             ->get();
@@ -205,7 +205,7 @@ class ReportsController extends Controller
                 'wh_products.id as product_id',
                 'wh_products.name as product_name',
                 'wh_measures.name as measure_name',
-                'wh_supply_request.office_id',
+                'wh_supply_request.fa_organizational_unit_id',
                 DB::raw('SUM(wh_kardex.quantity) as quantity')
             )
             ->where('wh_kardex.movement_type', 2)
@@ -214,7 +214,7 @@ class ReportsController extends Controller
                 'wh_products.id',
                 'wh_products.name',
                 'wh_measures.name',
-                'wh_supply_request.office_id'
+                'wh_supply_request.fa_organizational_unit_id'
             )
             ->orderBy('wh_products.name')
             ->get();
@@ -227,14 +227,14 @@ class ReportsController extends Controller
             ========================== */
         if ($exportExcel) {
             return Excel::download(
-                new DeliveryReportExport($products, $offices, $startDate, $endDate),
+                new DeliveryReportExport($products, $organizationalUnits, $startDate, $endDate),
                 "Entrega_Productos_{$startDate}_{$endDate}.xlsx"
             );
         }
 
         $pdf = Pdf::loadView('reports.delivery', [
             'products'  => $products,
-            'offices'   => $offices,
+            'organizationalUnits' => $organizationalUnits,
             'startDate' => $startDate,
             'endDate'   => $endDate,
         ])

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\warehouse;
 
 use App\Http\Controllers\Controller;
-use App\Models\warehouse\Office;
+use App\Models\fixedasset\OrganizationalUnit;
 use App\Models\warehouse\Product;
 use App\Models\warehouse\SupplyRequest;
 use App\Models\warehouse\SupplyRequestDetail;
@@ -36,11 +36,11 @@ class SupplyRequestController extends Controller
         ]);
     }
 
-    public function getBoss(String $officeId)
+    public function getBoss(string $organizationalUnitId)
     {
-        $office = Office::findOrFail($officeId);
+        $organizationalUnit = OrganizationalUnit::findOrFail($organizationalUnitId);
 
-        $bosses = $office->users()
+        $bosses = $organizationalUnit->users()
             ->whereHas('roles', function ($query) {
                 $query->where('id', 4);
             })
@@ -57,7 +57,7 @@ class SupplyRequestController extends Controller
     {
         $rules = [
             'date'              => 'required|date',
-            'office_id'      => 'required|exists:wh_offices,id',
+            'fa_organizational_unit_id' => 'required|exists:fa_organizational_units,id',
             'immediate_boss_id' => 'required|exists:users,id',
             'requester_id'      => 'required|exists:users,id',
             'observation'       => 'nullable|string|max:1000',
@@ -65,7 +65,7 @@ class SupplyRequestController extends Controller
         $messages = [
             // Mensajes directos para campos requeridos
             'date.required'              => 'La fecha de solicitud es obligatoria.',
-            'office_id.required'      => 'La oficina solicitante es obligatoria.',
+            'fa_organizational_unit_id.required' => 'La unidad organizativa solicitante es obligatoria.',
             'immediate_boss_id.required' => 'El jefe inmediato es obligatorio.',
             'requester_id.required'      => 'El ID del solicitante es obligatorio.',
             //'observation.required'       => 'La observación es obligatoria.', // Aunque 'observation' es nullable, la regla 'required' aquí aplicaría si la hubieras puesto. La mantengo por si la regla de negocio cambia.
@@ -73,7 +73,7 @@ class SupplyRequestController extends Controller
             // Mensajes directos para reglas de formato y existencia
             'date.date'                  => 'La fecha de solicitud debe tener un formato de fecha válido.',
 
-            'office_id.exists'        => 'La oficina seleccionada no es válida.',
+            'fa_organizational_unit_id.exists' => 'La unidad organizativa seleccionada no es válida.',
             'immediate_boss_id.exists'   => 'El jefe inmediato seleccionado no existe.',
             'requester_id.exists'        => 'El usuario solicitante no existe.',
             'observation.string'         => 'La observación debe ser texto.',
@@ -90,7 +90,7 @@ class SupplyRequestController extends Controller
             $supplyRequest->observation = $request->input('observation');
             $supplyRequest->requester_id = $requesterId;
             $supplyRequest->immediate_boss_id = $request->input('immediate_boss_id');
-            $supplyRequest->office_id = $request->input('office_id');
+            $supplyRequest->fa_organizational_unit_id = $request->input('fa_organizational_unit_id');
             $supplyRequest->status_id = 2;
 
             $supplyRequest->save();
@@ -117,7 +117,7 @@ class SupplyRequestController extends Controller
         $supplyRequest = SupplyRequest::with([
             'status',
             'requester',
-            'office',
+            'organizationalUnit',
             'immediateBoss',
             'details.product.measure',
         ])->find($id);
@@ -425,13 +425,13 @@ class SupplyRequestController extends Controller
             ->join('users as requester', 'wh_supply_request.requester_id', '=', 'requester.id')
             ->leftJoin('users as boss', 'wh_supply_request.immediate_boss_id', '=', 'boss.id')
             ->leftJoin('users as delivered', 'wh_supply_request.delivered_by_id', '=', 'delivered.id')
-            ->join('wh_offices', 'wh_supply_request.office_id', '=', 'wh_offices.id')
+            ->join('fa_organizational_units', 'wh_supply_request.fa_organizational_unit_id', '=', 'fa_organizational_units.id')
             ->select(
                 'wh_supply_request.*',
                 DB::raw("CONCAT(requester.name,' ',requester.lastname) as requester_name"),
                 DB::raw("CONCAT(boss.name,' ',boss.lastname) as boss_name"),
                 DB::raw("CONCAT(delivered.name,' ',delivered.lastname) as delivered_name"),
-                'wh_offices.name as office_name'
+                'fa_organizational_units.name as organizational_unit_name'
             )
             ->where('wh_supply_request.id', $id)
             ->first();

@@ -66,7 +66,7 @@
         <tr>
             <td>
                 <strong>Unidad Organizativa:</strong>
-                {{ $return->office_name }}
+                {{ $return->organizational_unit_name }}
             </td>
             <td>
                 <strong>Número de extensión telefónica:</strong>

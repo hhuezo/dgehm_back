@@ -1,24 +1,24 @@
 <table>
     <thead>
         <tr>
-            <th colspan="{{ 3 + $offices->count() }}" style="text-align:center; font-weight:bold;">
+            <th colspan="{{ 3 + $organizationalUnits->count() }}" style="text-align:center; font-weight:bold;">
                 DIRECCIÓN GENERAL DE ENERGÍA, HIDROCARBUROS Y MINAS
             </th>
         </tr>
         <tr>
-            <th colspan="{{ 3 + $offices->count() }}" style="text-align:center;">
+            <th colspan="{{ 3 + $organizationalUnits->count() }}" style="text-align:center;">
                 INFORME DE ENTREGA DE PRODUCTO
             </th>
         </tr>
         <tr>
-            <th colspan="{{ 3 + $offices->count() }}" style="text-align:center;">
+            <th colspan="{{ 3 + $organizationalUnits->count() }}" style="text-align:center;">
                 Desde: {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }}
                 &nbsp; | &nbsp;
                 Hasta: {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}
             </th>
         </tr>
         <tr>
-            <th colspan="{{ 3 + $offices->count() }}" style="text-align:center; font-weight:bold;">
+            <th colspan="{{ 3 + $organizationalUnits->count() }}" style="text-align:center; font-weight:bold;">
                 RECURSOS PROPIOS &nbsp; CEL
             </th>
         </tr>
@@ -28,9 +28,9 @@
             <th>Producto</th>
             <th>Unidad</th>
 
-            @foreach ($offices as $office)
+            @foreach ($organizationalUnits as $unit)
                 <th>
-                    {{ strtoupper($office->name) }}
+                    {{ strtoupper($unit->name) }}
                 </th>
             @endforeach
 
@@ -43,16 +43,16 @@
             @php
                 $first    = $productRows->first();
                 $total    = 0;
-                $byOffice = $productRows->keyBy('office_id');
+                $byUnit = $productRows->keyBy('fa_organizational_unit_id');
             @endphp
 
             <tr>
                 <td>{{ $first->product_name }}</td>
                 <td>{{ $first->measure_name }}</td>
 
-                @foreach ($offices as $office)
+                @foreach ($organizationalUnits as $unit)
                     @php
-                        $qty = $byOffice[$office->id]->quantity ?? 0;
+                        $qty = $byUnit[$unit->id]->quantity ?? 0;
                         $total += $qty;
                     @endphp
                     <td>
@@ -70,22 +70,22 @@
 
 <table style="width:100%; text-align:center;">
     <tr>
-        <td colspan="{{ 3 + $offices->count() }}">
+        <td colspan="{{ 3 + $organizationalUnits->count() }}">
             __________________________________________
         </td>
     </tr>
     <tr>
-        <td colspan="{{ 3 + $offices->count() }}">
+        <td colspan="{{ 3 + $organizationalUnits->count() }}">
             <strong>Licda. Dora Jeannette Timas Trujillo</strong>
         </td>
     </tr>
     <tr>
-        <td colspan="{{ 3 + $offices->count() }}">
+        <td colspan="{{ 3 + $organizationalUnits->count() }}">
             Gerente Administrativa
         </td>
     </tr>
     <tr>
-        <td colspan="{{ 3 + $offices->count() }}">
+        <td colspan="{{ 3 + $organizationalUnits->count() }}">
             Dirección General de Energía, Hidrocarburos y Minas
         </td>
     </tr>

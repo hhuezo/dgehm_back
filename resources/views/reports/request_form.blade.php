@@ -61,7 +61,7 @@
             </td>
             <td style="width:50%;">
                 <strong>Unidad Organizativa:</strong>
-                {{ $request->office_name }}
+                {{ $request->organizational_unit_name }}
             </td>
         </tr>
         <tr>

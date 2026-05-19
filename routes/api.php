@@ -74,7 +74,7 @@ Route::get('/users/{id}', [UserController::class, 'show']);
 Route::put('/users/{id}', [UserController::class, 'update']);
 Route::patch('/users/{id}', [UserController::class, 'update']);
 Route::post('/users/{id}/roles', [UserController::class, 'syncRoles']);
-Route::post('/users/{id}/offices', [UserController::class, 'syncOffices']);
+Route::post('/users/{id}/organizational_units', [UserController::class, 'syncOrganizationalUnits']);
 Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
 /*

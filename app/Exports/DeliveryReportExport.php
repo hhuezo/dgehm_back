@@ -8,14 +8,14 @@ use Maatwebsite\Excel\Concerns\FromView;
 class DeliveryReportExport implements FromView
 {
     protected $products;
-    protected $offices;
+    protected $organizationalUnits;
     protected $startDate;
     protected $endDate;
 
-    public function __construct($products, $offices, $startDate, $endDate)
+    public function __construct($products, $organizationalUnits, $startDate, $endDate)
     {
         $this->products  = $products;
-        $this->offices   = $offices;
+        $this->organizationalUnits = $organizationalUnits;
         $this->startDate = $startDate;
         $this->endDate   = $endDate;
     }
@@ -24,7 +24,7 @@ class DeliveryReportExport implements FromView
     {
         return view('reports.delivery_excel', [
             'products'  => $this->products,
-            'offices'   => $this->offices,
+            'organizationalUnits' => $this->organizationalUnits,
             'startDate' => $this->startDate,
             'endDate'   => $this->endDate,
         ]);

@@ -2,10 +2,10 @@
 
 namespace App\Models\warehouse;
 
+use App\Models\fixedasset\OrganizationalUnit;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
-use App\Models\warehouse\RequestStatus;
 use Spatie\Activitylog\LogOptions;
 
 class SupplyRequest extends Model
@@ -19,7 +19,7 @@ class SupplyRequest extends Model
         'delivery_date',
         'observation',
         'requester_id',
-        'office_id',
+        'fa_organizational_unit_id',
         'immediate_boss_id',
         'delivered_by_id',
         'approved_by_id',
@@ -49,9 +49,9 @@ class SupplyRequest extends Model
         return $this->belongsTo(User::class, 'requester_id');
     }
 
-    public function office()
+    public function organizationalUnit()
     {
-        return $this->belongsTo(Office::class, 'office_id');
+        return $this->belongsTo(OrganizationalUnit::class, 'fa_organizational_unit_id');
     }
 
     public function immediateBoss()

@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\warehouse\AccountingAccount;
 use App\Models\warehouse\Kardex;
 use App\Models\warehouse\Measure;
-use App\Models\warehouse\Office;
+use App\Models\fixedasset\OrganizationalUnit;
 use App\Models\warehouse\Product;
 use App\Models\warehouse\PurchaseOrder;
 use App\Models\warehouse\Supplier;
@@ -27,8 +27,8 @@ class PlanEntradasSalidasService
     protected ?int $nextOrderNum = null;
     /** @var array<string, Product> */
     protected array $productCache = [];
-    /** @var array<string, Office> */
-    protected array $officeCache = [];
+    /** @var array<string, OrganizationalUnit> */
+    protected array $organizationalUnitCache = [];
     /** @var array<string, Supplier> */
     protected array $supplierCache = [];
 
@@ -173,17 +173,17 @@ class PlanEntradasSalidasService
         return $product;
     }
 
-    protected function getOffice(string $namePart): ?Office
+    protected function getOrganizationalUnit(string $namePart): ?OrganizationalUnit
     {
         $key = $namePart;
-        if (isset($this->officeCache[$key])) {
-            return $this->officeCache[$key];
+        if (isset($this->organizationalUnitCache[$key])) {
+            return $this->organizationalUnitCache[$key];
         }
-        $office = Office::where('name', 'LIKE', '%' . $namePart . '%')->first();
-        if ($office) {
-            $this->officeCache[$key] = $office;
+        $unit = OrganizationalUnit::where('name', 'LIKE', '%' . $namePart . '%')->first();
+        if ($unit) {
+            $this->organizationalUnitCache[$key] = $unit;
         }
-        return $office;
+        return $unit;
     }
 
     protected function getSupplier(string $namePart): ?Supplier
@@ -726,9 +726,9 @@ class PlanEntradasSalidasService
         array $details,
         string $observation = 'Plan Feb–Jun 2025'
     ): void {
-        $office = $this->getOffice($officeNamePart);
-        if (!$office) {
-            $this->errors[] = "Oficina no encontrada: {$officeNamePart}";
+        $organizationalUnit = $this->getOrganizationalUnit($officeNamePart);
+        if (!$organizationalUnit) {
+            $this->errors[] = "Unidad organizativa no encontrada: {$officeNamePart}";
             return;
         }
 
@@ -743,7 +743,7 @@ class PlanEntradasSalidasService
             'delivery_date' => null,
             'observation' => $observation,
             'requester_id' => $userId,
-            'office_id' => $office->id,
+            'fa_organizational_unit_id' => $organizationalUnit->id,
             'immediate_boss_id' => $userId,
             'status_id' => 1,
         ]);

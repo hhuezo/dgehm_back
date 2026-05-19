@@ -44,6 +44,16 @@ class OrganizationalUnit extends Model
         return $this->hasMany(OrganizationalUnit::class, 'fa_organizational_unit_id');
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(
+            \App\Models\User::class,
+            'user_fa_organizational_unit',
+            'fa_organizational_unit_id',
+            'user_id'
+        )->withTimestamps();
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

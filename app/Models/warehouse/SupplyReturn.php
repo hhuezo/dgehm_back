@@ -2,10 +2,10 @@
 
 namespace App\Models\warehouse;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\fixedasset\OrganizationalUnit;
 use App\Models\User;
-use App\Models\warehouse\Office;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 
 class SupplyReturn extends Model
@@ -23,7 +23,7 @@ class SupplyReturn extends Model
     protected $fillable = [
         'return_date',
         'returned_by_id',
-        'wh_office_id',
+        'fa_organizational_unit_id',
         'immediate_supervisor_id',
         'received_by_id',
         'phone_extension',
@@ -64,9 +64,9 @@ class SupplyReturn extends Model
         return $this->belongsTo(User::class, 'received_by_id');
     }
 
-    public function office()
+    public function organizationalUnit()
     {
-        return $this->belongsTo(Office::class, 'wh_office_id');
+        return $this->belongsTo(OrganizationalUnit::class, 'fa_organizational_unit_id');
     }
 
     public function details()

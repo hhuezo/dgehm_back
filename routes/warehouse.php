@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\warehouse\AccountingAccountController;
 use App\Http\Controllers\warehouse\MeasuresController;
-use App\Http\Controllers\warehouse\OfficeController;
 use App\Http\Controllers\warehouse\ProductsController;
 use App\Http\Controllers\warehouse\PurchaseOrderController;
 use App\Http\Controllers\warehouse\PurchaseOrderDetailController;
@@ -60,7 +59,7 @@ Route::post('supply_return/approve/{id}', [SupplyReturnController::class, 'appro
 Route::post('supply_return/finalize/{id}', [SupplyReturnController::class, 'finalize']);
 Route::post('supply_return/reject/{id}', [SupplyReturnController::class, 'reject']);
 Route::get('supply_return/reports/{id}', [SupplyReturnController::class, 'ReturntFormReport']);
-Route::get('offices/{officeId}/bosses', [SupplyRequestController::class, 'getBoss']);
+Route::get('organizational_units/{organizationalUnitId}/bosses', [SupplyRequestController::class, 'getBoss']);
 
 Route::get('supply_return_detail/{id}', [SupplyReturnDetailController::class, 'show']);
 Route::post('supply_return_detail', [SupplyReturnDetailController::class, 'store']);
@@ -91,11 +90,6 @@ Route::get('products/supply-request-catalog', [ProductsController::class, 'index
 Route::get('products/{id}/kardex', [ProductsController::class, 'kardex']);
 Route::get('products/{id}/existencia', [ProductsController::class, 'existencia']);
 
-
-Route::get('offices', [OfficeController::class, 'index']);
-Route::post('offices', [OfficeController::class, 'store']);
-Route::put('offices/{id}', [OfficeController::class, 'update']);
-Route::delete('offices/{id}', [OfficeController::class, 'destroy']);
 
 Route::get('suppliers', [SupplierController::class, 'index']);
 Route::post('suppliers', [SupplierController::class, 'store']);

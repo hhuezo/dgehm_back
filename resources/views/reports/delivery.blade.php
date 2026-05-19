@@ -105,7 +105,7 @@
                 <th style="width:26%;">Producto</th>
                 <th style="width:6%;">Unidad</th>
 
-                @foreach ($offices as $office)
+                @foreach ($organizationalUnits as $unit)
                     <th style="
                         width: 3%;
                         writing-mode: vertical-rl;
@@ -113,7 +113,7 @@
                         font-size: 10px;
                         letter-spacing: 1px;
                     ">
-                        {{ strtoupper($office->name) }}
+                        {{ strtoupper($unit->name) }}
                     </th>
                 @endforeach
 
@@ -126,7 +126,7 @@
                 @php
                     $first    = $productRows->first();
                     $total    = 0;
-                    $byOffice = $productRows->keyBy('office_id');
+                    $byUnit = $productRows->keyBy('fa_organizational_unit_id');
                 @endphp
 
                 <tr>
@@ -137,9 +137,9 @@
                         {{ $first->measure_name }}
                     </td>
 
-                    @foreach ($offices as $office)
+                    @foreach ($organizationalUnits as $unit)
                         @php
-                            $qty = $byOffice[$office->id]->quantity ?? 0;
+                            $qty = $byUnit[$unit->id]->quantity ?? 0;
                             $total += $qty;
                         @endphp
                         <td class="text-right">
