@@ -95,7 +95,7 @@ class SupplyRequestController extends Controller
 
             $supplyRequest->save();
 
-            $supplyRequest->load('status', 'requester');
+            $supplyRequest->load('status', 'requester', 'organizationalUnit', 'immediateBoss');
 
             return response()->json([
                 'success' => true,

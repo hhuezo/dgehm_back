@@ -98,6 +98,28 @@ class UserController extends Controller
         }
     }
 
+    public function myOrganizationalUnits(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No autenticado.',
+            ], 401);
+        }
+
+        $units = $user->organizationalUnits()
+            ->where('fa_organizational_units.is_active', true)
+            ->orderBy('fa_organizational_units.name')
+            ->get(['fa_organizational_units.id', 'fa_organizational_units.name']);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $units,
+        ]);
+    }
+
     public function show(string $id)
     {
         $user = User::with(['roles', 'organizationalUnits'])->find($id);

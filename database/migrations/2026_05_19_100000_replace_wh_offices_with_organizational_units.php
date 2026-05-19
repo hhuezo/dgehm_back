@@ -9,23 +9,37 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('user_fa_organizational_unit', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('fa_organizational_unit_id')
-                ->constrained('fa_organizational_units')
-                ->cascadeOnDelete();
-            $table->unique(['user_id', 'fa_organizational_unit_id'], 'user_fa_ou_unique');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('user_fa_organizational_unit')) {
+            Schema::create('user_fa_organizational_unit', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+                $table->foreignId('fa_organizational_unit_id')
+                    ->constrained('fa_organizational_units')
+                    ->cascadeOnDelete();
+                $table->unique(['user_id', 'fa_organizational_unit_id'], 'user_fa_ou_unique');
+                $table->timestamps();
+            });
+        }
 
-        Schema::table('wh_supply_request', function (Blueprint $table) {
-            $table->unsignedBigInteger('fa_organizational_unit_id')->nullable()->after('office_id');
-        });
+        if (Schema::hasTable('wh_supply_request') && !Schema::hasColumn('wh_supply_request', 'fa_organizational_unit_id')) {
+            Schema::table('wh_supply_request', function (Blueprint $table) {
+                if (Schema::hasColumn('wh_supply_request', 'office_id')) {
+                    $table->unsignedBigInteger('fa_organizational_unit_id')->nullable()->after('office_id');
+                } else {
+                    $table->unsignedBigInteger('fa_organizational_unit_id')->nullable();
+                }
+            });
+        }
 
-        Schema::table('wh_supply_returns', function (Blueprint $table) {
-            $table->unsignedBigInteger('fa_organizational_unit_id')->nullable()->after('wh_office_id');
-        });
+        if (Schema::hasTable('wh_supply_returns') && !Schema::hasColumn('wh_supply_returns', 'fa_organizational_unit_id')) {
+            Schema::table('wh_supply_returns', function (Blueprint $table) {
+                if (Schema::hasColumn('wh_supply_returns', 'wh_office_id')) {
+                    $table->unsignedBigInteger('fa_organizational_unit_id')->nullable()->after('wh_office_id');
+                } else {
+                    $table->unsignedBigInteger('fa_organizational_unit_id')->nullable();
+                }
+            });
+        }
 
         $defaultTypeId = DB::table('fa_organizational_unit_types')->value('id');
         $officeToOu = [];
@@ -53,52 +67,78 @@ return new class extends Migration
             }
 
             foreach ($officeToOu as $officeId => $ouId) {
-                DB::table('wh_supply_request')
-                    ->where('office_id', $officeId)
-                    ->update(['fa_organizational_unit_id' => $ouId]);
+                if (Schema::hasColumn('wh_supply_request', 'office_id')) {
+                    DB::table('wh_supply_request')
+                        ->where('office_id', $officeId)
+                        ->update(['fa_organizational_unit_id' => $ouId]);
+                }
 
-                DB::table('wh_supply_returns')
-                    ->where('wh_office_id', $officeId)
-                    ->update(['fa_organizational_unit_id' => $ouId]);
+                if (Schema::hasColumn('wh_supply_returns', 'wh_office_id')) {
+                    DB::table('wh_supply_returns')
+                        ->where('wh_office_id', $officeId)
+                        ->update(['fa_organizational_unit_id' => $ouId]);
+                }
 
-                $userIds = DB::table('user_wh_office')
-                    ->where('wh_office_id', $officeId)
-                    ->pluck('user_id');
+                if (Schema::hasTable('user_wh_office')) {
+                    $userIds = DB::table('user_wh_office')
+                        ->where('wh_office_id', $officeId)
+                        ->pluck('user_id');
 
-                foreach ($userIds as $userId) {
-                    DB::table('user_fa_organizational_unit')->insertOrIgnore([
-                        'user_id' => $userId,
-                        'fa_organizational_unit_id' => $ouId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
+                    foreach ($userIds as $userId) {
+                        DB::table('user_fa_organizational_unit')->insertOrIgnore([
+                            'user_id' => $userId,
+                            'fa_organizational_unit_id' => $ouId,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
                 }
             }
         }
 
-        Schema::table('wh_supply_request', function (Blueprint $table) {
-            $table->dropForeign(['office_id']);
-            $table->dropColumn('office_id');
-        });
+        if (Schema::hasTable('wh_supply_request') && Schema::hasColumn('wh_supply_request', 'office_id')) {
+            Schema::table('wh_supply_request', function (Blueprint $table) {
+                $table->dropForeign(['office_id']);
+                $table->dropColumn('office_id');
+            });
+        }
 
-        Schema::table('wh_supply_request', function (Blueprint $table) {
-            $table->foreign('fa_organizational_unit_id')
-                ->references('id')
-                ->on('fa_organizational_units')
-                ->restrictOnDelete();
-        });
+        if (
+            Schema::hasTable('wh_supply_request')
+            && Schema::hasColumn('wh_supply_request', 'fa_organizational_unit_id')
+        ) {
+            $fkName = $this->foreignKeyName('wh_supply_request', 'fa_organizational_unit_id');
+            if (!$this->foreignKeyExists('wh_supply_request', $fkName)) {
+                Schema::table('wh_supply_request', function (Blueprint $table) {
+                    $table->foreign('fa_organizational_unit_id')
+                        ->references('id')
+                        ->on('fa_organizational_units')
+                        ->restrictOnDelete();
+                });
+            }
+        }
 
-        Schema::table('wh_supply_returns', function (Blueprint $table) {
-            $table->dropForeign(['wh_office_id']);
-            $table->dropColumn('wh_office_id');
-        });
+        if (Schema::hasTable('wh_supply_returns') && Schema::hasColumn('wh_supply_returns', 'wh_office_id')) {
+            Schema::table('wh_supply_returns', function (Blueprint $table) {
+                $table->dropForeign(['wh_office_id']);
+                $table->dropColumn('wh_office_id');
+            });
+        }
 
-        Schema::table('wh_supply_returns', function (Blueprint $table) {
-            $table->foreign('fa_organizational_unit_id')
-                ->references('id')
-                ->on('fa_organizational_units')
-                ->restrictOnDelete();
-        });
+        if (
+            Schema::hasTable('wh_supply_returns')
+            && Schema::hasColumn('wh_supply_returns', 'fa_organizational_unit_id')
+        ) {
+            $fkName = $this->foreignKeyName('wh_supply_returns', 'fa_organizational_unit_id');
+            if (!$this->foreignKeyExists('wh_supply_returns', $fkName)) {
+                Schema::table('wh_supply_returns', function (Blueprint $table) {
+                    $table->foreign('fa_organizational_unit_id')
+                        ->references('id')
+                        ->on('fa_organizational_units')
+                        ->restrictOnDelete();
+                });
+            }
+        }
 
         Schema::dropIfExists('user_wh_office');
         Schema::dropIfExists('wh_offices');
@@ -135,5 +175,22 @@ return new class extends Migration
         });
 
         Schema::dropIfExists('user_fa_organizational_unit');
+    }
+
+    private function foreignKeyName(string $table, string $column): string
+    {
+        return "{$table}_{$column}_foreign";
+    }
+
+    private function foreignKeyExists(string $table, string $constraintName): bool
+    {
+        $database = Schema::getConnection()->getDatabaseName();
+
+        return DB::table('information_schema.TABLE_CONSTRAINTS')
+            ->where('CONSTRAINT_SCHEMA', $database)
+            ->where('TABLE_NAME', $table)
+            ->where('CONSTRAINT_NAME', $constraintName)
+            ->where('CONSTRAINT_TYPE', 'FOREIGN KEY')
+            ->exists();
     }
 };
