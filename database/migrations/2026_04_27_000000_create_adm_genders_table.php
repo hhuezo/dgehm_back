@@ -6,24 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('fa_subcategories', function (Blueprint $table) {
+        Schema::create('adm_genders', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 150);
-            $table->string('code', 20)->unique();
+            $table->string('name')->unique();
+            $table->boolean('active')->default(true);
             $table->timestamps();
+            $table->timestamp('deleted_at')->nullable();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('fa_subcategories');
+        Schema::dropIfExists('adm_genders');
     }
 };

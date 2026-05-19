@@ -19,7 +19,7 @@ class Measure extends Model
     public $incrementing = true;
 
     protected $fillable = [
-        'description',
+        'name',
         'is_active',
     ];
 

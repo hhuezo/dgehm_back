@@ -14,6 +14,7 @@ class VehicleColorController extends Controller
     public function index()
     {
         $vehicleColors = VehicleColor::select('id', 'name')
+            ->where('is_active', true)
             ->get();
 
         return response()->json([
@@ -49,6 +50,7 @@ class VehicleColorController extends Controller
 
         $vehicleColor = new VehicleColor();
         $vehicleColor->name = $request->name;
+        $vehicleColor->is_active = true;
         $vehicleColor->save();
 
         return response()->json([
@@ -109,11 +111,12 @@ class VehicleColorController extends Controller
     public function destroy(string $id)
     {
         $vehicleColor = VehicleColor::findOrFail($id);
-        $vehicleColor->delete();
+        $vehicleColor->is_active = false;
+        $vehicleColor->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Registro eliminado correctamente',
+            'message' => 'Registro deshabilitado correctamente',
         ], 200);
         //
     }

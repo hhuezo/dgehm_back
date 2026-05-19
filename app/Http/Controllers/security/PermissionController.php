@@ -7,13 +7,12 @@ use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Spatie\Permission\Models\Permission as ModelsPermission;
 
 class PermissionController extends Controller
 {
     public function index()
     {
-        $permissions = Permission::get();
+        $permissions = Permission::with('permissionType')->get();
 
         return response()->json([
             'success' => true,
@@ -36,11 +35,13 @@ class PermissionController extends Controller
                         return $query->where('guard_name', $guardName);
                     })
                 ],
-                'guard_name' => 'nullable|string|max:255',
+                'guard_name'         => 'nullable|string|max:255',
+                'permission_type_id' => 'nullable|exists:permission_types,id',
             ],
             [
                 'name.required' => 'El nombre del permiso es obligatorio.',
                 'name.unique'   => 'Este permiso ya existe para este guard.',
+                'permission_type_id.exists' => 'El tipo de permiso no existe.',
             ]
         );
 
@@ -51,10 +52,13 @@ class PermissionController extends Controller
             ], 422);
         }
 
-        $permission = ModelsPermission::create([
-            'name' => $request->name,
-            'guard_name' => $guardName,
+        $permission = Permission::create([
+            'name'                => $request->name,
+            'guard_name'          => $guardName,
+            'permission_type_id'  => $request->permission_type_id,
         ]);
+
+        $permission->load('permissionType');
 
         return response()->json([
             'success' => true,
@@ -65,7 +69,7 @@ class PermissionController extends Controller
 
     public function update(Request $request, string $id)
     {
-        $permission = ModelsPermission::find($id);
+        $permission = Permission::find($id);
 
         if (!$permission) {
             return response()->json([
@@ -87,11 +91,13 @@ class PermissionController extends Controller
                         return $query->where('guard_name', $guardName);
                     })->ignore($permission->id)
                 ],
-                'guard_name' => 'nullable|string|max:255',
+                'guard_name'         => 'nullable|string|max:255',
+                'permission_type_id' => 'nullable|exists:permission_types,id',
             ],
             [
                 'name.required' => 'El nombre del permiso es obligatorio.',
                 'name.unique'   => 'Este permiso ya existe para este guard.',
+                'permission_type_id.exists' => 'El tipo de permiso no existe.',
             ]
         );
 
@@ -103,9 +109,12 @@ class PermissionController extends Controller
         }
 
         $permission->update([
-            'name' => $request->name,
-            'guard_name' => $guardName,
+            'name'                => $request->name,
+            'guard_name'          => $guardName,
+            'permission_type_id'  => $request->permission_type_id,
         ]);
+
+        $permission->load('permissionType');
 
         return response()->json([
             'success' => true,
@@ -127,7 +136,6 @@ class PermissionController extends Controller
         }
 
         $permission->delete();
-
 
         return response()->json([
             'success' => true,

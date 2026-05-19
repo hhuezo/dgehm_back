@@ -14,6 +14,7 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = Category::select('id', 'name', 'code')
+            ->where('is_active', true)
             ->get();
 
         return response()->json([
@@ -55,6 +56,7 @@ class CategoryController extends Controller
         $category = new Category();
         $category->code = $request->code;
         $category->name = $request->name;
+        $category->is_active = true;
         $category->save();
 
         return response()->json([
@@ -121,11 +123,12 @@ class CategoryController extends Controller
     public function destroy(string $id)
     {
         $category = Category::findOrFail($id);
-        $category->delete();
+        $category->is_active = false;
+        $category->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Categoria eliminada correctamente',
+            'message' => 'Categoria deshabilitada correctamente',
         ], 200);
         //
     }

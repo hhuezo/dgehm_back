@@ -39,51 +39,49 @@ class RolesPermissionsSeeder extends Seeder
         // ============================================
         $almacenAdminRole = Role::firstOrCreate(['name' => 'almacen-admin', 'guard_name' => 'web']);
 
+        // Nombres alineados con PermissionsSeeder (p. ej. suppliers view), no wh.suppliers.view
         $almacenAdminPermissions = [
-            // Permisos de Warehouse - Purchase Orders
-            'wh.purchase_order.view',
-            'wh.purchase_order.create',
-            'wh.purchase_order.show',
-            'wh.purchase_order.update',
-            'wh.purchase_order.report-acta',
-            'wh.purchase_order_detail.show',
-            'wh.purchase_order_detail.create',
-            'wh.purchase_order_detail.update',
-            'wh.purchase_order_detail.delete',
+            'purchase_order view',
+            'purchase_order create',
+            'purchase_order show',
+            'purchase_order update',
+            'purchase_order report-acta',
+            'purchase_order_detail show',
+            'purchase_order_detail create',
+            'purchase_order_detail update',
+            'purchase_order_detail delete',
 
-            // Permisos de Warehouse - Supply Requests
-            'wh.supply_request.view',
-            'wh.supply_request.create',
-            'wh.supply_request.show',
-            'wh.supply_request.approve',
-            'wh.supply_request.finalize',
-            'wh.supply_request_detail.show',
-            'wh.supply_request_detail.create',
-            'wh.supply_request_detail.update',
-            'wh.supply_request_detail.delete',
+            'supply_request view',
+            'supply_request create',
+            'supply_request show',
+            'supply_request approve',
+            'supply_request finalize',
+            'supply_request_detail show',
+            'supply_request_detail create',
+            'supply_request_detail update',
+            'supply_request_detail delete',
 
-            // Permisos de Warehouse - Catálogos
-            'wh.accounting_account.view',
-            'wh.accounting_account.create',
-            'wh.accounting_account.update',
-            'wh.accounting_account.delete',
-            'wh.measures.view',
-            'wh.measures.create',
-            'wh.measures.update',
-            'wh.measures.delete',
-            'wh.products.view',
-            'wh.products.create',
-            'wh.products.update',
-            'wh.products.delete',
-            'wh.products.kardex',
-            'wh.offices.view',
-            'wh.offices.create',
-            'wh.offices.update',
-            'wh.offices.delete',
-            'wh.suppliers.view',
-            'wh.suppliers.create',
-            'wh.suppliers.update',
-            'wh.suppliers.delete',
+            'accounting_account view',
+            'accounting_account create',
+            'accounting_account update',
+            'accounting_account delete',
+            'measures view',
+            'measures create',
+            'measures update',
+            'measures delete',
+            'products view',
+            'products create',
+            'products update',
+            'products delete',
+            'products kardex',
+            'offices view',
+            'offices create',
+            'offices update',
+            'offices delete',
+            'suppliers view',
+            'suppliers create',
+            'suppliers update',
+            'suppliers delete',
         ];
 
         $almacenAdminRole->syncPermissions($almacenAdminPermissions);
@@ -95,14 +93,13 @@ class RolesPermissionsSeeder extends Seeder
         $almacenSolicitanteRole = Role::firstOrCreate(['name' => 'almacen-solicitante', 'guard_name' => 'web']);
 
         $almacenSolicitantePermissions = [
-            // Solo puede ver y crear solicitudes de suministros
-            'wh.supply_request.view',
-            'wh.supply_request.create',
-            'wh.supply_request.show',
-            'wh.supply_request_detail.show',
-            'wh.supply_request_detail.create',
-            'wh.supply_request_detail.update',
-            'wh.supply_request_detail.delete',
+            'supply_request view',
+            'supply_request create',
+            'supply_request show',
+            'supply_request_detail show',
+            'supply_request_detail create',
+            'supply_request_detail update',
+            'supply_request_detail delete',
         ];
 
         $almacenSolicitanteRole->syncPermissions($almacenSolicitantePermissions);
@@ -114,15 +111,14 @@ class RolesPermissionsSeeder extends Seeder
         $almacenJefeAreaRole = Role::firstOrCreate(['name' => 'almacen-jefe-area', 'guard_name' => 'web']);
 
         $almacenJefeAreaPermissions = [
-            // Puede ver y crear solicitudes, y aprobarlas
-            'wh.supply_request.view',
-            'wh.supply_request.create',
-            'wh.supply_request.show',
-            'wh.supply_request.approve', // Puede aprobar
-            'wh.supply_request_detail.show',
-            'wh.supply_request_detail.create',
-            'wh.supply_request_detail.update',
-            'wh.supply_request_detail.delete',
+            'supply_request view',
+            'supply_request create',
+            'supply_request show',
+            'supply_request approve',
+            'supply_request_detail show',
+            'supply_request_detail create',
+            'supply_request_detail update',
+            'supply_request_detail delete',
         ];
 
         $almacenJefeAreaRole->syncPermissions($almacenJefeAreaPermissions);

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('fa_vehicle_colors', function (Blueprint $table) {
             $table->id();
             $table->string('name', 150);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

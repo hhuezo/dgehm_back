@@ -6,23 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('fa_vehicle_classes', function (Blueprint $table) {
+        Schema::create('permission_types', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 150);
+            $table->string('name');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('fa_vehicle_classes');
+        Schema::dropIfExists('permission_types');
     }
 };

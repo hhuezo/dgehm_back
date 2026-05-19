@@ -14,6 +14,7 @@ class VehicleBrandController extends Controller
     public function index()
     {
         $brands = VehicleBrand::select('id', 'name')
+            ->where('is_active', true)
             ->get();
 
         return response()->json([
@@ -49,6 +50,7 @@ class VehicleBrandController extends Controller
 
         $brand = new VehicleBrand();
         $brand->name = $request->name;
+        $brand->is_active = true;
         $brand->save();
 
         return response()->json([
@@ -109,11 +111,12 @@ class VehicleBrandController extends Controller
     public function destroy(string $id)
     {
         $brand = VehicleBrand::findOrFail($id);
-        $brand->delete();
+        $brand->is_active = false;
+        $brand->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Registro eliminado correctamente',
+            'message' => 'Registro deshabilitado correctamente',
         ], 200);
         //
     }

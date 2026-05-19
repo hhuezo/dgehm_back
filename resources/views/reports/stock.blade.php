@@ -104,9 +104,7 @@
 
             @foreach ($groupedByAccount as $accountStock)
                 @php
-                    $rowspan = $accountStock->count();
                     $accountTotal = 0;
-                    $firstRow = true;
                 @endphp
 
                 @foreach ($accountStock as $item)
@@ -115,19 +113,10 @@
                         $accountTotal += $rowValue;
                     @endphp
 
+                    {{-- Sin rowspan: cada fila lleva código y cuenta para que el PDF no se desconfigure al pasar de página --}}
                     <tr>
-                        {{-- COLUMNAS CON ROWSPAN --}}
-                        @if ($firstRow)
-                            <td rowspan="{{ $rowspan }}" class="text-center">
-                                {{ $item->account_code }}
-                            </td>
-                            <td rowspan="{{ $rowspan }}">
-                                {{ $item->account_name }}
-                            </td>
-                            @php $firstRow = false; @endphp
-                        @endif
-
-                        {{-- PRODUCTO --}}
+                        <td class="text-center">{{ $item->account_code }}</td>
+                        <td>{{ $item->account_name }}</td>
                         <td>{{ $item->product_name }}</td>
                         <td class="text-right">{{ number_format($item->stock_quantity, 0) }}</td>
                         <td class="text-center">{{ $item->measure_name }}</td>

@@ -3,32 +3,24 @@
 namespace App\Http\Controllers\fixedasset;
 
 use App\Http\Controllers\Controller;
-use App\Models\fixedasset\SubCategory;
+use App\Models\fixedasset\Specific;
 use Illuminate\Http\Request;
 
-class SubcategoryController extends Controller
+class SpecificController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $subcategories = SubCategory::select('id', 'name')
+        $specifics = Specific::select('id', 'name', 'code')
+            ->where('is_active', true)
             ->get();
 
         return response()->json([
             'success' => true,
-            'data' => $subcategories,
+            'data' => $specifics,
         ], 200);
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -37,48 +29,30 @@ class SubcategoryController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'name' => 'required|unique:fa_subcategories,name',
-            'code' => 'required|integer|unique:fa_subcategories,code',
+            'name' => 'required|unique:fa_specifics,name',
+            'code' => 'required|unique:fa_specifics,code',
         ];
 
         $messages = [
-            'name.required' => 'El nombre  es obligatorio.',
+            'name.required' => 'El nombre es obligatorio.',
             'name.unique'   => 'Ya existe un registro con este nombre.',
-
             'code.required' => 'El código es obligatorio.',
-            'code.integer'  => 'El código debe ser un número entero.',
             'code.unique'   => 'Ya existe un registro con este código.',
         ];
 
         $data = $request->validate($rules, $messages);
 
-        $subcategory = new SubCategory();
-        $subcategory->code = $request->code;
-        $subcategory->name = $request->name;
-        $subcategory->save();
+        $specific = new Specific();
+        $specific->name = $data['name'];
+        $specific->code = $data['code'];
+        $specific->is_active = true;
+        $specific->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Registro creado correctamente.',
-            'data' => $subcategory,
+            'data' => $specific,
         ], 201);
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
     }
 
     /**
@@ -87,32 +61,29 @@ class SubcategoryController extends Controller
     public function update(Request $request, string $id)
     {
         $rules = [
-            'name' => 'required|unique:fa_subcategories,name,' . $id,
-            'code' => 'required|integer|unique:fa_subcategories,code,' . $id,
+            'name' => 'required|unique:fa_specifics,name,' . $id . ',id',
+            'code' => 'required|unique:fa_specifics,code,' . $id . ',id',
         ];
 
         $messages = [
-            'name.required' => 'El nombre  es obligatorio.',
+            'name.required' => 'El nombre es obligatorio.',
             'name.unique'   => 'Ya existe un registro con este nombre.',
-
             'code.required' => 'El código es obligatorio.',
-            'code.integer'  => 'El código debe ser un número entero.',
             'code.unique'   => 'Ya existe un registro con este código.',
         ];
 
         $data = $request->validate($rules, $messages);
-        $subcategory = SubCategory::findOrFail($id);
 
-        $subcategory->name = $request->name;
-        $subcategory->code = $request->code;
-        $subcategory->save();
+        $specific = Specific::findOrFail($id);
+        $specific->name = $data['name'];
+        $specific->code = $data['code'];
+        $specific->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Registro actualizado correctamente.',
-            'data'    => $subcategory,
+            'data' => $specific,
         ], 200);
-        //
     }
 
     /**
@@ -120,13 +91,13 @@ class SubcategoryController extends Controller
      */
     public function destroy(string $id)
     {
-        $subcategory = SubCategory::findOrFail($id);
-        $subcategory->delete();
+        $specific = Specific::findOrFail($id);
+        $specific->is_active = false;
+        $specific->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Registro eliminado correctamente',
+            'message' => 'Registro deshabilitado correctamente',
         ], 200);
-        //
     }
 }

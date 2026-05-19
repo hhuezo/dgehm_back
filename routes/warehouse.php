@@ -23,6 +23,7 @@ use App\Http\Controllers\warehouse\SupplyReturnDetailController;
 // Purchase Orders
 Route::get('purchase_order', [PurchaseOrderController::class, 'index']);
 Route::post('purchase_order', [PurchaseOrderController::class, 'store']);
+Route::post('purchase_order/import', [PurchaseOrderController::class, 'import']);
 Route::get('purchase_order/{id}', [PurchaseOrderController::class, 'show']);
 Route::put('purchase_order/{id}', [PurchaseOrderController::class, 'update']);
 Route::get('purchase_order/acta/{id}', [PurchaseOrderController::class, 'reportActa']);
@@ -80,10 +81,12 @@ Route::put('measures/{id}', [MeasuresController::class, 'update']);
 Route::delete('measures/{id}', [MeasuresController::class, 'destroy']);
 
 Route::get('products', [ProductsController::class, 'index']);
+// // Misma lógica que GET products (por si /api/products está cacheado o apunta a otro despliegue).
+// Route::get('products-with-relations', [ProductsController::class, 'index']);
 
-Route::post('products', [ProductsController::class, 'store']);
-Route::put('products/{id}', [ProductsController::class, 'update']);
-Route::delete('products/{id}', [ProductsController::class, 'destroy']);
+// Route::post('products', [ProductsController::class, 'store']);
+// Route::put('products/{id}', [ProductsController::class, 'update']);
+// Route::delete('products/{id}', [ProductsController::class, 'destroy']);
 Route::get('products/{id}/kardex', [ProductsController::class, 'kardex']);
 Route::get('products/{id}/existencia', [ProductsController::class, 'existencia']);
 

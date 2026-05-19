@@ -14,6 +14,7 @@ class OriginController extends Controller
     public function index()
     {
         $origins = Origin::select('id', 'name')
+            ->where('is_active', true)
             ->get();
 
         return response()->json([
@@ -49,6 +50,7 @@ class OriginController extends Controller
 
         $origin = new Origin();
         $origin->name = $request->name;
+        $origin->is_active = true;
         $origin->save();
 
         return response()->json([
@@ -109,11 +111,12 @@ class OriginController extends Controller
     public function destroy(string $id)
     {
         $origin = Origin::findOrFail($id);
-        $origin->delete();
+        $origin->is_active = false;
+        $origin->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Registro eliminado correctamente',
+            'message' => 'Registro deshabilitado correctamente',
         ], 200);
         //
     }

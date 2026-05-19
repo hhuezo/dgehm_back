@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('accounting_account_id')->constrained('wh_accounting_accounts');
             $table->foreignId('measure_id')->constrained('wh_measures');
             $table->string('name', 150);
-            $table->string('description', 255);
+            $table->string('description', 255)->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

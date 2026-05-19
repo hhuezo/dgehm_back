@@ -19,6 +19,67 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // -----------------------------------------------------
+        // Permisos y roles (invocar primero)
+        // -----------------------------------------------------
+        $this->call(PermissionsSeeder::class);
+        $this->call(RolesPermissionsSeeder::class);
+
+        // -----------------------------------------------------
+        // Catálogo administrativo: géneros y estado civil (adm_*)
+        // -----------------------------------------------------
+        $this->call(AdmGendersMaritalStatusesSeeder::class);
+
+        // -----------------------------------------------------
+        // Unidades organizativas
+        // -----------------------------------------------------
+        $this->call(OrganizationalUnitsSeeder::class);
+
+        // -----------------------------------------------------
+        // Instituciones (fa_institutions)
+        // -----------------------------------------------------
+        $this->call(InstitutionsSeeder::class);
+
+        // -----------------------------------------------------
+        // Específicos (fa_specifics)
+        // -----------------------------------------------------
+        $this->call(SpecificsSeeder::class);
+
+        // -----------------------------------------------------
+        // Clases (fa_classes)
+        // -----------------------------------------------------
+        $this->call(ClassesSeeder::class);
+
+        // -----------------------------------------------------
+        // Orígenes (fa_origins)
+        // -----------------------------------------------------
+        $this->call(OriginsSeeder::class);
+
+        // -----------------------------------------------------
+        // Condiciones físicas (fa_physical_conditions)
+        // -----------------------------------------------------
+        $this->call(PhysicalConditionsSeeder::class);
+
+        // -----------------------------------------------------
+        // Marcas de vehículos (fa_vehicle_brands)
+        // -----------------------------------------------------
+        $this->call(VehicleBrandsSeeder::class);
+
+        // -----------------------------------------------------
+        // Tipos de vehículos (fa_vehicle_types)
+        // -----------------------------------------------------
+        $this->call(VehicleTypesSeeder::class);
+
+        // -----------------------------------------------------
+        // Tipos de tracción de vehículos (fa_vehicle_drive_types)
+        // -----------------------------------------------------
+        $this->call(VehicleDriveTypesSeeder::class);
+
+        // -----------------------------------------------------
+        // Colores de vehículos (fa_vehicle_colors)
+        // -----------------------------------------------------
+        $this->call(VehicleColorsSeeder::class);
+
+        // -----------------------------------------------------
         // 1. CUENTAS CONTABLES (wh_accounting_accounts)
         // -----------------------------------------------------
         DB::table('wh_accounting_accounts')->delete();
@@ -136,17 +197,6 @@ class DatabaseSeeder extends Seeder
         // No se insertan datos, ya que es una tabla transaccional.
         // -----------------------------------------------------
 
-
-
-
-        // =====================
-        // PERMISOS
-        // =====================
-        $this->call([
-            PermissionsSeeder::class, // Crea todos los permisos
-            RolesPermissionsSeeder::class, // Asigna permisos a los roles
-        ]);
-
         // =====================
         // ROLES (ya creados por RolesPermissionsSeeder, pero los obtenemos)
         // =====================
@@ -233,5 +283,10 @@ class DatabaseSeeder extends Seeder
         );
 
         $jefeAreaUser->assignRole('almacen-jefe-area');
+
+        // -----------------------------------------------------
+        // Empleado administrador (adm_employees), ligado al user admin
+        // -----------------------------------------------------
+        $this->call(AdmEmployeesSeeder::class);
     }
 }

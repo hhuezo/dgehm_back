@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('fa_administrative_units', function (Blueprint $table) {
+        Schema::create('fa_classes', function (Blueprint $table) {
             $table->id();
             $table->string('name', 150);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
@@ -23,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('fa_administrative_units');
+        Schema::dropIfExists('fa_classes');
     }
 };

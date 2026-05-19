@@ -3,32 +3,24 @@
 namespace App\Http\Controllers\fixedasset;
 
 use App\Http\Controllers\Controller;
-use App\Models\fixedasset\AccountingCategory;
+use App\Models\fixedasset\OrganizationalUnitType;
 use Illuminate\Http\Request;
 
-class AccountingCategoryController extends Controller
+class OrganizationalUnitTypeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $accountings = AccountingCategory::select('id', 'name')
+        $types = OrganizationalUnitType::select('id', 'name', 'staff')
+            ->where('is_active', true)
             ->get();
 
         return response()->json([
             'success' => true,
-            'data' => $accountings,
+            'data' => $types,
         ], 200);
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -37,42 +29,29 @@ class AccountingCategoryController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'name' => 'required|unique:fa_accounting_categories,name',
+            'name' => 'required|unique:fa_organizational_unit_types,name',
+            'staff' => 'boolean',
         ];
 
         $messages = [
             'name.required' => 'El nombre es obligatorio.',
-            'name.unique'   => 'Ya existe una categoría con este nombre.',
+            'name.unique'   => 'Ya existe un tipo de unidad organizativa con este nombre.',
+            'staff.boolean' => 'El campo staff debe ser verdadero o falso.',
         ];
 
         $data = $request->validate($rules, $messages);
 
-        $accounting = new AccountingCategory();
-        $accounting->name = $request->name;
-        $accounting->save();
+        $type = new OrganizationalUnitType();
+        $type->name = $data['name'];
+        $type->staff = $request->boolean('staff', false);
+        $type->is_active = true;
+        $type->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Registro creado correctamente.',
-            'data' => $accounting,
+            'data' => $type,
         ], 201);
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
     }
 
     /**
@@ -81,28 +60,28 @@ class AccountingCategoryController extends Controller
     public function update(Request $request, string $id)
     {
         $rules = [
-            'name' => 'required|unique:fa_accounting_categories,name,' . $id . ',id',
+            'name' => 'required|unique:fa_organizational_unit_types,name,' . $id . ',id',
+            'staff' => 'boolean',
         ];
 
         $messages = [
             'name.required' => 'El nombre es obligatorio.',
-            'name.unique'   => 'Ya existe una categoría contable con este nombre.',
+            'name.unique'   => 'Ya existe un tipo de unidad organizativa con este nombre.',
+            'staff.boolean' => 'El campo staff debe ser verdadero o falso.',
         ];
 
         $data = $request->validate($rules, $messages);
 
-        $accounting = AccountingCategory::findOrFail($id);
-        $accounting->name = $data['name'];
-        $accounting->save();
+        $type = OrganizationalUnitType::findOrFail($id);
+        $type->name = $data['name'];
+        $type->staff = $request->boolean('staff', false);
+        $type->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Registro actualizado correctamente.',
-            'data' => $accounting,
+            'data' => $type,
         ], 200);
-
-
-        //
     }
 
     /**
@@ -110,13 +89,13 @@ class AccountingCategoryController extends Controller
      */
     public function destroy(string $id)
     {
-        $accounting = AccountingCategory::findOrFail($id);
-        $accounting->delete();
+        $type = OrganizationalUnitType::findOrFail($id);
+        $type->is_active = false;
+        $type->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Registro eliminado correctamente',
+            'message' => 'Registro deshabilitado correctamente',
         ], 200);
-        //
     }
 }

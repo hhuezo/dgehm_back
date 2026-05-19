@@ -14,6 +14,7 @@ class PhysicalConditionController extends Controller
     public function index()
     {
         $conditions = PhysicalCondition::select('id', 'name')
+            ->where('is_active', true)
             ->get();
 
         return response()->json([
@@ -49,6 +50,7 @@ class PhysicalConditionController extends Controller
 
         $condition = new PhysicalCondition();
         $condition->name = $request->name;
+        $condition->is_active = true;
         $condition->save();
 
         return response()->json([
@@ -109,11 +111,12 @@ class PhysicalConditionController extends Controller
     public function destroy(string $id)
     {
         $condition = PhysicalCondition::findOrFail($id);
-        $condition->delete();
+        $condition->is_active = false;
+        $condition->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Registro eliminado correctamente',
+            'message' => 'Registro deshabilitado correctamente',
         ], 200);
         //
     }
