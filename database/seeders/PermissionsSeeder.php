@@ -61,6 +61,7 @@ class PermissionsSeeder extends Seeder
                 'supply_request show',
                 'supply_request approve',
                 'supply_request finalize',
+                'supply_request report',
                 'supply_request_detail show',
                 'supply_request_detail create',
                 'supply_request_detail update',

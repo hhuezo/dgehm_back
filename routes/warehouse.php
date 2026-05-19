@@ -81,6 +81,7 @@ Route::put('measures/{id}', [MeasuresController::class, 'update']);
 Route::delete('measures/{id}', [MeasuresController::class, 'destroy']);
 
 Route::get('products', [ProductsController::class, 'index']);
+Route::get('products/supply-request-catalog', [ProductsController::class, 'indexForSupplyRequest']);
 // // Misma lógica que GET products (por si /api/products está cacheado o apunta a otro despliegue).
 // Route::get('products-with-relations', [ProductsController::class, 'index']);
 

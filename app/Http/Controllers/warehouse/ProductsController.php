@@ -30,6 +30,39 @@ class ProductsController extends Controller
             ->header('X-Products-Index', 'wh-with-v1');
     }
 
+    /**
+     * Catálogo de productos con existencia total (solicitud de insumos).
+     */
+    public function indexForSupplyRequest()
+    {
+        $remainingQuantitySql = 'SUM(CASE WHEN k.movement_type = 1 THEN k.quantity WHEN k.movement_type = 2 THEN -k.quantity ELSE 0 END)';
+
+        $stockByProduct = DB::table('wh_kardex as k')
+            ->select('k.product_id', DB::raw("{$remainingQuantitySql} as available_quantity"))
+            ->groupBy('k.product_id');
+
+        $data = Product::query()
+            ->select(
+                'wh_products.id',
+                'wh_products.name',
+                'wh_products.description',
+                'wh_products.measure_id'
+            )
+            ->with(['measure:id,name'])
+            ->leftJoinSub($stockByProduct, 'stock', function ($join) {
+                $join->on('wh_products.id', '=', 'stock.product_id');
+            })
+            ->addSelect(DB::raw('COALESCE(stock.available_quantity, 0) as available_quantity'))
+            ->where('wh_products.is_active', 1)
+            ->orderBy('wh_products.name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $data,
+        ]);
+    }
+
     public function store(Request $request)
     {
 

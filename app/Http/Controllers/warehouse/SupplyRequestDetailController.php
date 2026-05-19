@@ -4,16 +4,30 @@ namespace App\Http\Controllers\warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\warehouse\SupplyRequestDetail;
+use App\Services\KardexStockService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
 
 class SupplyRequestDetailController extends Controller
 {
+    public function __construct(
+        private KardexStockService $kardexStockService
+    ) {}
 
     public function show(string $id)
     {
         $details = SupplyRequestDetail::with('product.measure')->where('supply_request_id', $id)->get();
+
+        if ($details->isNotEmpty()) {
+            $stockMap = $this->kardexStockService->getAvailableQuantitiesForProducts(
+                $details->pluck('product_id')->all()
+            );
+            $details->each(function ($detail) use ($stockMap) {
+                $detail->available_quantity = $stockMap[(int) $detail->product_id] ?? 0;
+            });
+        }
 
         return response()->json([
             'success' => true,
@@ -115,6 +129,19 @@ class SupplyRequestDetailController extends Controller
             }
 
             $validated = $request->validate($rules, $messages);
+
+            if ($requestStatusId === 3) {
+                $available = $this->kardexStockService->getAvailableQuantity((int) $item->product_id);
+                $delivered = (float) $validated['delivered_quantity'];
+
+                if ($delivered > $available) {
+                    throw ValidationException::withMessages([
+                        'delivered_quantity' => [
+                            'La cantidad entregada no puede superar la existencia disponible (' . $available . ').',
+                        ],
+                    ]);
+                }
+            }
 
             // --- LÓGICA DE ACTUALIZACIÓN ---
 

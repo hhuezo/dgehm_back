@@ -7,6 +7,7 @@ use App\Models\warehouse\Office;
 use App\Models\warehouse\Product;
 use App\Models\warehouse\SupplyRequest;
 use App\Models\warehouse\SupplyRequestDetail;
+use App\Services\KardexStockService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -18,6 +19,10 @@ use Ramsey\Uuid\Type\Integer;
 
 class SupplyRequestController extends Controller
 {
+    public function __construct(
+        private KardexStockService $kardexStockService
+    ) {}
+
     public function index()
     {
         $supplyRequests = SupplyRequest::with('status')->with('requester')
@@ -117,6 +122,15 @@ class SupplyRequestController extends Controller
             'details.product.measure',
         ])->find($id);
 
+        if ($supplyRequest && $supplyRequest->details->isNotEmpty()) {
+            $productIds = $supplyRequest->details->pluck('product_id')->all();
+            $stockMap = $this->kardexStockService->getAvailableQuantitiesForProducts($productIds);
+
+            $supplyRequest->details->each(function ($detail) use ($stockMap) {
+                $detail->available_quantity = $stockMap[(int) $detail->product_id] ?? 0;
+            });
+        }
+
         return response()->json([
             'success' => true,
             'data'    => $supplyRequest,
@@ -206,10 +220,10 @@ class SupplyRequestController extends Controller
         try {
             $supplyRequest = SupplyRequest::findOrFail($id);
 
-            if ($supplyRequest->status_id !== 2) {
+            if (! in_array($supplyRequest->status_id, [2, 3], true)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Solo se pueden rechazar solicitudes que están en estado Enviada.',
+                    'message' => 'Solo se pueden rechazar solicitudes en estado Enviada o Aprobada.',
                 ], 403); // HTTP_FORBIDDEN
             }
             $supplyRequest->rejected_by_id = $request->userId;
@@ -311,7 +325,7 @@ class SupplyRequestController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Solicitud de insumos aprobada correctamente.',
+                'message' => 'Entrega de insumos registrada correctamente. Solicitud completada.',
             ], 200);
         } catch (ValidationException $e) {
 
@@ -426,6 +440,13 @@ class SupplyRequestController extends Controller
             abort(404, 'Solicitud no encontrada');
         }
 
+        if ((int) $request->status_id !== 4) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El acta de entrega solo está disponible para solicitudes completadas.',
+            ], 403);
+        }
+
         // 2. PRODUCTOS DE LA SOLICITUD (TABLA CORRECTA)
         $products = DB::table('wh_supply_request_detail')
             ->join('wh_products', 'wh_supply_request_detail.product_id', '=', 'wh_products.id')
@@ -447,6 +468,6 @@ class SupplyRequestController extends Controller
         ])
             ->setPaper('A4', 'portrait');
 
-        return $pdf->download("Solicitud_Insumos_{$id}.pdf");
+        return $pdf->download("Acta_Entrega_Insumos_{$id}.pdf");
     }
 }

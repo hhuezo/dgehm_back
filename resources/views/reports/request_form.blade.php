@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ficha de Solicitud de Insumos</title>
+    <title>Acta de Entrega de Insumos</title>
 
     <style>
         body {
@@ -49,7 +49,7 @@
 
     {{-- TÍTULO --}}
     <h3 class="center">
-        FICHA DE SOLICITUD DE INSUMOS DE ALMACÉN
+        ACTA DE ENTREGA DE INSUMOS DE ALMACÉN
     </h3>
 
     {{-- DATOS GENERALES --}}
