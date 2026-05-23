@@ -15,14 +15,26 @@ use Illuminate\Validation\ValidationException;
 
 class SupplyReturnController extends Controller
 {
+    /** Convierte cadenas vacías en null para FK opcionales al registrar. */
+    private function normalizeOptionalReturnFields(Request $request): void
+    {
+        $request->merge([
+            'received_by_id'  => $request->filled('received_by_id') ? $request->input('received_by_id') : null,
+            'phone_extension' => $request->filled('phone_extension') ? $request->input('phone_extension') : null,
+        ]);
+    }
+
     public function index()
     {
         $supplyReturns = SupplyReturn::with([
             'returnedBy:id,name,lastname',
             'organizationalUnit:id,name',
             'immediateSupervisor:id,name,lastname',
-            'receivedBy:id,name,lastname'
-        ])->get();
+            'receivedBy:id,name,lastname',
+            'status:id,name',
+        ])
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -32,53 +44,44 @@ class SupplyReturnController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizeOptionalReturnFields($request);
+
         $rules = [
-            'return_date'            => 'required|date',
-            'returned_by_id'         => 'required|exists:users,id',
+            'return_date'               => 'required|date',
+            'returned_by_id'            => 'required|exists:users,id',
             'fa_organizational_unit_id' => 'required|exists:fa_organizational_units,id',
-            'immediate_supervisor_id' => 'required|exists:users,id',
-            'received_by_id'         => 'required|exists:users,id',
-            'phone_extension'        => 'nullable|string|max:10',
-            'general_observations'   => 'nullable|string|max:1000',
+            'immediate_supervisor_id'   => 'required|exists:users,id',
+            'general_observations'      => 'nullable|string|max:1000',
         ];
 
         $messages = [
-            'return_date.required'             => 'La fecha de devolución es obligatoria.',
-            'return_date.date'                 => 'La fecha de devolución debe tener un formato de fecha válido.',
-
-            'returned_by_id.required'          => 'El usuario que devuelve el suministro es obligatorio.',
+            'return_date.required'               => 'La fecha de devolución es obligatoria.',
+            'return_date.date'                   => 'La fecha de devolución debe tener un formato de fecha válido.',
+            'returned_by_id.required'            => 'El usuario que devuelve el suministro es obligatorio.',
             'fa_organizational_unit_id.required' => 'La unidad organizativa es obligatoria.',
-            'immediate_supervisor_id.required' => 'El supervisor inmediato es obligatorio.',
-            'received_by_id.required'          => 'El usuario que recibe la devolución es obligatorio.',
-
-            'returned_by_id.exists'            => 'El usuario que devuelve no existe en el sistema.',
-            'fa_organizational_unit_id.exists' => 'La unidad organizativa seleccionada no es válida.',
-            'immediate_supervisor_id.exists'   => 'El supervisor inmediato seleccionado no existe.',
-            'received_by_id.exists'            => 'El usuario receptor seleccionado no existe.',
-
-            'phone_extension.string'           => 'La extensión telefónica debe ser texto.',
-            'phone_extension.max'              => 'La extensión telefónica no debe exceder los 10 caracteres.',
-            'general_observations.string'      => 'Las observaciones generales deben ser texto.',
-            'general_observations.max'         => 'Las observaciones generales no deben exceder los 1000 caracteres.',
+            'immediate_supervisor_id.required'     => 'El supervisor inmediato es obligatorio.',
+            'returned_by_id.exists'              => 'El usuario que devuelve no existe en el sistema.',
+            'fa_organizational_unit_id.exists'   => 'La unidad organizativa seleccionada no es válida.',
+            'immediate_supervisor_id.exists'     => 'El supervisor inmediato seleccionado no existe.',
+            'general_observations.string'        => 'Las observaciones generales deben ser texto.',
+            'general_observations.max'           => 'Las observaciones generales no deben exceder los 1000 caracteres.',
         ];
 
-        $request->validate($rules, $messages);
+        $validated = $request->validate($rules, $messages);
 
         try {
             $supplyReturn = new SupplyReturn();
 
-            $supplyReturn->return_date = $request->input('return_date');
-            $supplyReturn->returned_by_id = $request->input('returned_by_id');
-            $supplyReturn->fa_organizational_unit_id = $request->input('fa_organizational_unit_id');
-            $supplyReturn->immediate_supervisor_id = $request->input('immediate_supervisor_id');
-            $supplyReturn->received_by_id = $request->input('received_by_id');
-
-            $supplyReturn->phone_extension = $request->input('phone_extension');
-            $supplyReturn->general_observations = $request->input('general_observations');
-            $supplyReturn->status_id = 1;
+            $supplyReturn->return_date = $validated['return_date'];
+            $supplyReturn->returned_by_id = $validated['returned_by_id'];
+            $supplyReturn->fa_organizational_unit_id = $validated['fa_organizational_unit_id'];
+            $supplyReturn->immediate_supervisor_id = $validated['immediate_supervisor_id'];
+            $supplyReturn->received_by_id = null;
+            $supplyReturn->phone_extension = null;
+            $supplyReturn->general_observations = $validated['general_observations'] ?? null;
+            $supplyReturn->status_id = 2;
 
             $supplyReturn->save();
-
 
             return response()->json([
                 'success' => true,
@@ -134,12 +137,14 @@ class SupplyReturnController extends Controller
             ], 404);
         }
 
+        $this->normalizeOptionalReturnFields($request);
+
         $rules = [
             'return_date'            => 'required|date',
             'returned_by_id'         => 'required|exists:users,id',
             'fa_organizational_unit_id' => 'required|exists:fa_organizational_units,id',
             'immediate_supervisor_id' => 'required|exists:users,id',
-            'received_by_id'         => 'required|exists:users,id',
+            'received_by_id'         => 'nullable|exists:users,id',
             'phone_extension'        => 'nullable|string|max:10',
             'general_observations'   => 'nullable|string|max:1000',
         ];
@@ -151,7 +156,6 @@ class SupplyReturnController extends Controller
             'returned_by_id.required'          => 'El usuario que devuelve el suministro es obligatorio.',
             'fa_organizational_unit_id.required' => 'La unidad organizativa es obligatoria.',
             'immediate_supervisor_id.required' => 'El supervisor inmediato es obligatorio.',
-            'received_by_id.required'          => 'El usuario que recibe la devolución es obligatorio.',
 
             'returned_by_id.exists'            => 'El usuario que devuelve no existe en el sistema.',
             'fa_organizational_unit_id.exists' => 'La unidad organizativa seleccionada no es válida.',
@@ -171,9 +175,13 @@ class SupplyReturnController extends Controller
             $supplyReturn->returned_by_id = $request->input('returned_by_id');
             $supplyReturn->fa_organizational_unit_id = $request->input('fa_organizational_unit_id');
             $supplyReturn->immediate_supervisor_id = $request->input('immediate_supervisor_id');
-            $supplyReturn->received_by_id = $request->input('received_by_id');
 
-            $supplyReturn->phone_extension = $request->input('phone_extension');
+            if ($request->has('received_by_id')) {
+                $supplyReturn->received_by_id = $request->input('received_by_id');
+            }
+            if ($request->has('phone_extension')) {
+                $supplyReturn->phone_extension = $request->input('phone_extension');
+            }
             $supplyReturn->general_observations = $request->input('general_observations');
 
             $supplyReturn->save();
@@ -305,10 +313,10 @@ class SupplyReturnController extends Controller
         try {
             $supplyReturn = SupplyReturn::findOrFail($id);
 
-            if ($supplyReturn->status_id !== 2) {
+            if (! in_array($supplyReturn->status_id, [2, 3], true)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Solo se pueden rechazar solicitudes que están en estado Enviada.',
+                    'message' => 'Solo se pueden rechazar devoluciones en estado Enviada o Aprobada.',
                 ], 403); // HTTP_FORBIDDEN
             }
 
@@ -318,7 +326,7 @@ class SupplyReturnController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Solicitud de insumos rechazada correctamente. Estado: Rechazado.',
+                'message' => 'Devolución de insumos rechazada correctamente. Estado: Rechazado.',
                 'data' => $supplyReturn,
             ], 200); // HTTP_OK
 
@@ -479,8 +487,23 @@ class SupplyReturnController extends Controller
                 DB::table('wh_kardex')->insert($kardexToInsert);
             }
 
+            $request->validate([
+                'received_date'   => 'required|date',
+                'userId'          => 'required|exists:users,id',
+                'phone_extension' => 'nullable|string|max:10',
+            ], [
+                'received_date.required' => 'La fecha de recepción es obligatoria.',
+                'received_date.date'     => 'La fecha de recepción debe ser válida.',
+                'userId.required'        => 'El técnico que recibe la devolución es obligatorio.',
+                'userId.exists'          => 'El técnico receptor no existe.',
+                'phone_extension.max'    => 'La extensión telefónica no debe exceder los 10 caracteres.',
+            ]);
+
             $supplyReturn->received_date = $request->received_date;
             $supplyReturn->received_by_id = $request->userId;
+            if ($request->filled('phone_extension')) {
+                $supplyReturn->phone_extension = $request->input('phone_extension');
+            }
             $supplyReturn->status_id = 4;
             $supplyReturn->save();
 
