@@ -183,49 +183,51 @@ class ProductsController extends Controller
     {
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
-
-        if (!$startDate || !$endDate) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Las fechas de inicio y fin son obligatorias para generar el Kardex.',
-            ], 400);
-        }
-
-        $tz = config('app.timezone', 'UTC');
-
-        try {
-            $start = Carbon::parse($startDate, $tz)->startOfDay();
-            $end = Carbon::parse($endDate, $tz)->endOfDay();
-        } catch (\Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Formato de fecha inválido. Use YYYY-MM-DD.',
-            ], 422);
-        }
-
-        if ($start->greaterThan($end)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'La fecha de inicio no puede ser posterior a la fecha fin.',
-            ], 422);
-        }
+        $filterByDate = $startDate && $endDate;
 
         try {
             // Fecha del movimiento: devolución → fecha solicitud → recepción OC → registro en kardex.
             // `date` entrecomillado: palabra reservada en MySQL.
             $movementAt = 'COALESCE(sret.return_date, sreq.`date`, po.reception_date, wh_kardex.created_at)';
 
-            $kardexMovements = Kardex::query()
+            $query = Kardex::query()
                 ->select('wh_kardex.*')
                 ->leftJoin('wh_purchase_order as po', 'wh_kardex.purchase_order_id', '=', 'po.id')
                 ->leftJoin('wh_supply_request as sreq', 'wh_kardex.supply_request_id', '=', 'sreq.id')
                 ->leftJoin('wh_supply_returns as sret', 'wh_kardex.supply_return_id', '=', 'sret.id')
                 ->with(['product', 'purchaseOrder', 'supplierRequest.organizationalUnit', 'supplierReturn.organizationalUnit'])
-                ->where('wh_kardex.product_id', (int) $id)
-                ->whereRaw("{$movementAt} >= ?", [$start->format('Y-m-d H:i:s')])
-                ->whereRaw("{$movementAt} <= ?", [$end->format('Y-m-d H:i:s')])
-                ->orderByDesc('wh_kardex.id')
-                ->get();
+                ->where('wh_kardex.product_id', (int) $id);
+
+            if ($filterByDate) {
+                $tz = config('app.timezone', 'UTC');
+
+                try {
+                    $start = Carbon::parse($startDate, $tz)->startOfDay();
+                    $end = Carbon::parse($endDate, $tz)->endOfDay();
+                } catch (\Throwable $e) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Formato de fecha inválido. Use YYYY-MM-DD.',
+                    ], 422);
+                }
+
+                if ($start->greaterThan($end)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'La fecha de inicio no puede ser posterior a la fecha fin.',
+                    ], 422);
+                }
+
+                $query
+                    ->whereRaw("{$movementAt} >= ?", [$start->format('Y-m-d H:i:s')])
+                    ->whereRaw("{$movementAt} <= ?", [$end->format('Y-m-d H:i:s')]);
+            } else {
+                $limit = (int) $request->query('limit', 100);
+                $limit = max(1, min($limit, 500));
+                $query->limit($limit);
+            }
+
+            $kardexMovements = $query->orderByDesc('wh_kardex.id')->get();
 
             return response()->json([
                 'success' => true,
