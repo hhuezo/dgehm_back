@@ -17,7 +17,7 @@ class ProductsController extends Controller
             ->select('id', 'name', 'description', 'measure_id', 'accounting_account_id', 'minimo', 'maximo')
             ->with([
                 'measure:id,name',
-                'accountingAccount:id,name',
+                'accountingAccount:id,code,name',
             ])
             ->orderBy('id')
             ->get();
