@@ -23,11 +23,15 @@ class Product extends Model
         'measure_id',
         'name',
         'description',
+        'minimo',
+        'maximo',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'minimo' => 'integer',
+        'maximo' => 'integer',
     ];
 
     public function accountingAccount()

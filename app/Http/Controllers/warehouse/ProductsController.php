@@ -14,7 +14,7 @@ class ProductsController extends Controller
     public function index()
     {
         $data = Product::query()
-            ->select('id', 'name', 'description', 'measure_id', 'accounting_account_id')
+            ->select('id', 'name', 'description', 'measure_id', 'accounting_account_id', 'minimo', 'maximo')
             ->with([
                 'measure:id,name',
                 'accountingAccount:id,name',
@@ -69,6 +69,8 @@ class ProductsController extends Controller
         $rules = [
             'name'                  => 'required|unique:wh_products,name',
             'accounting_account_id' => 'required|exists:wh_accounting_accounts,id',
+            'minimo'                => 'nullable|integer',
+            'maximo'                => 'nullable|integer',
         ];
 
         $messages = [
@@ -77,15 +79,33 @@ class ProductsController extends Controller
 
             'accounting_account_id.required' => 'Debe seleccionar una cuenta contable.',
             'accounting_account_id.exists'   => 'La cuenta contable seleccionada no existe.',
+
+            'minimo.integer' => 'El mínimo debe ser un número entero.',
+            'maximo.integer' => 'El máximo debe ser un número entero.',
         ];
 
         $data = $request->validate($rules, $messages);
+
+        if (
+            isset($data['minimo'], $data['maximo'])
+            && $data['minimo'] !== null
+            && $data['maximo'] !== null
+            && (int) $data['maximo'] < (int) $data['minimo']
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El máximo no puede ser menor que el mínimo.',
+                'errors'  => ['maximo' => ['El máximo no puede ser menor que el mínimo.']],
+            ], 422);
+        }
 
         $product = new Product();
         $product->name = $request->name;
         $product->accounting_account_id = $request->accounting_account_id;
         $product->measure_id = $request->measure_id;
         $product->description = $request->description;
+        $product->minimo = array_key_exists('minimo', $data) ? $data['minimo'] : null;
+        $product->maximo = array_key_exists('maximo', $data) ? $data['maximo'] : null;
         $product->is_active = 1;
         $product->save();
 
@@ -137,6 +157,8 @@ class ProductsController extends Controller
         $rules = [
             'name'                  => 'required|unique:wh_products,name,' . $id,
             'accounting_account_id' => 'required|exists:wh_accounting_accounts,id',
+            'minimo'                => 'nullable|integer',
+            'maximo'                => 'nullable|integer',
         ];
 
         $messages = [
@@ -145,16 +167,33 @@ class ProductsController extends Controller
 
             'accounting_account_id.required' => 'Debe seleccionar una cuenta contable.',
             'accounting_account_id.exists'   => 'La cuenta contable seleccionada no existe.',
+
+            'minimo.integer' => 'El mínimo debe ser un número entero.',
+            'maximo.integer' => 'El máximo debe ser un número entero.',
         ];
 
         $data = $request->validate($rules, $messages);
 
+        if (
+            isset($data['minimo'], $data['maximo'])
+            && $data['minimo'] !== null
+            && $data['maximo'] !== null
+            && (int) $data['maximo'] < (int) $data['minimo']
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El máximo no puede ser menor que el mínimo.',
+                'errors'  => ['maximo' => ['El máximo no puede ser menor que el mínimo.']],
+            ], 422);
+        }
 
         $product = Product::findOrFail($id);
         $product->name = $request->name;
         $product->accounting_account_id = $request->accounting_account_id;
         $product->measure_id = $request->measure_id;
         $product->description = $request->description;
+        $product->minimo = array_key_exists('minimo', $data) ? $data['minimo'] : null;
+        $product->maximo = array_key_exists('maximo', $data) ? $data['maximo'] : null;
         $product->save();
 
         return response()->json([
