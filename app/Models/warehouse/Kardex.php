@@ -17,7 +17,13 @@ class Kardex extends Model
         'quantity',
         'unit_price',
         'subtotal',
+        'lot_number',
+        'expiration_date',
         'supply_request_id',
+    ];
+
+    protected $casts = [
+        'expiration_date' => 'date',
     ];
 
 

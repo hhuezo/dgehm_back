@@ -18,7 +18,9 @@ class PurchaseOrderController extends Controller
 
     public function index()
     {
-        $purchase_orders = PurchaseOrder::with('supplier')->get();
+        $purchase_orders = PurchaseOrder::with('supplier')
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json([
             'success' => true,

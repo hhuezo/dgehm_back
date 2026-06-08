@@ -28,6 +28,8 @@ class PurchaseOrderDetailController extends Controller
             'product_id'        => 'required|exists:wh_products,id',
             'quantity'          => 'required|numeric|min:1',
             'unit_price'        => 'required|numeric|min:0.01',
+            'lot_number'        => 'nullable|string|max:100',
+            'expiration_date'   => 'nullable|date',
             'id'                => 'nullable|sometimes|exists:wh_purchase_order_items,id',
         ];
 
@@ -46,6 +48,8 @@ class PurchaseOrderDetailController extends Controller
             'product_id'        => 'producto',
             'quantity'          => 'cantidad',
             'unit_price'        => 'precio unitario',
+            'lot_number'        => 'número de lote',
+            'expiration_date'   => 'fecha de vencimiento',
         ];
 
         $validator = Validator::make($request->all(), $rules, $messages, $attributes);
@@ -122,8 +126,10 @@ class PurchaseOrderDetailController extends Controller
         }
 
         $rules = [
-            'quantity' => 'required|numeric|min:1',
-            'unit_price' => 'required|numeric|min:0.01',
+            'quantity'        => 'required|numeric|min:1',
+            'unit_price'      => 'required|numeric|min:0.01',
+            'lot_number'      => 'nullable|string|max:100',
+            'expiration_date' => 'nullable|date',
         ];
 
         $messages = [
@@ -134,8 +140,10 @@ class PurchaseOrderDetailController extends Controller
         ];
 
         $attributes = [
-            'quantity' => 'cantidad',
-            'unit_price' => 'precio unitario',
+            'quantity'        => 'cantidad',
+            'unit_price'      => 'precio unitario',
+            'lot_number'      => 'número de lote',
+            'expiration_date' => 'fecha de vencimiento',
         ];
 
         $validator = Validator::make($request->all(), $rules, $messages, $attributes);
