@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\warehouse\AccountingAccountController;
+use App\Http\Controllers\warehouse\FundingSourceController;
 use App\Http\Controllers\warehouse\MeasuresController;
 use App\Http\Controllers\warehouse\ProductsController;
 use App\Http\Controllers\warehouse\PurchaseOrderController;
@@ -97,6 +98,11 @@ Route::get('suppliers', [SupplierController::class, 'index']);
 Route::post('suppliers', [SupplierController::class, 'store']);
 Route::put('suppliers/{id}', [SupplierController::class, 'update']);
 Route::delete('suppliers/{id}', [SupplierController::class, 'destroy']);
+
+Route::get('funding_source', [FundingSourceController::class, 'index']);
+Route::post('funding_source', [FundingSourceController::class, 'store']);
+Route::put('funding_source/{id}', [FundingSourceController::class, 'update']);
+Route::delete('funding_source/{id}', [FundingSourceController::class, 'destroy']);
 
 //reportes
 Route::post('warehouse/reports/liquidation', [ReportsController::class, 'liquidationReport']);

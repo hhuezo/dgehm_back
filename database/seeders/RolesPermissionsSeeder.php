@@ -79,6 +79,10 @@ class RolesPermissionsSeeder extends Seeder
             'suppliers create',
             'suppliers update',
             'suppliers delete',
+            'funding_source view',
+            'funding_source create',
+            'funding_source update',
+            'funding_source delete',
         ];
 
         $almacenAdminRole->syncPermissions($almacenAdminPermissions);
