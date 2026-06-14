@@ -28,6 +28,8 @@ class DatabaseSeeder extends Seeder
         // Catálogo administrativo: géneros y estado civil (adm_*)
         // -----------------------------------------------------
         $this->call(AdmGendersMaritalStatusesSeeder::class);
+        $this->call(AdmDocumentTypesSeeder::class);
+        $this->call(AdmFunctionalPositionsSeeder::class);
 
         // -----------------------------------------------------
         // Unidades organizativas
@@ -274,5 +276,6 @@ class DatabaseSeeder extends Seeder
         // Empleado administrador (adm_employees), ligado al user admin
         // -----------------------------------------------------
         $this->call(AdmEmployeesSeeder::class);
+        $this->call(AdmEmployeeRelationsSeeder::class);
     }
 }

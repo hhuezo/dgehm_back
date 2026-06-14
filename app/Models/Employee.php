@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
@@ -71,5 +73,30 @@ class Employee extends Model
     public function maritalStatus(): BelongsTo
     {
         return $this->belongsTo(AdmMaritalStatus::class, 'adm_marital_status_id');
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(AdmEmployeeDocumentType::class, 'adm_employee_id');
+    }
+
+    public function documentTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(AdmDocumentType::class, 'adm_document_type_adm_employee', 'adm_employee_id', 'adm_document_type_id')
+            ->using(AdmEmployeeDocumentType::class)
+            ->withPivot(['id', 'value']);
+    }
+
+    public function functionalPositionAssignments(): HasMany
+    {
+        return $this->hasMany(AdmEmployeeFunctionalPosition::class, 'adm_employee_id');
+    }
+
+    public function functionalPositions(): BelongsToMany
+    {
+        return $this->belongsToMany(AdmFunctionalPosition::class, 'adm_employee_adm_functional_position', 'adm_employee_id', 'adm_functional_position_id')
+            ->using(AdmEmployeeFunctionalPosition::class)
+            ->withPivot(['id', 'date_start', 'date_end', 'principal', 'salary', 'active'])
+            ->withTimestamps();
     }
 }
