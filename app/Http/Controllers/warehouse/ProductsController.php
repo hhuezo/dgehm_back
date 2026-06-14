@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\warehouse;
 
 use App\Http\Controllers\Controller;
+use App\Models\warehouse\AccountingAccount;
 use App\Models\warehouse\Kardex;
 use App\Models\warehouse\Product;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class ProductsController extends Controller
         $data = Product::query()
             ->select(
                 'wh_products.id',
+                'wh_products.sku',
                 'wh_products.name',
                 'wh_products.description',
                 'wh_products.measure_id',
@@ -62,6 +64,7 @@ class ProductsController extends Controller
         $data = Product::query()
             ->select(
                 'wh_products.id',
+                'wh_products.sku',
                 'wh_products.name',
                 'wh_products.description',
                 'wh_products.measure_id'
@@ -117,15 +120,50 @@ class ProductsController extends Controller
             ], 422);
         }
 
-        $product = new Product();
-        $product->name = $request->name;
-        $product->accounting_account_id = $request->accounting_account_id;
-        $product->measure_id = $request->measure_id;
-        $product->description = $request->description;
-        $product->minimo = array_key_exists('minimo', $data) ? $data['minimo'] : null;
-        $product->maximo = array_key_exists('maximo', $data) ? $data['maximo'] : null;
-        $product->is_active = 1;
-        $product->save();
+        $product = DB::transaction(function () use ($request, $data) {
+            $account = AccountingAccount::query()
+                ->whereKey($data['accounting_account_id'])
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $code = (string) $account->code;
+            $prefix = $code . '-';
+
+            $maxCorrelative = Product::query()
+                ->where('accounting_account_id', $account->id)
+                ->whereNotNull('sku')
+                ->where('sku', 'like', $prefix . '%')
+                ->lockForUpdate()
+                ->pluck('sku')
+                ->map(function (string $sku) use ($prefix) {
+                    if (!str_starts_with($sku, $prefix)) {
+                        return 0;
+                    }
+
+                    $suffix = substr($sku, strlen($prefix));
+
+                    return ctype_digit($suffix) ? (int) $suffix : 0;
+                })
+                ->max();
+
+            $next = ((int) $maxCorrelative) + 1;
+            $sku = $prefix . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+
+            $product = new Product();
+            $product->sku = $sku;
+            $product->name = $request->name;
+            $product->accounting_account_id = $request->accounting_account_id;
+            $product->measure_id = $request->measure_id;
+            $product->description = $request->description;
+            $product->minimo = array_key_exists('minimo', $data) ? $data['minimo'] : null;
+            $product->maximo = array_key_exists('maximo', $data) ? $data['maximo'] : null;
+            $product->is_active = 1;
+            $product->save();
+
+            return $product;
+        });
+
+        $product->load(['measure:id,name', 'accountingAccount:id,code,name']);
 
         return response()->json([
             'success' => true,
