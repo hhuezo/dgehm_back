@@ -146,6 +146,10 @@ class DatabaseSeeder extends Seeder
         ];
         DB::table('wh_suppliers')->insert($suppliers);
 
+        // -----------------------------------------------------
+        // 4. FUENTES DE FINANCIAMIENTO (wh_funding_sources)
+        // -----------------------------------------------------
+        $this->call(FundingSourcesSeeder::class);
 
         // -----------------------------------------------------
         // 5. PRODUCTOS/INSUMOS (wh_products) - ¡SIN measure_id!

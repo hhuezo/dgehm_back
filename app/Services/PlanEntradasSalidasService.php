@@ -245,6 +245,7 @@ class PlanEntradasSalidasService
         $date = Carbon::parse($receptionDate)->format('Y-m-d');
         $order = PurchaseOrder::create([
             'supplier_id' => $supplier->id,
+            'wh_funding_sources_id' => 1,
             'order_number' => $orderNum,
             'budget_commitment_number' => 'OC-' . $orderNum,
             'acta_date' => $date . ' 10:00:00',

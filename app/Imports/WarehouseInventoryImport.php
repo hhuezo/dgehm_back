@@ -43,6 +43,7 @@ class WarehouseInventoryImport implements ToCollection, WithHeadingRow
             ['order_number' => '0001'],
             [
                 'supplier_id' => $supplier->id,
+                'wh_funding_sources_id' => 1,
                 'budget_commitment_number' => 'IMP-0001',
                 'acta_date' => $orderDate,
                 'reception_date' => $orderDate,

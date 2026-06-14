@@ -43,6 +43,7 @@ class WarehouseInventoryImportService
 
         $order = PurchaseOrder::create([
             'supplier_id' => $supplier->id,
+            'wh_funding_sources_id' => 1,
             'order_number' => $orderNumber,
             'budget_commitment_number' => 'IMP-' . $orderNumber,
             'acta_date' => $orderDate,

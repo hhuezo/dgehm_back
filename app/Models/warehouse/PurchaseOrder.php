@@ -23,6 +23,7 @@ class PurchaseOrder extends Model
 
     protected $fillable = [
         'supplier_id',
+        'wh_funding_sources_id',
         'order_number',
         'budget_commitment_number',
         'acta_date',
@@ -45,6 +46,11 @@ class PurchaseOrder extends Model
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function fundingSource(): BelongsTo
+    {
+        return $this->belongsTo(FundingSource::class, 'wh_funding_sources_id');
     }
 
     public function purchaseOrderAdministrator(): BelongsTo

@@ -22,7 +22,7 @@ class PurchaseOrderController extends Controller
 
     public function index()
     {
-        $purchase_orders = PurchaseOrder::with(['supplier', 'purchaseOrderAdministrator', 'administrativeTechnician'])
+        $purchase_orders = PurchaseOrder::with(['supplier', 'fundingSource', 'purchaseOrderAdministrator', 'administrativeTechnician'])
             ->withDetailsTotal()
             ->orderBy('id', 'desc')
             ->get();
@@ -37,6 +37,7 @@ class PurchaseOrderController extends Controller
     {
         $rules = [
             'supplier_id'              => 'required|exists:wh_suppliers,id',
+            'wh_funding_sources_id'    => 'required|integer|exists:wh_funding_sources,id',
             'order_number'             => 'required|string|max:50|unique:wh_purchase_order,order_number',
             'invoice_number'           => 'required|string|max:50|unique:wh_purchase_order,invoice_number',
             'budget_commitment_number' => 'required|string|max:50',
@@ -56,6 +57,7 @@ class PurchaseOrderController extends Controller
             'numeric'  => 'El campo ":attribute" debe ser un número.',
             'min'      => 'El campo ":attribute" debe ser mayor a cero (0.00).',
             'supplier_id.exists'         => 'El proveedor seleccionado no es válido o no existe.',
+            'wh_funding_sources_id.exists' => 'La fuente de financiamiento seleccionada no es válida o no existe.',
             'order_number.unique'        => 'El número de Orden de Compra ya existe en el sistema.',
             'invoice_number.unique'      => 'El número de Factura ya existe en el sistema y debe ser único.',
             'date_format'                => 'El formato del campo ":attribute" debe ser AAAA-MM-DD HH:MM:SS.',
@@ -65,6 +67,7 @@ class PurchaseOrderController extends Controller
             'file.max' => 'El archivo no debe superar 10 MB.',
             'attributes' => [
                 'supplier_id'              => 'proveedor',
+                'wh_funding_sources_id'    => 'fuente de financiamiento',
                 'order_number'             => 'número de orden',
                 'invoice_number'           => 'número de factura',
                 'budget_commitment_number' => 'número de compromiso presupuestario',
@@ -84,6 +87,7 @@ class PurchaseOrderController extends Controller
             $order = new PurchaseOrder();
 
             $order->supplier_id              = $data['supplier_id'];
+            $order->wh_funding_sources_id    = $data['wh_funding_sources_id'];
             $order->order_number             = $data['order_number'];
             $order->invoice_number           = $data['invoice_number'];
             $order->budget_commitment_number = $data['budget_commitment_number'];
@@ -160,7 +164,7 @@ class PurchaseOrderController extends Controller
 
     public function show(string $id)
     {
-        $order = PurchaseOrder::with(['supplier', 'purchaseOrderAdministrator', 'administrativeTechnician'])
+        $order = PurchaseOrder::with(['supplier', 'fundingSource', 'purchaseOrderAdministrator', 'administrativeTechnician'])
             ->withDetailsTotal()
             ->find($id);
 
@@ -195,6 +199,7 @@ class PurchaseOrderController extends Controller
 
         $request->validate([
             'supplier_id'             => 'required|exists:wh_suppliers,id',
+            'wh_funding_sources_id'   => 'required|integer|exists:wh_funding_sources,id',
             'order_number'            => ['required', 'string', 'max:50', Rule::unique('wh_purchase_order')->ignore($order->id)],
             'invoice_number'          => ['required', 'string', 'max:50', Rule::unique('wh_purchase_order')->ignore($order->id)],
             'budget_commitment_number' => 'nullable|string|max:50',
@@ -211,6 +216,7 @@ class PurchaseOrderController extends Controller
             $previousOrderNumber = $order->order_number;
 
             $order->supplier_id              = $request->supplier_id;
+            $order->wh_funding_sources_id    = $request->wh_funding_sources_id;
             $order->order_number             = $request->order_number;
             $order->invoice_number           = $request->invoice_number;
             $order->budget_commitment_number = $request->budget_commitment_number;
@@ -278,7 +284,7 @@ class PurchaseOrderController extends Controller
 
     public function reportActa(string $id)
     {
-        $order = PurchaseOrder::with(['supplier', 'purchaseOrderAdministrator', 'administrativeTechnician'])
+        $order = PurchaseOrder::with(['supplier', 'fundingSource', 'purchaseOrderAdministrator', 'administrativeTechnician'])
             ->withDetailsTotal()
             ->find($id);
 
