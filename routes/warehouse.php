@@ -41,6 +41,7 @@ Route::post('supply_request/approve/{id}', [SupplyRequestController::class, 'app
 Route::post('supply_request/send/{id}', [SupplyRequestController::class, 'send']);
 Route::post('supply_request/finalize/{id}', [SupplyRequestController::class, 'finalize']);
 Route::post('supply_request/reject/{id}', [SupplyRequestController::class, 'reject']);
+Route::get('supply_request/{id}/files/{role}', [SupplyRequestController::class, 'downloadFile']);
 Route::get('supply_request/reports/{id}', [SupplyRequestController::class, 'RequestFormReport']);
 
 Route::get('supply_request_detail/{id}', [SupplyRequestDetailController::class, 'show']);

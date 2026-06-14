@@ -8,6 +8,7 @@ use App\Models\warehouse\Product;
 use App\Models\warehouse\SupplyRequest;
 use App\Models\warehouse\SupplyRequestDetail;
 use App\Services\KardexStockService;
+use App\Services\SupplyRequestFileService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -20,7 +21,8 @@ use Ramsey\Uuid\Type\Integer;
 class SupplyRequestController extends Controller
 {
     public function __construct(
-        private KardexStockService $kardexStockService
+        private KardexStockService $kardexStockService,
+        private SupplyRequestFileService $supplyRequestFileService,
     ) {}
 
     public function index()
@@ -61,6 +63,7 @@ class SupplyRequestController extends Controller
             'immediate_boss_id' => 'required|exists:users,id',
             'requester_id'      => 'required|exists:users,id',
             'observation'       => 'nullable|string|max:1000',
+            'requester_file'    => SupplyRequestFileService::FILE_RULE,
         ];
         $messages = [
             // Mensajes directos para campos requeridos
@@ -77,6 +80,8 @@ class SupplyRequestController extends Controller
             'immediate_boss_id.exists'   => 'El jefe inmediato seleccionado no existe.',
             'requester_id.exists'        => 'El usuario solicitante no existe.',
             'observation.string'         => 'La observación debe ser texto.',
+            'requester_file.mimes'       => 'El archivo del solicitante debe ser PDF o imagen (jpg, jpeg, png, webp, gif).',
+            'requester_file.max'         => 'El archivo del solicitante no debe superar 10 MB.',
         ];
 
         $request->validate($rules, $messages);
@@ -94,6 +99,15 @@ class SupplyRequestController extends Controller
             $supplyRequest->status_id = 2;
 
             $supplyRequest->save();
+
+            if ($request->hasFile('requester_file')) {
+                $supplyRequest->requester_file = $this->supplyRequestFileService->store(
+                    $request->file('requester_file'),
+                    $supplyRequest->id,
+                    SupplyRequestFileService::ROLE_REQUESTER
+                );
+                $supplyRequest->save();
+            }
 
             $supplyRequest->load('status', 'requester', 'organizationalUnit', 'immediateBoss');
 
@@ -182,6 +196,14 @@ class SupplyRequestController extends Controller
 
     public function approve(Request $request, string $id)
     {
+        $request->validate([
+            'userId'        => 'required|exists:users,id',
+            'approver_file' => SupplyRequestFileService::FILE_RULE,
+        ], [
+            'approver_file.mimes' => 'El archivo del aprobador debe ser PDF o imagen (jpg, jpeg, png, webp, gif).',
+            'approver_file.max'   => 'El archivo del aprobador no debe superar 10 MB.',
+        ]);
+
         try {
             $supplyRequest = SupplyRequest::findOrFail($id);
 
@@ -194,6 +216,16 @@ class SupplyRequestController extends Controller
 
             $supplyRequest->approved_by_id = $request->userId;
             $supplyRequest->status_id = 3;
+
+            if ($request->hasFile('approver_file')) {
+                $supplyRequest->approver_file = $this->supplyRequestFileService->store(
+                    $request->file('approver_file'),
+                    $supplyRequest->id,
+                    SupplyRequestFileService::ROLE_APPROVER,
+                    $supplyRequest->approver_file
+                );
+            }
+
             $supplyRequest->save();
 
             return response()->json([
@@ -252,6 +284,15 @@ class SupplyRequestController extends Controller
 
     public function finalize(Request $request, string $id)
     {
+        $request->validate([
+            'userId'                 => 'required|exists:users,id',
+            'delivery_date'          => 'required|date',
+            'warehouse_manager_file' => SupplyRequestFileService::FILE_RULE,
+        ], [
+            'warehouse_manager_file.mimes' => 'El archivo del encargado de almacén debe ser PDF o imagen (jpg, jpeg, png, webp, gif).',
+            'warehouse_manager_file.max'   => 'El archivo del encargado de almacén no debe superar 10 MB.',
+        ]);
+
         DB::beginTransaction();
 
         try {
@@ -319,6 +360,16 @@ class SupplyRequestController extends Controller
             $supplyRequest->delivery_date = $request->delivery_date;
             $supplyRequest->delivered_by_id = $request->userId;
             $supplyRequest->status_id = 4;
+
+            if ($request->hasFile('warehouse_manager_file')) {
+                $supplyRequest->warehouse_manager_file = $this->supplyRequestFileService->store(
+                    $request->file('warehouse_manager_file'),
+                    $supplyRequest->id,
+                    SupplyRequestFileService::ROLE_WAREHOUSE_MANAGER,
+                    $supplyRequest->warehouse_manager_file
+                );
+            }
+
             $supplyRequest->save();
 
             DB::commit();
@@ -469,5 +520,45 @@ class SupplyRequestController extends Controller
             ->setPaper('A4', 'portrait');
 
         return $pdf->download("Acta_Entrega_Insumos_{$id}.pdf");
+    }
+
+    public function downloadFile(string $id, string $role)
+    {
+        if (! isset(SupplyRequestFileService::ROLE_COLUMNS[$role])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tipo de archivo no válido.',
+            ], 400);
+        }
+
+        $supplyRequest = SupplyRequest::find($id);
+
+        if (! $supplyRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solicitud no encontrada.',
+            ], 404);
+        }
+
+        $column = SupplyRequestFileService::ROLE_COLUMNS[$role];
+        $filename = $supplyRequest->{$column};
+
+        if (! $filename) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Archivo no encontrado.',
+            ], 404);
+        }
+
+        $download = $this->supplyRequestFileService->downloadResponse($filename);
+
+        if (! $download) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El archivo no existe en el almacenamiento.',
+            ], 404);
+        }
+
+        return $download;
     }
 }
