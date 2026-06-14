@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Models\Employee;
 use App\Models\warehouse\AccountingAccount;
 use App\Models\warehouse\Kardex;
 use App\Models\warehouse\Measure;
@@ -34,6 +35,7 @@ class WarehouseInventoryImport implements ToCollection, WithHeadingRow
 
         // Obtener primer usuario para administrative_technician_id (puede ser null)
         $technicianId = \App\Models\User::first()?->id;
+        $administratorId = Employee::query()->orderBy('id')->value('id');
 
         // Obtener o crear orden de compra 0001
         $orderDate = Carbon::parse('2025-01-01')->startOfDay();
@@ -47,8 +49,7 @@ class WarehouseInventoryImport implements ToCollection, WithHeadingRow
                 'supplier_representative' => 'Importación Excel',
                 'invoice_number' => 'FAC-IMP-0001',
                 'invoice_date' => $orderDate->format('Y-m-d'),
-                'total_amount' => 0,
-                'administrative_manager' => 'Sistema',
+                'purchase_order_administrator_id' => $administratorId,
                 'administrative_technician_id' => $technicianId ?? null,
             ]
         );
@@ -157,12 +158,6 @@ class WarehouseInventoryImport implements ToCollection, WithHeadingRow
                 $this->errors[] = "Fila {$rowNumber}: " . $e->getMessage();
                 $this->skipped++;
             }
-        }
-
-        // Actualizar monto total de la orden
-        if ($this->imported > 0) {
-            $order->total_amount = $totalAmount;
-            $order->save();
         }
     }
 

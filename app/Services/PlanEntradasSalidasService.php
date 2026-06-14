@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Employee;
 use App\Models\User;
 use App\Models\warehouse\AccountingAccount;
 use App\Models\warehouse\Kardex;
@@ -217,6 +218,7 @@ class PlanEntradasSalidasService
 
         $orderNum = $this->getNextOrderNumber();
         $techId = User::first()?->id;
+        $administratorId = Employee::query()->orderBy('id')->value('id');
 
         $total = 0;
         $kardexRows = [];
@@ -250,8 +252,7 @@ class PlanEntradasSalidasService
             'supplier_representative' => 'Rep. ' . $supplier->name,
             'invoice_number' => 'FAC-' . $orderNum . '-' . time(),
             'invoice_date' => $date . ' 10:00:00',
-            'total_amount' => round($total, 2),
-            'administrative_manager' => 'Sistema',
+            'purchase_order_administrator_id' => $administratorId,
             'administrative_technician_id' => $techId,
         ]);
 

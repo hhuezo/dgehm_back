@@ -118,7 +118,9 @@
         en representación de
         <span class="underline">{{ $order->supplier->name ?? '' }}</span>;
         el(la) Sr.(Sra.)
-        <span class="underline">{{ $order->administrative_manager }}</span>,
+        <span class="underline">
+            {{ trim(($order->purchaseOrderAdministrator->name ?? '') . ' ' . ($order->purchaseOrderAdministrator->lastname ?? '')) }}
+        </span>,
         Gerente Administrativo(a) de la DGEHM; y el(la) Sr.(Sra.)
         <span class="underline">
             {{ $order->administrativeTechnician->name ?? '' }}
@@ -160,7 +162,7 @@
             <td style="width:50%;">
                 <strong>RECIBE:</strong><br><br>
                 F.__________________________________________<br>
-                Nombre: {{ $order->administrative_manager }}<br>
+                Nombre: {{ trim(($order->purchaseOrderAdministrator->name ?? '') . ' ' . ($order->purchaseOrderAdministrator->lastname ?? '')) }}<br>
                 Cargo: Gerente Administrativo(a)<br>
                 (Administrador de O/C)
 

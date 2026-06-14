@@ -8,6 +8,7 @@ use App\Models\warehouse\PurchaseOrderDetail;
 use App\Models\warehouse\SupplyRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use App\Services\WarehouseInventoryImportService;
@@ -15,10 +16,14 @@ use PDF;
 
 class PurchaseOrderController extends Controller
 {
+    private const FILE_DIRECTORY = 'purchase_orders';
+
+    private const FILE_RULE = 'nullable|file|mimes:pdf,jpg,jpeg,png,webp,gif|max:10240';
 
     public function index()
     {
-        $purchase_orders = PurchaseOrder::with('supplier')
+        $purchase_orders = PurchaseOrder::with(['supplier', 'purchaseOrderAdministrator', 'administrativeTechnician'])
+            ->withDetailsTotal()
             ->orderBy('id', 'desc')
             ->get();
 
@@ -39,9 +44,9 @@ class PurchaseOrderController extends Controller
             'reception_date'           => 'required|date_format:Y-m-d H:i:s',
             'supplier_representative'  => 'required|string|max:150',
             'invoice_date'             => 'required|date_format:Y-m-d H:i:s',
-            'total_amount'             => 'required|numeric|min:0.01|max:9999999999.99',
-            'administrative_manager'   => 'required|string|max:150',
+            'purchase_order_administrator_id' => 'required|integer|exists:adm_employees,id',
             'administrative_technician_id' => 'required|integer|exists:users,id',
+            'file' => self::FILE_RULE,
         ];
 
         $messages = [
@@ -54,8 +59,10 @@ class PurchaseOrderController extends Controller
             'order_number.unique'        => 'El número de Orden de Compra ya existe en el sistema.',
             'invoice_number.unique'      => 'El número de Factura ya existe en el sistema y debe ser único.',
             'date_format'                => 'El formato del campo ":attribute" debe ser AAAA-MM-DD HH:MM:SS.',
-            'total_amount.min'           => 'El monto total debe ser mayor a cero (0.00).',
+            'purchase_order_administrator_id.exists' => 'El administrador de orden de compra seleccionado no es válido o no existe.',
             'administrative_technician_id.exists' => 'El técnico administrativo seleccionado no es válido o no existe.',
+            'file.mimes' => 'El archivo debe ser PDF o imagen (jpg, jpeg, png, webp, gif).',
+            'file.max' => 'El archivo no debe superar 10 MB.',
             'attributes' => [
                 'supplier_id'              => 'proveedor',
                 'order_number'             => 'número de orden',
@@ -65,9 +72,9 @@ class PurchaseOrderController extends Controller
                 'reception_date'           => 'fecha y hora de recepción',
                 'supplier_representative'  => 'representante del proveedor',
                 'invoice_date'             => 'fecha y hora de la factura',
-                'total_amount'             => 'monto total',
-                'administrative_manager'   => 'gerente administrativo',
+                'purchase_order_administrator_id' => 'administrador de orden de compra',
                 'administrative_technician_id' => 'técnico administrativo',
+                'file' => 'archivo adjunto',
             ],
         ];
 
@@ -84,12 +91,18 @@ class PurchaseOrderController extends Controller
             $order->reception_date           = $data['reception_date'];
             $order->supplier_representative  = $data['supplier_representative'];
             $order->invoice_date             = $data['invoice_date'];
-            $order->total_amount             = $data['total_amount'];
-            $order->administrative_manager   = $data['administrative_manager'];
-
+            $order->purchase_order_administrator_id = $data['purchase_order_administrator_id'];
             $order->administrative_technician_id = $data['administrative_technician_id'];
 
             $order->save();
+
+            if ($request->hasFile('file')) {
+                $order->file = $this->storePurchaseOrderFile(
+                    $request->file('file'),
+                    $order->order_number
+                );
+                $order->save();
+            }
 
             return response()->json([
                 'success' => true,
@@ -147,7 +160,9 @@ class PurchaseOrderController extends Controller
 
     public function show(string $id)
     {
-        $order = PurchaseOrder::with('supplier')->with('administrativeTechnician')->find($id);
+        $order = PurchaseOrder::with(['supplier', 'purchaseOrderAdministrator', 'administrativeTechnician'])
+            ->withDetailsTotal()
+            ->find($id);
 
         if (!$order) {
             return response()->json([
@@ -187,13 +202,13 @@ class PurchaseOrderController extends Controller
             'reception_date'          => 'required|date_format:Y-m-d H:i:s',
             'supplier_representative' => 'required|string|max:150',
             'invoice_date'            => 'required|date',
-            'total_amount'            => 'required|numeric|min:0|max:9999999999.99',
-            'administrative_manager'  => 'required|string|max:150',
-            'administrative_technician' => 'required|string|max:150',
+            'purchase_order_administrator_id' => 'required|integer|exists:adm_employees,id',
             'administrative_technician_id' => 'required|integer|exists:users,id',
+            'file' => self::FILE_RULE,
         ]);
 
         try {
+            $previousOrderNumber = $order->order_number;
 
             $order->supplier_id              = $request->supplier_id;
             $order->order_number             = $request->order_number;
@@ -203,10 +218,18 @@ class PurchaseOrderController extends Controller
             $order->reception_date           = $request->reception_date;
             $order->supplier_representative  = $request->supplier_representative;
             $order->invoice_date             = $request->invoice_date;
-            $order->total_amount             = $request->total_amount;
-            $order->administrative_manager   = $request->administrative_manager;
-
+            $order->purchase_order_administrator_id = $request->purchase_order_administrator_id;
             $order->administrative_technician_id = $request->administrative_technician_id;
+
+            if ($request->hasFile('file')) {
+                $order->file = $this->storePurchaseOrderFile(
+                    $request->file('file'),
+                    $order->order_number,
+                    $order->file
+                );
+            } elseif ($previousOrderNumber !== $order->order_number && $order->file) {
+                $order->file = $this->renamePurchaseOrderFile($order->file, $order->order_number);
+            }
 
             $order->save();
 
@@ -236,6 +259,7 @@ class PurchaseOrderController extends Controller
         }
 
         try {
+            $this->deletePurchaseOrderFile($order->file);
             $order->delete();
 
             return response()->json([
@@ -254,7 +278,9 @@ class PurchaseOrderController extends Controller
 
     public function reportActa(string $id)
     {
-        $order = PurchaseOrder::with('supplier')->find($id);
+        $order = PurchaseOrder::with(['supplier', 'purchaseOrderAdministrator', 'administrativeTechnician'])
+            ->withDetailsTotal()
+            ->find($id);
 
         if (!$order) {
             return response()->json([
@@ -283,5 +309,83 @@ class PurchaseOrderController extends Controller
         $pdf = PDF::loadView('reports.acta_recepcion', $data);
 
         return $pdf->download("Acta_Recepcion_{$id}.pdf");
+    }
+
+    public function downloadFile(string $id)
+    {
+        $order = PurchaseOrder::find($id);
+
+        if (!$order || !$order->file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Archivo no encontrado.',
+            ], 404);
+        }
+
+        $path = self::FILE_DIRECTORY . '/' . $order->file;
+
+        if (!Storage::disk('local')->exists($path)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El archivo no existe en el almacenamiento.',
+            ], 404);
+        }
+
+        return Storage::disk('local')->download($path, $order->file);
+    }
+
+    private function storePurchaseOrderFile(UploadedFile $uploadedFile, string $orderNumber, ?string $previousFile = null): string
+    {
+        $this->deletePurchaseOrderFile($previousFile);
+
+        $filename = $this->buildPurchaseOrderFilename($orderNumber, $uploadedFile);
+        $uploadedFile->storeAs(self::FILE_DIRECTORY, $filename, 'local');
+
+        return $filename;
+    }
+
+    private function renamePurchaseOrderFile(string $currentFilename, string $orderNumber): string
+    {
+        $extension = pathinfo($currentFilename, PATHINFO_EXTENSION);
+        $newFilename = $this->buildPurchaseOrderFilename($orderNumber, null, $extension);
+        $disk = Storage::disk('local');
+        $currentPath = self::FILE_DIRECTORY . '/' . $currentFilename;
+        $newPath = self::FILE_DIRECTORY . '/' . $newFilename;
+
+        if ($disk->exists($currentPath)) {
+            if ($currentFilename !== $newFilename) {
+                $disk->move($currentPath, $newPath);
+            }
+
+            return $newFilename;
+        }
+
+        return $currentFilename;
+    }
+
+    private function buildPurchaseOrderFilename(string $orderNumber, ?UploadedFile $uploadedFile = null, ?string $extension = null): string
+    {
+        if ($extension === null) {
+            $extension = strtolower($uploadedFile?->getClientOriginalExtension()
+                ?: $uploadedFile?->guessExtension()
+                ?: 'bin');
+        }
+
+        $safeOrderNumber = preg_replace('/[^A-Za-z0-9._-]/', '_', trim($orderNumber));
+
+        return $safeOrderNumber . '.' . strtolower($extension);
+    }
+
+    private function deletePurchaseOrderFile(?string $filename): void
+    {
+        if (!$filename) {
+            return;
+        }
+
+        $path = self::FILE_DIRECTORY . '/' . $filename;
+
+        if (Storage::disk('local')->exists($path)) {
+            Storage::disk('local')->delete($path);
+        }
     }
 }

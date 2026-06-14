@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Employee;
 use App\Models\warehouse\AccountingAccount;
 use App\Models\warehouse\Kardex;
 use App\Models\warehouse\Measure;
@@ -33,6 +34,7 @@ class WarehouseInventoryImportService
         );
 
         $technicianId = \App\Models\User::first()?->id;
+        $administratorId = Employee::query()->orderBy('id')->value('id');
         $orderDate = Carbon::parse('2025-01-01')->startOfDay();
 
         $lastOrder = PurchaseOrder::orderBy('id', 'desc')->first();
@@ -48,8 +50,7 @@ class WarehouseInventoryImportService
             'supplier_representative' => 'Importación Excel',
             'invoice_number' => 'FAC-IMP-' . $orderNumber . '-' . time(),
             'invoice_date' => $orderDate->format('Y-m-d'),
-            'total_amount' => 0,
-            'administrative_manager' => 'Sistema',
+            'purchase_order_administrator_id' => $administratorId,
             'administrative_technician_id' => $technicianId,
         ]);
 
@@ -135,9 +136,6 @@ class WarehouseInventoryImportService
                 $this->skipped++;
             }
         }
-
-        $order->total_amount = $totalAmount;
-        $order->save();
 
         $spreadsheet->disconnectWorksheets();
         unset($spreadsheet);

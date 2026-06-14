@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\LogOptions;
+use App\Models\Employee;
 use App\Models\User;
 
 class PurchaseOrder extends Model
@@ -29,13 +30,13 @@ class PurchaseOrder extends Model
         'supplier_representative',
         'invoice_number',
         'invoice_date',
-        'total_amount',
-        'administrative_manager',
+        'purchase_order_administrator_id',
         'administrative_technician_id',
+        'file',
     ];
 
-    protected $casts = [
-        'total_amount' => 'decimal:2',
+    protected $appends = [
+        'total_amount',
     ];
 
 
@@ -44,6 +45,11 @@ class PurchaseOrder extends Model
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function purchaseOrderAdministrator(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'purchase_order_administrator_id');
     }
 
     public function administrativeTechnician(): BelongsTo
@@ -56,11 +62,36 @@ class PurchaseOrder extends Model
         return $this->hasMany(Kardex::class, 'purchase_order_id');
     }
 
+    public function getTotalAmountAttribute(): float
+    {
+        if (array_key_exists('total_amount', $this->attributes) && $this->attributes['total_amount'] !== null) {
+            return round((float) $this->attributes['total_amount'], 2);
+        }
+
+        if ($this->relationLoaded('details')) {
+            return round((float) $this->details
+                ->where('movement_type', 1)
+                ->sum('subtotal'), 2);
+        }
+
+        return round((float) $this->details()
+            ->where('movement_type', 1)
+            ->sum('subtotal'), 2);
+    }
+
+    public function scopeWithDetailsTotal($query)
+    {
+        return $query->withSum(
+            ['details as total_amount' => fn ($q) => $q->where('movement_type', 1)],
+            'subtotal'
+        );
+    }
+
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->useLogName('functional_positions')
+            ->useLogName('purchase_orders')
             ->logAll()
             ->logOnlyDirty();
     }

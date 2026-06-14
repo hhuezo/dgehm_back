@@ -26,6 +26,7 @@ Route::post('purchase_order/import', [PurchaseOrderController::class, 'import'])
 Route::get('purchase_order/{id}', [PurchaseOrderController::class, 'show']);
 Route::put('purchase_order/{id}', [PurchaseOrderController::class, 'update']);
 Route::get('purchase_order/acta/{id}', [PurchaseOrderController::class, 'reportActa']);
+Route::get('purchase_order/{id}/file', [PurchaseOrderController::class, 'downloadFile']);
 
 Route::get('purchase_order_detail/{id}', [PurchaseOrderDetailController::class, 'show']);
 Route::post('purchase_order_detail', [PurchaseOrderDetailController::class, 'store']);
