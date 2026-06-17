@@ -34,6 +34,11 @@ class PurchaseOrder extends Model
         'purchase_order_administrator_id',
         'administrative_technician_id',
         'file',
+        'partial_delivery',
+    ];
+
+    protected $casts = [
+        'partial_delivery' => 'boolean',
     ];
 
     protected $appends = [

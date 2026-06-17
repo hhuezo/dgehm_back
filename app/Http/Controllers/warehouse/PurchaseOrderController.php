@@ -48,6 +48,7 @@ class PurchaseOrderController extends Controller
             'purchase_order_administrator_id' => 'required|integer|exists:adm_employees,id',
             'administrative_technician_id' => 'required|integer|exists:users,id',
             'file' => self::FILE_RULE,
+            'partial_delivery' => 'nullable|boolean',
         ];
 
         $messages = [
@@ -97,6 +98,7 @@ class PurchaseOrderController extends Controller
             $order->invoice_date             = $data['invoice_date'];
             $order->purchase_order_administrator_id = $data['purchase_order_administrator_id'];
             $order->administrative_technician_id = $data['administrative_technician_id'];
+            $order->partial_delivery = $data['partial_delivery'] ?? false;
 
             $order->save();
 
@@ -210,6 +212,7 @@ class PurchaseOrderController extends Controller
             'purchase_order_administrator_id' => 'required|integer|exists:adm_employees,id',
             'administrative_technician_id' => 'required|integer|exists:users,id',
             'file' => self::FILE_RULE,
+            'partial_delivery' => 'nullable|boolean',
         ]);
 
         try {
@@ -226,6 +229,7 @@ class PurchaseOrderController extends Controller
             $order->invoice_date             = $request->invoice_date;
             $order->purchase_order_administrator_id = $request->purchase_order_administrator_id;
             $order->administrative_technician_id = $request->administrative_technician_id;
+            $order->partial_delivery = $request->boolean('partial_delivery');
 
             if ($request->hasFile('file')) {
                 $order->file = $this->storePurchaseOrderFile(
