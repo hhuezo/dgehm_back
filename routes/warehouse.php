@@ -21,6 +21,7 @@ use App\Http\Controllers\warehouse\SupplyReturnDetailController;
 */
 
 // Purchase Orders
+Route::get('purchase_order/lookup/by-order-number', [PurchaseOrderController::class, 'lookupByOrderNumber']);
 Route::get('purchase_order', [PurchaseOrderController::class, 'index']);
 Route::post('purchase_order', [PurchaseOrderController::class, 'store']);
 Route::post('purchase_order/import', [PurchaseOrderController::class, 'import']);

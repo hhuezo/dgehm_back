@@ -20,8 +20,12 @@ class PurchaseOrderController extends Controller
 
     private const FILE_RULE = 'nullable|file|mimes:pdf,jpg,jpeg,png,webp,gif|max:10240';
 
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->boolean('lookup')) {
+            return $this->lookupByOrderNumber($request);
+        }
+
         $purchase_orders = PurchaseOrder::with(['supplier', 'fundingSource', 'purchaseOrderAdministrator', 'administrativeTechnician'])
             ->withDetailsTotal()
             ->orderBy('id', 'desc')
@@ -38,7 +42,7 @@ class PurchaseOrderController extends Controller
         $rules = [
             'supplier_id'              => 'required|exists:wh_suppliers,id',
             'wh_funding_sources_id'    => 'required|integer|exists:wh_funding_sources,id',
-            'order_number'             => 'required|string|max:50|unique:wh_purchase_order,order_number',
+            'order_number'             => 'required|string|max:50',
             'invoice_number'           => 'required|string|max:50|unique:wh_purchase_order,invoice_number',
             'budget_commitment_number' => 'required|string|max:50',
             'acta_date'                => 'required|date_format:Y-m-d H:i:s',
@@ -83,6 +87,19 @@ class PurchaseOrderController extends Controller
         ];
 
         $data = $request->validate($rules, $messages);
+
+        $orderNumberError = $this->validateOrderNumberUniqueness(
+            $data['order_number'],
+            (bool) ($data['partial_delivery'] ?? false)
+        );
+
+        if ($orderNumberError) {
+            return response()->json([
+                'success' => false,
+                'message' => $orderNumberError,
+                'errors'  => ['order_number' => [$orderNumberError]],
+            ], 422);
+        }
 
         try {
             $order = new PurchaseOrder();
@@ -188,6 +205,59 @@ class PurchaseOrderController extends Controller
 
 
 
+    public function lookupByOrderNumber(Request $request)
+    {
+        $request->validate([
+            'order_number' => 'required|string|max:50',
+        ]);
+
+        $orderNumber = trim($request->order_number);
+
+        if ($orderNumber === '') {
+            return response()->json([
+                'success' => true,
+                'status'  => 'available',
+                'data'    => null,
+            ]);
+        }
+
+        $orders = PurchaseOrder::with([
+            'supplier',
+            'fundingSource',
+            'purchaseOrderAdministrator',
+            'administrativeTechnician',
+        ])
+            ->where('order_number', $orderNumber)
+            ->get();
+
+        if ($orders->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'status'  => 'available',
+                'data'    => null,
+            ]);
+        }
+
+        if ($orders->contains(fn (PurchaseOrder $order) => !$order->partial_delivery)) {
+            return response()->json([
+                'success' => false,
+                'status'  => 'exists',
+                'message' => 'No se puede ingresar una orden ya existente.',
+            ], 422);
+        }
+
+        $partialOrder = $orders
+            ->where('partial_delivery', true)
+            ->sortByDesc('id')
+            ->first();
+
+        return response()->json([
+            'success' => true,
+            'status'  => 'partial_found',
+            'data'    => $partialOrder,
+        ]);
+    }
+
     public function update(Request $request, string $id)
     {
         $order = PurchaseOrder::find($id);
@@ -202,7 +272,7 @@ class PurchaseOrderController extends Controller
         $request->validate([
             'supplier_id'             => 'required|exists:wh_suppliers,id',
             'wh_funding_sources_id'   => 'required|integer|exists:wh_funding_sources,id',
-            'order_number'            => ['required', 'string', 'max:50', Rule::unique('wh_purchase_order')->ignore($order->id)],
+            'order_number'            => 'required|string|max:50',
             'invoice_number'          => ['required', 'string', 'max:50', Rule::unique('wh_purchase_order')->ignore($order->id)],
             'budget_commitment_number' => 'nullable|string|max:50',
             'acta_date'               => 'required|date',
@@ -214,6 +284,20 @@ class PurchaseOrderController extends Controller
             'file' => self::FILE_RULE,
             'partial_delivery' => 'nullable|boolean',
         ]);
+
+        $orderNumberError = $this->validateOrderNumberUniqueness(
+            $request->order_number,
+            $request->boolean('partial_delivery'),
+            (int) $order->id
+        );
+
+        if ($orderNumberError) {
+            return response()->json([
+                'success' => false,
+                'message' => $orderNumberError,
+                'errors'  => ['order_number' => [$orderNumberError]],
+            ], 422);
+        }
 
         try {
             $previousOrderNumber = $order->order_number;
@@ -342,6 +426,42 @@ class PurchaseOrderController extends Controller
         }
 
         return Storage::disk('local')->download($path, $order->file);
+    }
+
+    private function validateOrderNumberUniqueness(
+        string $orderNumber,
+        bool $isPartial,
+        ?int $ignoreId = null
+    ): ?string {
+        $orderNumber = trim($orderNumber);
+
+        if ($orderNumber === '') {
+            return null;
+        }
+
+        $query = PurchaseOrder::where('order_number', $orderNumber);
+
+        if ($ignoreId) {
+            $query->where('id', '!=', $ignoreId);
+        }
+
+        $existing = $query->get();
+
+        if ($existing->isEmpty()) {
+            return null;
+        }
+
+        $hasNonPartial = $existing->contains(fn (PurchaseOrder $order) => !$order->partial_delivery);
+
+        if (!$isPartial) {
+            return 'No se puede ingresar una orden ya existente.';
+        }
+
+        if ($hasNonPartial) {
+            return 'La orden ya existe pero no es de entrega parcial.';
+        }
+
+        return null;
     }
 
     private function storePurchaseOrderFile(UploadedFile $uploadedFile, string $orderNumber, ?string $previousFile = null): string
