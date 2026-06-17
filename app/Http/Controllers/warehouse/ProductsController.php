@@ -29,7 +29,8 @@ class ProductsController extends Controller
                 'wh_products.measure_id',
                 'wh_products.accounting_account_id',
                 'wh_products.minimo',
-                'wh_products.maximo'
+                'wh_products.maximo',
+                'wh_products.environmental_report',
             )
             ->leftJoinSub($stockByProduct, 'stock', function ($join) {
                 $join->on('wh_products.id', '=', 'stock.product_id');
@@ -82,6 +83,7 @@ class ProductsController extends Controller
             'accounting_account_id' => 'required|exists:wh_accounting_accounts,id',
             'minimo'                => 'nullable|integer',
             'maximo'                => 'nullable|integer',
+            'environmental_report'  => 'nullable|boolean',
         ];
 
         $messages = [
@@ -147,6 +149,7 @@ class ProductsController extends Controller
             $product->description = $request->description;
             $product->minimo = array_key_exists('minimo', $data) ? $data['minimo'] : null;
             $product->maximo = array_key_exists('maximo', $data) ? $data['maximo'] : null;
+            $product->environmental_report = $request->boolean('environmental_report');
             $product->is_active = 1;
             $product->save();
 
@@ -205,6 +208,7 @@ class ProductsController extends Controller
             'accounting_account_id' => 'required|exists:wh_accounting_accounts,id',
             'minimo'                => 'nullable|integer',
             'maximo'                => 'nullable|integer',
+            'environmental_report'  => 'nullable|boolean',
         ];
 
         $messages = [
@@ -240,6 +244,7 @@ class ProductsController extends Controller
         $product->description = $request->description;
         $product->minimo = array_key_exists('minimo', $data) ? $data['minimo'] : null;
         $product->maximo = array_key_exists('maximo', $data) ? $data['maximo'] : null;
+        $product->environmental_report = $request->boolean('environmental_report');
         $product->save();
 
         return response()->json([

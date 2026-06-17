@@ -26,10 +26,12 @@ class Product extends Model
         'minimo',
         'maximo',
         'is_active',
+        'environmental_report',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'environmental_report' => 'boolean',
         'minimo' => 'integer',
         'maximo' => 'integer',
     ];

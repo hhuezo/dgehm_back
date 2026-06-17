@@ -109,3 +109,4 @@ Route::delete('funding_source/{id}', [FundingSourceController::class, 'destroy']
 Route::post('warehouse/reports/liquidation', [ReportsController::class, 'liquidationReport']);
 Route::post('warehouse/reports/stock', [ReportsController::class, 'stockReport']);
 Route::post('warehouse/reports/delivery', [ReportsController::class, 'deliveryReport']);
+Route::post('warehouse/reports/environmental-supplies', [ReportsController::class, 'environmentalSuppliesReport']);
