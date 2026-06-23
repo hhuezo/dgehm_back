@@ -4,6 +4,7 @@ namespace App\Http\Controllers\warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\warehouse\FundingSource;
+use App\Models\warehouse\PurchaseOrder;
 use Illuminate\Http\Request;
 
 class FundingSourceController extends Controller
@@ -82,6 +83,14 @@ class FundingSourceController extends Controller
     public function destroy(string $id)
     {
         $fundingSource = FundingSource::findOrFail($id);
+
+        if (PurchaseOrder::where('wh_funding_sources_id', $fundingSource->id)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede eliminar: la fuente está asociada a órdenes de compra.',
+            ], 422);
+        }
+
         $fundingSource->delete();
 
         return response()->json([

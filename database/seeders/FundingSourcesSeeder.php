@@ -13,19 +13,25 @@ class FundingSourcesSeeder extends Seeder
 
         $rows = [
             [
-                'name'       => 'Presupuesto General de la Nación',
+                'name'       => 'PFondos GOES',
                 'is_active'  => true,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
-                'name'       => 'Donación',
+                'name'       => 'Fondos Convenios',
                 'is_active'  => true,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
-                'name'       => 'Cooperación Internacional',
+                'name'       => 'Fondos Recursos Propios',
+                'is_active'  => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'name'       => 'Fondos La GEO',
                 'is_active'  => true,
                 'created_at' => $now,
                 'updated_at' => $now,
