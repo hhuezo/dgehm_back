@@ -33,8 +33,12 @@ class WarehouseInventoryImport implements ToCollection, WithHeadingRow
             ['is_active' => true]
         );
 
-        // Obtener primer usuario para administrative_technician_id (puede ser null)
-        $technicianId = \App\Models\User::first()?->id;
+        // Encargado de almacén (empleado)
+        $technicianId = Employee::query()
+            ->where('warehouse_manager', true)
+            ->orderBy('id')
+            ->value('id')
+            ?? Employee::query()->orderBy('id')->value('id');
         $administratorId = Employee::query()->orderBy('id')->value('id');
 
         // Obtener o crear orden de compra 0001

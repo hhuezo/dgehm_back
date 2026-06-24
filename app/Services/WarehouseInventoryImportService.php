@@ -33,7 +33,11 @@ class WarehouseInventoryImportService
             ['is_active' => true]
         );
 
-        $technicianId = \App\Models\User::first()?->id;
+        $technicianId = Employee::query()
+            ->where('warehouse_manager', true)
+            ->orderBy('id')
+            ->value('id')
+            ?? Employee::query()->orderBy('id')->value('id');
         $administratorId = Employee::query()->orderBy('id')->value('id');
         $orderDate = Carbon::parse('2025-01-01')->startOfDay();
 

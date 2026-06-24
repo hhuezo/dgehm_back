@@ -85,10 +85,12 @@ Route::delete('/users/{id}', [UserController::class, 'destroy']);
 */
 Route::get('/employees/form-options', [EmployeeController::class, 'formOptions']);
 Route::get('/employees', [EmployeeController::class, 'index']);
+Route::get('/employees/warehouse-managers', [EmployeeController::class, 'getWarehouseManagers']);
+Route::get('/administrative_technicians', [EmployeeController::class, 'getWarehouseManagers']);
 Route::post('/employees', [EmployeeController::class, 'store']);
 Route::get('/employees/{id}', [EmployeeController::class, 'show']);
 Route::put('/employees/{id}', [EmployeeController::class, 'update']);
+Route::patch('/employees/{id}/warehouse-manager', [EmployeeController::class, 'updateWarehouseManager']);
 Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
 
-Route::get('/administrative_technicians', [UserController::class, 'getAdministrativeTechnicians']);
 Route::get('/area-managers', [UserController::class, 'getAreaManagers']);

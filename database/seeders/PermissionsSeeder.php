@@ -15,9 +15,10 @@ class PermissionsSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $types = [
-            'Security'    => PermissionType::firstOrCreate(['name' => 'Security'], ['is_active' => true]),
-            'Warehouse'   => PermissionType::firstOrCreate(['name' => 'Warehouse'], ['is_active' => true]),
-            'Fixed Asset' => PermissionType::firstOrCreate(['name' => 'Fixed Asset'], ['is_active' => true]),
+            'Security'      => PermissionType::firstOrCreate(['name' => 'Security'], ['is_active' => true]),
+            'Warehouse'       => PermissionType::firstOrCreate(['name' => 'Warehouse'], ['is_active' => true]),
+            'Fixed Asset'     => PermissionType::firstOrCreate(['name' => 'Fixed Asset'], ['is_active' => true]),
+            'Configuration'   => PermissionType::firstOrCreate(['name' => 'Configuration'], ['is_active' => true]),
         ];
 
         $permissionsByType = [
@@ -142,6 +143,10 @@ class PermissionsSeeder extends Seeder
                 'fixed_assets update',
                 'fixed_assets delete',
                 'fixed_assets import',
+            ],
+            'Configuration' => [
+                'configuration view',
+                'warehouse_managers update',
             ],
         ];
 

@@ -134,6 +134,51 @@ class EmployeeController extends Controller
     }
 
     /**
+     * Empleados marcados como encargados de almacén (sin join con users).
+     */
+    public function getWarehouseManagers()
+    {
+        $employees = Employee::query()
+            ->where('warehouse_manager', true)
+            ->orderBy('name')
+            ->orderBy('lastname')
+            ->get(['id', 'name', 'lastname', 'email']);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $employees,
+        ]);
+    }
+
+    public function updateWarehouseManager(Request $request, string $id)
+    {
+        $employee = Employee::query()->find($id);
+
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Empleado no encontrado.',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'warehouse_manager' => 'required|boolean',
+        ]);
+
+        $employee->update([
+            'warehouse_manager' => (bool) $validated['warehouse_manager'],
+        ]);
+
+        $employee->load(['user:id,name,lastname,email']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Encargado de almacén actualizado correctamente.',
+            'data' => $employee,
+        ]);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function validatedPayload(Request $request, ?int $ignoreEmployeeId = null): array
@@ -171,6 +216,7 @@ class EmployeeController extends Controller
             'adhonorem' => 'nullable|boolean',
             'parking' => 'nullable|boolean',
             'disabled' => 'nullable|boolean',
+            'warehouse_manager' => 'nullable|boolean',
         ]);
 
         if (array_key_exists('email_personal', $validated) && $validated['email_personal'] === '') {
@@ -188,6 +234,7 @@ class EmployeeController extends Controller
             'adhonorem' => false,
             'parking' => false,
             'disabled' => false,
+            'warehouse_manager' => false,
         ];
 
         foreach ($defaults as $key => $default) {

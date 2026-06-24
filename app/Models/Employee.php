@@ -40,6 +40,7 @@ class Employee extends Model
         'adhonorem',
         'parking',
         'disabled',
+        'warehouse_manager',
     ];
 
     protected function casts(): array
@@ -56,6 +57,7 @@ class Employee extends Model
             'adhonorem' => 'boolean',
             'parking' => 'boolean',
             'disabled' => 'boolean',
+            'warehouse_manager' => 'boolean',
             'status' => 'integer',
         ];
     }

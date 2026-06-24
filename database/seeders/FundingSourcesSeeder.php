@@ -13,7 +13,7 @@ class FundingSourcesSeeder extends Seeder
 
         $rows = [
             [
-                'name'       => 'PFondos GOES',
+                'name'       => 'Fondos GOES',
                 'is_active'  => true,
                 'created_at' => $now,
                 'updated_at' => $now,

@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\LogOptions;
 use App\Models\Employee;
-use App\Models\User;
 
 class PurchaseOrder extends Model
 {
@@ -65,7 +64,7 @@ class PurchaseOrder extends Model
 
     public function administrativeTechnician(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'administrative_technician_id');
+        return $this->belongsTo(Employee::class, 'administrative_technician_id');
     }
 
     public function details(): HasMany

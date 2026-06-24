@@ -217,7 +217,11 @@ class PlanEntradasSalidasService
         }
 
         $orderNum = $this->getNextOrderNumber();
-        $techId = User::first()?->id;
+        $techId = Employee::query()
+            ->where('warehouse_manager', true)
+            ->orderBy('id')
+            ->value('id')
+            ?? Employee::query()->orderBy('id')->value('id');
         $administratorId = Employee::query()->orderBy('id')->value('id');
 
         $total = 0;

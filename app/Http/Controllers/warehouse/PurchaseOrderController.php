@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\warehouse;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
 use App\Models\warehouse\PurchaseOrder;
 use App\Models\warehouse\PurchaseOrderDetail;
 use App\Models\warehouse\SupplyRequest;
@@ -39,54 +40,11 @@ class PurchaseOrderController extends Controller
 
     public function store(Request $request)
     {
-        $rules = [
-            'supplier_id'              => 'required|exists:wh_suppliers,id',
-            'wh_funding_sources_id'    => 'required|integer|exists:wh_funding_sources,id',
-            'order_number'             => 'required|string|max:50',
-            'invoice_number'           => 'required|string|max:50|unique:wh_purchase_order,invoice_number',
-            'budget_commitment_number' => 'required|string|max:50',
-            'acta_date'                => 'required|date_format:Y-m-d H:i:s',
-            'reception_date'           => 'required|date_format:Y-m-d H:i:s',
-            'supplier_representative'  => 'required|string|max:150',
-            'invoice_date'             => 'required|date_format:Y-m-d H:i:s',
-            'purchase_order_administrator_id' => 'required|integer|exists:adm_employees,id',
-            'administrative_technician_id' => 'required|integer|exists:users,id',
-            'file' => self::FILE_RULE,
-            'partial_delivery' => 'nullable|boolean',
-        ];
-
-        $messages = [
-            'required' => 'El campo ":attribute" es obligatorio.',
-            'string'   => 'El campo ":attribute" debe ser texto.',
-            'date'     => 'El campo ":attribute" debe ser una fecha válida.',
-            'numeric'  => 'El campo ":attribute" debe ser un número.',
-            'min'      => 'El campo ":attribute" debe ser mayor a cero (0.00).',
-            'supplier_id.exists'         => 'El proveedor seleccionado no es válido o no existe.',
-            'wh_funding_sources_id.exists' => 'La fuente de financiamiento seleccionada no es válida o no existe.',
-            'order_number.unique'        => 'El número de Orden de Compra ya existe en el sistema.',
-            'invoice_number.unique'      => 'El número de Factura ya existe en el sistema y debe ser único.',
-            'date_format'                => 'El formato del campo ":attribute" debe ser AAAA-MM-DD HH:MM:SS.',
-            'purchase_order_administrator_id.exists' => 'El administrador de orden de compra seleccionado no es válido o no existe.',
-            'administrative_technician_id.exists' => 'El técnico administrativo seleccionado no es válido o no existe.',
-            'file.mimes' => 'El archivo debe ser PDF o imagen (jpg, jpeg, png, webp, gif).',
-            'file.max' => 'El archivo no debe superar 10 MB.',
-            'attributes' => [
-                'supplier_id'              => 'proveedor',
-                'wh_funding_sources_id'    => 'fuente de financiamiento',
-                'order_number'             => 'número de orden',
-                'invoice_number'           => 'número de factura',
-                'budget_commitment_number' => 'número de compromiso presupuestario',
-                'acta_date'                => 'fecha y hora del acta',
-                'reception_date'           => 'fecha y hora de recepción',
-                'supplier_representative'  => 'representante del proveedor',
-                'invoice_date'             => 'fecha y hora de la factura',
-                'purchase_order_administrator_id' => 'administrador de orden de compra',
-                'administrative_technician_id' => 'técnico administrativo',
-                'file' => 'archivo adjunto',
-            ],
-        ];
-
-        $data = $request->validate($rules, $messages);
+        $data = $request->validate(
+            $this->storeRules(),
+            $this->purchaseOrderValidationMessages(),
+            $this->purchaseOrderValidationAttributes()
+        );
 
         $orderNumberError = $this->validateOrderNumberUniqueness(
             $data['order_number'],
@@ -207,9 +165,15 @@ class PurchaseOrderController extends Controller
 
     public function lookupByOrderNumber(Request $request)
     {
-        $request->validate([
-            'order_number' => 'required|string|max:50',
-        ]);
+        $request->validate(
+            ['order_number' => 'required|string|max:50'],
+            [
+                'required' => 'El campo :attribute es obligatorio.',
+                'string' => 'El campo :attribute debe ser texto.',
+                'max.string' => 'El campo :attribute no debe superar :max caracteres.',
+            ],
+            ['order_number' => 'número de orden']
+        );
 
         $orderNumber = trim($request->order_number);
 
@@ -269,21 +233,11 @@ class PurchaseOrderController extends Controller
             ], 404);
         }
 
-        $request->validate([
-            'supplier_id'             => 'required|exists:wh_suppliers,id',
-            'wh_funding_sources_id'   => 'required|integer|exists:wh_funding_sources,id',
-            'order_number'            => 'required|string|max:50',
-            'invoice_number'          => ['required', 'string', 'max:50', Rule::unique('wh_purchase_order')->ignore($order->id)],
-            'budget_commitment_number' => 'nullable|string|max:50',
-            'acta_date'               => 'required|date',
-            'reception_date'          => 'required|date_format:Y-m-d H:i:s',
-            'supplier_representative' => 'required|string|max:150',
-            'invoice_date'            => 'required|date',
-            'purchase_order_administrator_id' => 'required|integer|exists:adm_employees,id',
-            'administrative_technician_id' => 'required|integer|exists:users,id',
-            'file' => self::FILE_RULE,
-            'partial_delivery' => 'nullable|boolean',
-        ]);
+        $request->validate(
+            $this->updateRules($order),
+            $this->purchaseOrderValidationMessages(),
+            $this->purchaseOrderValidationAttributes()
+        );
 
         $orderNumberError = $this->validateOrderNumberUniqueness(
             $request->order_number,
@@ -426,6 +380,99 @@ class PurchaseOrderController extends Controller
         }
 
         return Storage::disk('local')->download($path, $order->file);
+    }
+
+    private function storeRules(): array
+    {
+        return [
+            'supplier_id'              => 'required|exists:wh_suppliers,id',
+            'wh_funding_sources_id'    => 'required|integer|exists:wh_funding_sources,id',
+            'order_number'             => 'required|string|max:50',
+            'invoice_number'           => 'required|string|max:50|unique:wh_purchase_order,invoice_number',
+            'budget_commitment_number' => 'required|string|max:50',
+            'acta_date'                => 'required|date_format:Y-m-d H:i:s',
+            'reception_date'           => 'required|date_format:Y-m-d H:i:s',
+            'supplier_representative'  => 'required|string|max:150',
+            'invoice_date'             => 'required|date_format:Y-m-d H:i:s',
+            'purchase_order_administrator_id' => 'required|integer|exists:adm_employees,id',
+            'administrative_technician_id' => $this->administrativeTechnicianRule(),
+            'file' => self::FILE_RULE,
+            'partial_delivery' => 'nullable|in:0,1,true,false',
+        ];
+    }
+
+    private function updateRules(PurchaseOrder $order): array
+    {
+        return [
+            'supplier_id'             => 'required|exists:wh_suppliers,id',
+            'wh_funding_sources_id'   => 'required|integer|exists:wh_funding_sources,id',
+            'order_number'            => 'required|string|max:50',
+            'invoice_number'          => ['required', 'string', 'max:50', Rule::unique('wh_purchase_order')->ignore($order->id)],
+            'budget_commitment_number' => 'required|string|max:50',
+            'acta_date'               => 'required|date_format:Y-m-d H:i:s',
+            'reception_date'          => 'required|date_format:Y-m-d H:i:s',
+            'supplier_representative' => 'required|string|max:150',
+            'invoice_date'            => 'required|date_format:Y-m-d H:i:s',
+            'purchase_order_administrator_id' => 'required|integer|exists:adm_employees,id',
+            'administrative_technician_id' => $this->administrativeTechnicianRule(),
+            'file' => self::FILE_RULE,
+            'partial_delivery' => 'nullable|in:0,1,true,false',
+        ];
+    }
+
+    private function administrativeTechnicianRule(): array
+    {
+        return [
+            'required',
+            'integer',
+            Rule::exists('adm_employees', 'id')->where(function ($query) {
+                $query->where('warehouse_manager', true);
+            }),
+        ];
+    }
+
+    private function purchaseOrderValidationMessages(): array
+    {
+        return [
+            'required' => 'El campo :attribute es obligatorio.',
+            'string' => 'El campo :attribute debe ser texto.',
+            'integer' => 'El campo :attribute debe ser un número entero.',
+            'date' => 'El campo :attribute debe ser una fecha válida.',
+            'date_format' => 'El formato del campo :attribute debe ser AAAA-MM-DD HH:MM:SS.',
+            'numeric' => 'El campo :attribute debe ser un número.',
+            'boolean' => 'El campo :attribute debe ser verdadero o falso.',
+            'in' => 'El valor seleccionado para :attribute no es válido.',
+            'max.string' => 'El campo :attribute no debe superar :max caracteres.',
+            'exists' => 'El :attribute seleccionado no es válido o no existe.',
+            'unique' => 'El :attribute ya existe en el sistema.',
+            'supplier_id.exists' => 'El proveedor seleccionado no es válido o no existe.',
+            'wh_funding_sources_id.exists' => 'La fuente de financiamiento seleccionada no es válida o no existe.',
+            'order_number.unique' => 'El número de Orden de Compra ya existe en el sistema.',
+            'invoice_number.unique' => 'El número de Factura ya existe en el sistema y debe ser único.',
+            'purchase_order_administrator_id.exists' => 'El administrador de orden de compra seleccionado no es válido o no existe.',
+            'administrative_technician_id.exists' => 'El encargado de almacén seleccionado no es válido o no está habilitado como encargado de almacén.',
+            'file.mimes' => 'El archivo debe ser PDF o imagen (jpg, jpeg, png, webp, gif).',
+            'file.max' => 'El archivo no debe superar 10 MB.',
+        ];
+    }
+
+    private function purchaseOrderValidationAttributes(): array
+    {
+        return [
+            'supplier_id' => 'proveedor',
+            'wh_funding_sources_id' => 'fuente de financiamiento',
+            'order_number' => 'número de orden',
+            'invoice_number' => 'número de factura',
+            'budget_commitment_number' => 'número de compromiso presupuestario',
+            'acta_date' => 'fecha del acta',
+            'reception_date' => 'fecha de recepción',
+            'supplier_representative' => 'representante del proveedor',
+            'invoice_date' => 'fecha de factura',
+            'purchase_order_administrator_id' => 'administrador de orden de compra',
+            'administrative_technician_id' => 'encargado de almacén',
+            'file' => 'archivo adjunto',
+            'partial_delivery' => 'entrega parcial',
+        ];
     }
 
     private function validateOrderNumberUniqueness(

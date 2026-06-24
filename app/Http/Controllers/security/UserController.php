@@ -356,20 +356,6 @@ class UserController extends Controller
         }
     }
 
-    public function getAdministrativeTechnicians()
-    {
-        $users = User::whereHas('roles', function ($query) {
-            $query->where('id', 2);
-        })
-            ->where('status', 1)
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data'    => $users
-        ]);
-    }
-
     public function getAreaManagers()
     {
         $users = User::whereHas('roles', function ($query) {

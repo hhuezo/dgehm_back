@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -46,6 +47,18 @@ return Application::configure(basePath: dirname(__DIR__))
                 'success' => false,
                 'message' => 'No autorizado.',
             ], 403);
+        });
+
+        //VALIDACIÓN (mensajes personalizados en español)
+        $exceptions->render(function (ValidationException $e) {
+            $errors = $e->errors();
+            $firstError = collect($errors)->flatten()->first();
+
+            return response()->json([
+                'success' => false,
+                'message' => $firstError ?: 'Los datos enviados no son válidos.',
+                'errors' => $errors,
+            ], 422);
         });
     })
 

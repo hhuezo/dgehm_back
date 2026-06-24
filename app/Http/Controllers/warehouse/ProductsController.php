@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\warehouse\AccountingAccount;
 use App\Models\warehouse\Kardex;
 use App\Models\warehouse\Product;
+use App\Services\KardexStockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -14,11 +15,7 @@ class ProductsController extends Controller
 {
     public function index()
     {
-        $remainingQuantitySql = 'SUM(CASE WHEN k.movement_type = 1 THEN k.quantity WHEN k.movement_type = 2 THEN -k.quantity ELSE 0 END)';
-
-        $stockByProduct = DB::table('wh_kardex as k')
-            ->select('k.product_id', DB::raw("{$remainingQuantitySql} as available_quantity"))
-            ->groupBy('k.product_id');
+        $stockByProduct = KardexStockService::stockByProductSubquery();
 
         $data = Product::query()
             ->select(
@@ -52,10 +49,12 @@ class ProductsController extends Controller
     }
 
     /**
-     * Catálogo de productos activos (solicitud de insumos).
+     * Catálogo de productos activos con existencia (solicitud de insumos).
      */
     public function indexForSupplyRequest()
     {
+        $stockByProduct = KardexStockService::stockByProductSubquery();
+
         $data = Product::query()
             ->select(
                 'wh_products.id',
@@ -64,8 +63,13 @@ class ProductsController extends Controller
                 'wh_products.description',
                 'wh_products.measure_id'
             )
+            ->leftJoinSub($stockByProduct, 'stock', function ($join) {
+                $join->on('wh_products.id', '=', 'stock.product_id');
+            })
+            ->addSelect(DB::raw('COALESCE(stock.available_quantity, 0) as available_quantity'))
             ->with(['measure:id,name'])
             ->where('wh_products.is_active', 1)
+            ->whereRaw('COALESCE(stock.available_quantity, 0) > 0')
             ->orderBy('wh_products.name')
             ->get();
 
