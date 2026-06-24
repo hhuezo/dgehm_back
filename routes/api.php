@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\general\ImageController;
+use App\Http\Controllers\configuration\MailSettingsController;
 use App\Http\Controllers\security\EmployeeController;
 use App\Http\Controllers\security\PermissionController;
 use App\Http\Controllers\security\PermissionTypeController;
@@ -94,3 +95,12 @@ Route::patch('/employees/{id}/warehouse-manager', [EmployeeController::class, 'u
 Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
 
 Route::get('/area-managers', [UserController::class, 'getAreaManagers']);
+
+/*
+|--------------------------------------------------------------------------
+| Configuración de correo (adm_mail_settings)
+|--------------------------------------------------------------------------
+*/
+Route::get('/mail_settings', [MailSettingsController::class, 'show']);
+Route::put('/mail_settings', [MailSettingsController::class, 'update']);
+Route::post('/mail_settings/test', [MailSettingsController::class, 'sendTest']);

@@ -147,6 +147,9 @@ class PermissionsSeeder extends Seeder
             'Configuration' => [
                 'configuration view',
                 'warehouse_managers update',
+                'mail_settings view',
+                'mail_settings update',
+                'mail_settings test',
             ],
         ];
 

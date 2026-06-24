@@ -491,10 +491,10 @@ class SupplyRequestController extends Controller
             abort(404, 'Solicitud no encontrada');
         }
 
-        if ((int) $request->status_id !== 4) {
+        if (! in_array((int) $request->status_id, [3, 4], true)) {
             return response()->json([
                 'success' => false,
-                'message' => 'El acta de entrega solo está disponible para solicitudes completadas.',
+                'message' => 'La ficha de solicitud solo está disponible para solicitudes aprobadas o completadas.',
             ], 403);
         }
 
@@ -519,7 +519,7 @@ class SupplyRequestController extends Controller
         ])
             ->setPaper('A4', 'portrait');
 
-        return $pdf->download("Acta_Entrega_Insumos_{$id}.pdf");
+        return $pdf->download("Ficha_Solicitud_Insumos_{$id}.pdf");
     }
 
     public function downloadFile(string $id, string $role)
