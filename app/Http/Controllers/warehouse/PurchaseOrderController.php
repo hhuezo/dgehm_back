@@ -341,20 +341,34 @@ class PurchaseOrderController extends Controller
         Carbon::setLocale('es');
 
         $actaDate = Carbon::parse($order->acta_date);
+        $receptionDate = Carbon::parse($order->reception_date);
+        $invoiceDate = Carbon::parse($order->invoice_date);
 
         $data = [
             'order' => $order,
 
-            'acta_time_part'    => $actaDate->format('H'),
-            'acta_minutes_part' => $actaDate->format('i'),
-            'acta_date_part'    => $actaDate->format('d'),
-            'acta_month_part'   => $actaDate->translatedFormat('F'), // ← español
-            'acta_year_part'    => $actaDate->format('Y'),
+            'acta_time_part'     => $actaDate->format('H'),
+            'acta_minutes_part'  => $actaDate->format('i'),
+            'acta_date_part'     => $actaDate->format('d'),
+            'acta_month_part'    => $actaDate->translatedFormat('F'),
+            'acta_year_part'     => $actaDate->format('Y'),
+
+            'oc_date_part'       => $receptionDate->format('d'),
+            'oc_month_part'      => $receptionDate->translatedFormat('F'),
+            'oc_year_part'       => $receptionDate->format('Y'),
+
+            'invoice_date_part'  => $invoiceDate->format('d'),
+            'invoice_month_part' => $invoiceDate->translatedFormat('F'),
+            'invoice_year_part'  => $invoiceDate->format('Y'),
         ];
 
         //return view('reports.acta_recepcion',$data);
 
-        $pdf = PDF::loadView('reports.acta_recepcion', $data);
+        $pdf = PDF::loadView('reports.acta_recepcion', $data)
+            ->setPaper('letter', 'portrait')
+            ->setOption('fontDir', storage_path('fonts'))
+            ->setOption('fontCache', storage_path('fonts'))
+            ->setOption('enable_font_subsetting', true);
 
         return $pdf->download("Acta_Recepcion_{$id}.pdf");
     }

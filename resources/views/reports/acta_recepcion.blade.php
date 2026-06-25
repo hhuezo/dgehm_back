@@ -1,201 +1,270 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <title>Acta de Recepción de Insumos de Almacén</title>
-
     <style>
         @page {
-            margin: 30px 30px 60px 30px;
-            /* espacio inferior para footer */
+            margin: 96pt 72pt 90pt 72pt;
         }
 
         body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 13px;
-            line-height: 1.6;
+            font-family: museo-sans-300, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #150D2D;
+            margin: 0;
         }
 
-        .header-logos {
+        table {
             width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-collapse: collapse;
         }
 
-        .logo-box {
-            width: 15%;
+        .pdf-header {
+            position: fixed;
+            top: -78pt;
+            left: 0;
+            right: 0;
+            height: 78pt;
+        }
+
+        .header-logos td {
+            vertical-align: middle;
+            padding: 0;
+        }
+
+        .header-logos .logo-left {
+            width: 14%;
+            text-align: left;
+        }
+
+        .header-logos .logo-right {
+            width: 36%;
+            text-align: right;
+        }
+
+        .header-logos .logo-spacer {
+            width: 50%;
+        }
+
+        .header-title {
+            font-family: museo-sans-500, sans-serif;
             text-align: center;
+            font-size: 12pt;
+            line-height: 1.15;
+            color: #150D2D;
+            margin: 4pt 0 0;
+            padding: 0 8pt;
         }
 
-        .logo-box img {
-            max-width: 100%;
-            height: auto;
+        .body-text {
+            margin-top: 6pt;
+            text-align: justify;
+            text-justify: inter-word;
         }
 
-        .center {
-            text-align: center;
-        }
-
-        .bold {
-            font-weight: bold;
+        .body-text p {
+            margin: 0 0 10pt;
+            font-family: museo-sans-300, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
         }
 
         .underline {
-            border-bottom: 1px solid #000;
-            display: inline-block;
-            min-width: 30px;
-            padding: 0 4px;
-        }
-
-        .block {
-            margin-top: 15px;
-            text-align: justify;
+            border-bottom: 0.5pt solid #150D2D;
+            padding: 0 1pt 0.5pt;
         }
 
         .signatures {
-            margin-top: 40px;
-            width: 100%;
-            font-size: 12px;
+            margin-top: 22pt;
+            font-family: museo-sans-300, sans-serif;
+            font-size: 10pt;
+            line-height: 1.2;
+        }
+
+        .signatures .sign-head {
+            font-family: museo-sans-500, sans-serif;
+            margin-bottom: 8pt;
         }
 
         .signatures td {
-            padding-right: 40px;
+            vertical-align: top;
+            width: 50%;
+            padding-right: 14pt;
+        }
+
+        .signatures .sign-right {
+            padding-right: 0;
+            padding-left: 14pt;
+        }
+
+        .warehouse-sign {
+            margin-top: 24pt;
+        }
+
+        .pdf-footer {
+            position: fixed;
+            bottom: -72pt;
+            left: 0;
+            right: 0;
+            height: 72pt;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 9pt;
+            line-height: 1.2;
+            color: #150D2D;
+        }
+
+        .pdf-footer td {
             vertical-align: top;
         }
 
-        /* FOOTER FIJO */
-        .footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 10px 30px;
-            font-size: 11px;
+        .pdf-footer .footer-spacer td {
+            height: 14pt;
+            padding: 0;
+            line-height: 0;
+            font-size: 0;
+        }
+
+        .pdf-footer .code-row td {
+            padding-bottom: 6pt;
+        }
+
+        .pdf-footer .dist-row td {
+            font-size: 9pt;
+            line-height: 1.15;
+            padding-top: 0;
+        }
+
+        .pdf-footer .dist-center {
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .pdf-footer .dist-sub-row td {
+            font-size: 9pt;
+            line-height: 1.15;
+            padding-top: 0;
         }
     </style>
 </head>
-
 <body>
+@php
+    $escudoPath = public_path('escudo.png');
+    $logoPath = public_path('logo_azul.png');
+    $adminName = trim(($order->purchaseOrderAdministrator->name ?? '') . ' ' . ($order->purchaseOrderAdministrator->lastname ?? ''));
+    $techName = trim(($order->administrativeTechnician->name ?? '') . ' ' . ($order->administrativeTechnician->lastname ?? ''));
+@endphp
 
-    {{-- HEADER --}}
-    <table style="width:100%; margin-bottom:10px;">
+<div class="pdf-header">
+    <table class="header-logos">
         <tr>
-            <td style="width:50%; text-align:left;">
-                <img src="{{ public_path('escudo.png') }}" width="50">
+            <td class="logo-left">
+                @if (file_exists($escudoPath))
+                    <img src="{{ $escudoPath }}" width="58" alt="">
+                @endif
             </td>
-
-            <td style="width:50%; text-align:right;">
-                <img src="{{ public_path('logo_azul.png') }}" height="50">
+            <td class="logo-spacer"></td>
+            <td class="logo-right">
+                @if (file_exists($logoPath))
+                    <img src="{{ $logoPath }}" height="46" alt="">
+                @endif
             </td>
         </tr>
     </table>
+    <div class="header-title">ACTA DE RECEPCIÓN DE INSUMOS DE ALMACÉN</div>
+</div>
 
+<div class="body-text">
+    <p>
+        San Salvador Centro, a las <span class="underline">{{ $acta_time_part }}</span> horas y
+        <span class="underline">{{ $acta_minutes_part }}</span> minutos del día
+        <span class="underline">{{ $acta_date_part }}</span> de
+        <span class="underline">{{ $acta_month_part }}</span> de dos mil
+        <span class="underline">{{ $acta_year_part }}</span>; en las instalaciones de la Dirección General
+        de Energía, Hidrocarburos y Minas, ubicadas en Torre Futura Nivel 16 y 17, entre Calle el
+        Mirador y 87 Avenida Norte, Colonia Escalón, Distrito de San Salvador Centro, Departamento
+        de San Salvador; reunidos el(la) Sr(Sra.)
+        <span class="underline">{{ $order->supplier_representative }}</span>, en
+        representación de <span class="underline">{{ $order->supplier->name ?? '' }}</span>; el(la)
+        Sr.(Sra.) <span class="underline">{{ $adminName }}</span>, Gerente Administrativo(a)
+        de la DGEHM; y el(la) Sr.(Sra.) <span class="underline">{{ $techName }}</span>,
+        Técnico(a) Administrativo(a) de la DGEHM; para hacer constar la entrega por parte del(la)
+        Primero(a) y la recepción por parte del(la) segundo(a) de los insumos adquiridos mediante el
+        proceso de compra No. <span class="underline">{{ $order->order_number }}</span> de fecha
+        <span class="underline">{{ $oc_date_part }}</span> de
+        <span class="underline">{{ $oc_month_part }}</span> de
+        <span class="underline">{{ $oc_year_part }}</span>, y compromiso presupuestario No.
+        <span class="underline">{{ $order->budget_commitment_number }}</span>, recibidos por medio de la factura No.
+        <span class="underline">{{ $order->invoice_number }}</span> de fecha:
+        <span class="underline">{{ $invoice_date_part }}</span> de
+        <span class="underline">{{ $invoice_month_part }}</span> de
+        <span class="underline">{{ $invoice_year_part }}</span>, por un monto total de
+        US$ <span class="underline">{{ number_format($order->total_amount, 2) }}</span> emitida por el proveedor.
+    </p>
 
-
-    <div class="center bold">
-        ACTA DE RECEPCIÓN DE INSUMOS DE ALMACÉN
-    </div>
-
-    {{-- CUERPO --}}
-    <div class="block">
-        San Salvador Centro, a las
-        <span class="underline">{{ $acta_time_part }}</span>
-        horas y
-        <span class="underline">{{ $acta_minutes_part }}</span>
-        minutos del día
-        <span class="underline">{{ $acta_date_part }}</span>
-        de
-        <span class="underline">{{ \Carbon\Carbon::parse($order->acta_date)->translatedFormat('F') }}</span>
-        de dos mil
-        <span class="underline">{{ $acta_year_part }}</span>;
-        en las instalaciones de la Dirección General de Energía, Hidrocarburos y Minas,
-        ubicadas en Torre Futura Nivel 16 y 17, entre Calle el Mirador y 87 Avenida Norte,
-        Colonia Escalón, Distrito de San Salvador Centro, Departamento de San Salvador;
-        reunidos el(la) Sr(Sra.)
-        <span class="underline">{{ $order->supplier_representative }}</span>,
-        en representación de
-        <span class="underline">{{ $order->supplier->name ?? '' }}</span>;
-        el(la) Sr.(Sra.)
-        <span class="underline">
-            {{ trim(($order->purchaseOrderAdministrator->name ?? '') . ' ' . ($order->purchaseOrderAdministrator->lastname ?? '')) }}
-        </span>,
-        Gerente Administrativo(a) de la DGEHM; y el(la) Sr.(Sra.)
-        <span class="underline">
-            {{ $order->administrativeTechnician->name ?? '' }}
-            {{ $order->administrativeTechnician->lastname ?? '' }}
-        </span>,
-        Técnico(a) Administrativo(a) de la DGEHM; para hacer constar la entrega por parte
-        del(la) Primero(a) y la recepción por parte del(la) segundo(a) de los insumos
-        adquiridos mediante el proceso de compra No.
-        <span class="underline">{{ $order->order_number }}</span>
-        y compromiso presupuestario No.
-        <span class="underline">{{ $order->budget_commitment_number }}</span>,
-        recibidos por medio de la factura No.
-        <span class="underline">{{ $order->invoice_number }}</span>
-        de fecha
-        <span class="underline">{{ optional($order->invoice_date)->format('d/m/Y') }}</span>,
-        por un monto total de
-        <span class="underline">US$ {{ number_format($order->total_amount, 2) }}</span>
-        emitida por el proveedor.
-    </div>
-
-    <div class="block">
+    <p>
         Posterior a haber constado físicamente los insumos recibidos, los abajo suscritos
         firman a satisfacción.
-    </div>
+    </p>
+</div>
 
-    {{-- FIRMAS --}}
-    <table class="signatures">
-        <tr>
-            {{-- ENTREGA --}}
-            <td style="width:50%;">
-                <strong>ENTREGA:</strong><br><br>
-                F.__________________________________________<br>
-                Nombre: {{ $order->supplier_representative }}<br>
-                Por Empresa: {{ $order->supplier->name ?? '' }}<br>
-                Sello
-            </td>
+<table class="signatures">
+    <tr>
+        <td>
+            <div class="sign-head">ENTREGA:</div>
+            F.________________________________________<br><br>
+            Nombre: <span class="underline">{{ $order->supplier_representative }}</span><br>
+            Por Empresa: <span class="underline">{{ $order->supplier->name ?? '' }}</span><br>
+            Sello
+        </td>
+        <td class="sign-right">
+            <div class="sign-head">RECIBE:</div>
+            F.________________________________________<br><br>
+            Nombre: <span class="underline">{{ $adminName }}</span><br>
+            Cargo: Gerente Administrativo(a)<br>
+            (Administrador de O/C)
 
-            {{-- RECIBE + POR ALMACÉN --}}
-            <td style="width:50%;">
-                <strong>RECIBE:</strong><br><br>
-                F.__________________________________________<br>
-                Nombre: {{ trim(($order->purchaseOrderAdministrator->name ?? '') . ' ' . ($order->purchaseOrderAdministrator->lastname ?? '')) }}<br>
-                Cargo: Gerente Administrativo(a)<br>
-                (Administrador de O/C)
+            <div class="warehouse-sign">
+                <div class="sign-head">POR ALMACÉN:</div>
+                F.________________________________<br><br>
+                Nombre: <span class="underline">{{ $techName }}</span><br>
+                Cargo: Técnico Administrativo (Encargado de Almacén)
+            </div>
+        </td>
+    </tr>
+</table>
 
-                <div style="margin-top:35px;">
-                    <strong>POR ALMACÉN:</strong><br><br>
-                    F.__________________________________________<br>
-                    Nombre: {{ $order->administrativeTechnician->name ?? '' }}
-                    {{ $order->administrativeTechnician->lastname ?? '' }}<br>
-                    Cargo: Técnico Administrativo (Encargado de Almacén)
-                </div>
-            </td>
-        </tr>
-    </table>
+<table class="pdf-footer">
+    <tr class="footer-spacer">
+        <td colspan="3">&nbsp;</td>
+    </tr>
+    <tr class="code-row">
+        <td style="width:50%; text-align:left;">
+            DAF-F-GA-08<br>
+            13/01/2025
+        </td>
+        <td style="width:50%; text-align:right;">&nbsp;</td>
+    </tr>
+    <tr class="dist-row">
+        <td style="width:33%; text-align:left;">Original: Contabilidad</td>
+        <td style="width:34%; text-align:center;">Duplicado: Administrador de Contrato</td>
+        <td style="width:33%; text-align:right;">Triplicado: UCP</td>
+    </tr>
+    <tr class="dist-sub-row">
+        <td style="width:33%;">&nbsp;</td>
+        <td style="width:34%; text-align:center;">u Orden de Compra</td>
+        <td style="width:33%;">&nbsp;</td>
+    </tr>
+</table>
 
-    {{-- FOOTER --}}
-    <table class="footer" style="width:100%; table-layout:fixed;">
-        <tr>
-            <td style="text-align:left;">
-                Original: Contabilidad
-            </td>
-
-            <td style="text-align:center;">
-                Duplicado: Administrador de Contrato<br>
-                u Orden de Compra
-            </td>
-
-            <td style="text-align:right;">
-                Triplicado: UCP
-            </td>
-        </tr>
-    </table>
-
-
+<script type="text/php">
+    if (isset($pdf)) {
+        $pdf->page_script('
+            $font = $fontMetrics->get_font("Arial", "normal");
+            $pdf->text(430, 768, "Página $PAGE_NUM de $PAGE_COUNT", $font, 9);
+        ');
+    }
+</script>
 </body>
-
 </html>

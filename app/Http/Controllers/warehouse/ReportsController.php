@@ -213,13 +213,7 @@ class ReportsController extends Controller
         $exportExcel = $request->boolean('exportExcel', false);
         $fundingSourceId = $this->resolveFundingSourceId($request);
 
-        // 1. Unidades organizativas (columnas)
-        $organizationalUnits = DB::table('fa_organizational_units')
-            ->where('is_active', 1)
-            ->orderBy('name')
-            ->get();
-
-        // 2. Datos base (producto + oficina + cantidad)
+        // 1. Datos base (producto + oficina + cantidad)
         $data = DB::table('wh_kardex')
             ->join('wh_products', 'wh_kardex.product_id', '=', 'wh_products.id')
             ->join('wh_supply_request', 'wh_kardex.supply_request_id', '=', 'wh_supply_request.id')
@@ -242,6 +236,14 @@ class ReportsController extends Controller
                 'wh_supply_request.fa_organizational_unit_id'
             )
             ->orderBy('wh_products.name')
+            ->get();
+
+        // 2. Solo oficinas con entregas en el periodo (columnas)
+        $deliveredUnitIds = $data->pluck('fa_organizational_unit_id')->unique()->filter()->values();
+
+        $organizationalUnits = DB::table('fa_organizational_units')
+            ->whereIn('id', $deliveredUnitIds)
+            ->orderBy('name')
             ->get();
 
         // 3. Agrupar por producto (para la matriz)
