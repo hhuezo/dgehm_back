@@ -143,6 +143,11 @@ class PermissionsSeeder extends Seeder
                 'fixed_assets update',
                 'fixed_assets delete',
                 'fixed_assets import',
+                'assignments view',
+                'assignments create',
+                'assignments update',
+                'assignments delete',
+                'assignments report',
             ],
             'Configuration' => [
                 'configuration view',

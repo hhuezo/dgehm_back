@@ -15,6 +15,7 @@ use App\Http\Controllers\fixedasset\VehicleDriveTypeController;
 use App\Http\Controllers\fixedasset\VehicleTypeController;
 use App\Http\Controllers\fixedasset\FixedAssetController;
 use App\Http\Controllers\fixedasset\DepreciationReportController;
+use App\Http\Controllers\fixedasset\AssignmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -87,6 +88,12 @@ Route::get('/fixed_assets', [FixedAssetController::class, 'index']);
 Route::post('/fixed_assets', [FixedAssetController::class, 'store']);
 Route::put('/fixed_assets/{id}', [FixedAssetController::class, 'update']);
 Route::delete('/fixed_assets/{id}', [FixedAssetController::class, 'destroy']);
+
+Route::get('/assignments', [AssignmentController::class, 'index']);
+Route::get('/assignments/reports/{id}', [AssignmentController::class, 'report']);
+Route::get('/assignments/{id}', [AssignmentController::class, 'show']);
+Route::post('/assignments', [AssignmentController::class, 'store']);
+Route::put('/assignments/{id}', [AssignmentController::class, 'update']);
 
 
 Route::post('/fixed_assets/import', [FixedAssetController::class, 'import']);
