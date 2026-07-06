@@ -8,17 +8,31 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('fa_assignments', function (Blueprint $table) {
-            $table->text('observation')->nullable()->after('collaborator_id');
-            $table->dropColumn('is_finalized');
-        });
+        if (! Schema::hasColumn('fa_assignments', 'observation')) {
+            Schema::table('fa_assignments', function (Blueprint $table) {
+                $table->text('observation')->nullable()->after('collaborator_id');
+            });
+        }
+
+        if (Schema::hasColumn('fa_assignments', 'is_finalized')) {
+            Schema::table('fa_assignments', function (Blueprint $table) {
+                $table->dropColumn('is_finalized');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('fa_assignments', function (Blueprint $table) {
-            $table->boolean('is_finalized')->default(false)->after('collaborator_id');
-            $table->dropColumn('observation');
-        });
+        if (! Schema::hasColumn('fa_assignments', 'is_finalized')) {
+            Schema::table('fa_assignments', function (Blueprint $table) {
+                $table->boolean('is_finalized')->default(false)->after('collaborator_id');
+            });
+        }
+
+        if (Schema::hasColumn('fa_assignments', 'observation')) {
+            Schema::table('fa_assignments', function (Blueprint $table) {
+                $table->dropColumn('observation');
+            });
+        }
     }
 };

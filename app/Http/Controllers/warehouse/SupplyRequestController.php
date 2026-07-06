@@ -9,6 +9,7 @@ use App\Models\warehouse\SupplyRequest;
 use App\Models\warehouse\SupplyRequestDetail;
 use App\Services\KardexStockService;
 use App\Services\SupplyRequestFileService;
+use App\Services\SupplyRequestMailService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -23,6 +24,7 @@ class SupplyRequestController extends Controller
     public function __construct(
         private KardexStockService $kardexStockService,
         private SupplyRequestFileService $supplyRequestFileService,
+        private SupplyRequestMailService $supplyRequestMailService,
     ) {}
 
     public function index()
@@ -374,9 +376,20 @@ class SupplyRequestController extends Controller
 
             DB::commit();
 
+            $emailResult = $this->supplyRequestMailService->notifyRequesterReadyForPickup($supplyRequest);
+
+            $message = 'Entrega de insumos registrada correctamente. Solicitud completada.';
+            if ($emailResult['sent']) {
+                $message .= ' Se notificó al solicitante por correo electrónico.';
+            } elseif (!empty($emailResult['reason'])) {
+                $message .= ' No se pudo notificar por correo: ' . $emailResult['reason'];
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'Entrega de insumos registrada correctamente. Solicitud completada.',
+                'message' => $message,
+                'email_sent' => $emailResult['sent'],
+                'email_reason' => $emailResult['reason'],
             ], 200);
         } catch (ValidationException $e) {
 
