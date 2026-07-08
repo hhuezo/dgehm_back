@@ -47,7 +47,7 @@ class DatabaseSeeder extends Seeder
         $this->call(SpecificsSeeder::class);
 
         // -----------------------------------------------------
-        // Clases (fa_classes)
+        // Categorías (fa_categories)
         // -----------------------------------------------------
         $this->call(ClassesSeeder::class);
 
@@ -84,46 +84,46 @@ class DatabaseSeeder extends Seeder
         // -----------------------------------------------------
         // 1. CUENTAS CONTABLES (wh_accounting_accounts)
         // -----------------------------------------------------
-        DB::table('wh_accounting_accounts')->delete();
-
         $accounts = [
-            ['code' => '54101', 'name' => 'PRODUCTOS ALIMENTICIOS PARA PERSONAS', 'created_at' => now(), 'updated_at' => now()],
-            ['code' => '54105', 'name' => 'PRODUCTOS DE PAPEL Y CARTON', 'created_at' => now(), 'updated_at' => now()],
-            ['code' => '54107', 'name' => 'PRODUCTOS QUIMICOS', 'created_at' => now(), 'updated_at' => now()],
-            ['code' => '54114', 'name' => 'MATERIALES DE OFICINA', 'created_at' => now(), 'updated_at' => now()],
-            ['code' => '54115', 'name' => 'MATERIALES INFORMATICOS', 'created_at' => now(), 'updated_at' => now()],
-            ['code' => '54119', 'name' => 'MATERIALES ELECTRICOS', 'created_at' => now(), 'updated_at' => now()],
-            ['code' => '54199', 'name' => 'BIENES DE USO Y CONSUMO DIVERSOS', 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54101', 'name' => 'PRODUCTOS ALIMENTICIOS PARA PERSONAS', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54105', 'name' => 'PRODUCTOS DE PAPEL Y CARTON', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54107', 'name' => 'PRODUCTOS QUIMICOS', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54114', 'name' => 'MATERIALES DE OFICINA', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54115', 'name' => 'MATERIALES INFORMATICOS', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54119', 'name' => 'MATERIALES ELECTRICOS', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['code' => '54199', 'name' => 'BIENES DE USO Y CONSUMO DIVERSOS', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
         ];
-        DB::table('wh_accounting_accounts')->insert($accounts);
+        DB::table('wh_accounting_accounts')->upsert(
+            $accounts,
+            ['code'],
+            ['name', 'is_active', 'updated_at']
+        );
 
         // -----------------------------------------------------
-        // 2. UNIDADES DE MEDIDA (wh_measures) - ¡SOLO 'description'!
-        // Los IDs se usarán para relacionar productos.
+        // 2. UNIDADES DE MEDIDA (wh_measures)
         // -----------------------------------------------------
-        DB::table('wh_measures')->delete();
-
         $units = [
-            // IDs fijos: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
-            ['name' => 'Unidad', 'created_at' => now(), 'updated_at' => now()], // ID 1
-            ['name' => 'Kilogramo', 'created_at' => now(), 'updated_at' => now()], // ID 2
-            ['name' => 'Gramo', 'created_at' => now(), 'updated_at' => now()], // ID 3
-            ['name' => 'Litro', 'created_at' => now(), 'updated_at' => now()], // ID 4
-            ['name' => 'Metro', 'created_at' => now(), 'updated_at' => now()], // ID 5
-            ['name' => 'Caja', 'created_at' => now(), 'updated_at' => now()], // ID 6
-            ['name' => 'Resma', 'created_at' => now(), 'updated_at' => now()], // ID 7
-            ['name' => 'Galón', 'created_at' => now(), 'updated_at' => now()], // ID 8
-            ['name' => 'Paquete', 'created_at' => now(), 'updated_at' => now()], // ID 9
-            ['name' => 'Libra', 'created_at' => now(), 'updated_at' => now()], // ID 10
-            ['name' => 'Bolsa', 'created_at' => now(), 'updated_at' => now()], // ID 11
+            ['name' => 'Unidad', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Kilogramo', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Gramo', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Litro', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Metro', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Caja', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Resma', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Galón', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Paquete', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Libra', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Bolsa', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
         ];
-        DB::table('wh_measures')->insert($units);
+        DB::table('wh_measures')->upsert(
+            $units,
+            ['name'],
+            ['is_active', 'updated_at']
+        );
 
         // -----------------------------------------------------
         // 3. PROVEEDORES (wh_suppliers)
         // -----------------------------------------------------
-        DB::table('wh_suppliers')->delete();
-
         $suppliers = [
             [
                 'name' => 'PROVEEDORA DE ALIMENTOS EL SALVADOR S.A. DE C.V.',
@@ -131,8 +131,9 @@ class DatabaseSeeder extends Seeder
                 'phone' => '2255-0000',
                 'email' => 'ventas@proveedora.com',
                 'address' => 'Avenida Principal, San Salvador',
+                'is_active' => true,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             [
                 'name' => 'SUMINISTROS DE OFICINA CENTRAL S.A. DE C.V.',
@@ -140,11 +141,16 @@ class DatabaseSeeder extends Seeder
                 'phone' => '2266-1111',
                 'email' => 'info@suministros.com',
                 'address' => 'Calle Secundaria, Santa Ana',
+                'is_active' => true,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
         ];
-        DB::table('wh_suppliers')->insert($suppliers);
+        DB::table('wh_suppliers')->upsert(
+            $suppliers,
+            ['email'],
+            ['name', 'contact_person', 'phone', 'address', 'is_active', 'updated_at']
+        );
 
         // -----------------------------------------------------
         // 4. FUENTES DE FINANCIAMIENTO (wh_funding_sources)
@@ -152,37 +158,51 @@ class DatabaseSeeder extends Seeder
         $this->call(FundingSourcesSeeder::class);
 
         // -----------------------------------------------------
-        // 5. PRODUCTOS/INSUMOS (wh_products) - ¡SIN measure_id!
+        // 5. PRODUCTOS/INSUMOS (wh_products)
         // -----------------------------------------------------
-
-        DB::table('wh_products')->delete();
-
-        // Búsqueda de Cuenta Contable
         $cuentaId = DB::table('wh_accounting_accounts')->where('code', '54101')->value('id');
         $cuentaId = $cuentaId ?: 1;
 
-        //measures_id
-        $products = [
-            ['name' => 'AZUCAR DE 1 LIBRA DEL CAÑAL', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'AZUCAR BLANCA GRANULADA EN SOBRE BOLSA DE 1000 UNIDADES', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'CAFE MOLIDO MAJADA ORO, BOLSA DE 1 LIBRA CON EMPAQUE METALIZADO CON VALVULA', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'CREMORA EN SOBRE BOLSA DE 200 UNIDADES, MARCA CREMAFE', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'PAPEL DE ALUMINIO ROLLO DE 500 PIES', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'SAL EN SOBRE BOLSA DE 500 UNIDADES SOBRE DE 0.39 GRS. MARCA CODIPA', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'SOBRE DE AZUCAR DIETETICA, CAJA DE 200 UNIDADES', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE DE CANELA CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE DE MANZANA CANELA. CAJA DE 20 UNIDADES MARCA SELECTOS', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE DE MANZANILLA CANELA. CAJA DE 20 UNIDADES MARCA MC CORMICK', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE DE MENTA CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE NEGRO CAJA DE 25 SOBRE DE 1.8GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'TE VERDE CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'SOBRE DE AZUCAR SPLENDA (CAJA DE 100 UNIDADES)', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'BOLSAS DE CAFÉ TOSTADO Y MOLIDO', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'BOLSAS DE AZUCAR BLANCA DE 500G', 'accounting_account_id' => $cuentaId, 'measure_id' => rand(1, 11), 'created_at' => now(), 'updated_at' => now()],
+        $measureIds = DB::table('wh_measures')->pluck('id')->all();
+        $defaultMeasureId = $measureIds[0] ?? 1;
+
+        $productNames = [
+            'AZUCAR DE 1 LIBRA DEL CAÑAL',
+            'AZUCAR BLANCA GRANULADA EN SOBRE BOLSA DE 1000 UNIDADES',
+            'CAFE MOLIDO MAJADA ORO, BOLSA DE 1 LIBRA CON EMPAQUE METALIZADO CON VALVULA',
+            'CREMORA EN SOBRE BOLSA DE 200 UNIDADES, MARCA CREMAFE',
+            'PAPEL DE ALUMINIO ROLLO DE 500 PIES',
+            'SAL EN SOBRE BOLSA DE 500 UNIDADES SOBRE DE 0.39 GRS. MARCA CODIPA',
+            'SOBRE DE AZUCAR DIETETICA, CAJA DE 200 UNIDADES',
+            'TE DE CANELA CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE',
+            'TE DE MANZANA CANELA. CAJA DE 20 UNIDADES MARCA SELECTOS',
+            'TE DE MANZANILLA CANELA. CAJA DE 20 UNIDADES MARCA MC CORMICK',
+            'TE DE MENTA CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE',
+            'TE NEGRO CAJA DE 25 SOBRE DE 1.8GRS. MARCA MANZATE',
+            'TE VERDE CAJA DE 25 SOBRE DE 1.3GRS. MARCA MANZATE',
+            'SOBRE DE AZUCAR SPLENDA (CAJA DE 100 UNIDADES)',
+            'BOLSAS DE CAFÉ TOSTADO Y MOLIDO',
+            'BOLSAS DE AZUCAR BLANCA DE 500G',
         ];
 
+        $products = array_map(function (string $name) use ($cuentaId, $measureIds, $defaultMeasureId) {
+            $measureId = !empty($measureIds)
+                ? $measureIds[array_rand($measureIds)]
+                : $defaultMeasureId;
 
-        DB::table('wh_products')->insert($products);
+            return [
+                'name' => $name,
+                'accounting_account_id' => $cuentaId,
+                'measure_id' => $measureId,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }, $productNames);
+
+        if (!DB::table('wh_products')->exists()) {
+            DB::table('wh_products')->insert($products);
+        }
 
         // -----------------------------------------------------
         // 6. ORDENES DE COMPRA (purchase_order)

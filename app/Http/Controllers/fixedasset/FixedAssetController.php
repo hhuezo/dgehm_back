@@ -4,7 +4,7 @@ namespace App\Http\Controllers\fixedasset;
 
 use App\Http\Controllers\Controller;
 use App\Imports\FixedAssetImport;
-use App\Models\fixedasset\AssetClass;
+use App\Models\fixedasset\Category;
 use App\Models\fixedasset\FixedAsset;
 use App\Models\fixedasset\Institution;
 use Illuminate\Http\Request;
@@ -20,7 +20,7 @@ class FixedAssetController extends Controller
     {
         $assets = FixedAsset::select(
             'id',
-            'fa_class_id',
+            'fa_category_id',
             'code',
             'correlative',
             'description',
@@ -45,8 +45,8 @@ class FixedAssetController extends Controller
             'purchase_value'
         )
             ->with([
-                'assetClass:id,fa_specific_id,code,name,useful_life',
-                'assetClass.specific:id,code,name',
+                'category:id,fa_specific_id,code,name,useful_life',
+                'category.specific:id,code,name',
                 'organizationalUnit:id,name',
                 'origin:id,name',
                 'physicalCondition:id,name',
@@ -66,7 +66,7 @@ class FixedAssetController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'fa_class_id' => 'required|exists:fa_classes,id',
+            'fa_category_id' => 'required|exists:fa_categories,id',
             'description' => 'required|string|max:255',
             'brand' => 'nullable|string|max:150',
             'model' => 'nullable|string|max:150',
@@ -90,8 +90,8 @@ class FixedAssetController extends Controller
         ];
 
         $messages = [
-            'fa_class_id.required' => 'La clase es obligatoria.',
-            'fa_class_id.exists' => 'La clase seleccionada no existe.',
+            'fa_category_id.required' => 'La categoría es obligatoria.',
+            'fa_category_id.exists' => 'La categoría seleccionada no existe.',
             'description.required' => 'La descripción es obligatoria.',
             'location.required' => 'La ubicación es obligatoria.',
             'current_responsible.required' => 'El responsable actual es obligatorio.',
@@ -121,21 +121,21 @@ class FixedAssetController extends Controller
 
             $institutionCode = $institution?->code ?? '0000';
 
-            /** @var \App\Models\fixedasset\AssetClass $class */
-            $class = AssetClass::with('specific:id,code')
-                ->findOrFail($data['fa_class_id']);
+            /** @var \App\Models\fixedasset\Category $category */
+            $category = Category::with('specific:id,code')
+                ->findOrFail($data['fa_category_id']);
 
-            $specificCode = $class->specific?->code ?? '0000';
-            $classCode = $class->code;
+            $specificCode = $category->specific?->code ?? '0000';
+            $categoryCode = $category->code;
 
-            $lastCorrelative = FixedAsset::where('fa_class_id', $class->id)->max('correlative');
+            $lastCorrelative = FixedAsset::where('fa_category_id', $category->id)->max('correlative');
             $nextCorrelativeNumber = $lastCorrelative ? (int)$lastCorrelative + 1 : 1;
             $correlative = str_pad($nextCorrelativeNumber, 4, '0', STR_PAD_LEFT);
 
-            $code = $institutionCode . '-' . $specificCode . '-' . $classCode . '-' . $correlative;
+            $code = $institutionCode . '-' . $specificCode . '-' . $categoryCode . '-' . $correlative;
 
             $asset = new FixedAsset();
-            $asset->fa_class_id = $class->id;
+            $asset->fa_category_id = $category->id;
             $asset->code = $code;
             $asset->correlative = $correlative;
             $asset->description = $data['description'];
@@ -161,8 +161,8 @@ class FixedAssetController extends Controller
             $asset->save();
 
             $asset->load([
-                'assetClass:id,fa_specific_id,code,name,useful_life',
-                'assetClass.specific:id,code,name',
+                'category:id,fa_specific_id,code,name,useful_life',
+                'category.specific:id,code,name',
                 'organizationalUnit:id,name',
                 'origin:id,name',
                 'physicalCondition:id,name',
@@ -182,7 +182,7 @@ class FixedAssetController extends Controller
     public function update(Request $request, string $id)
     {
         $rules = [
-            'fa_class_id' => 'required|exists:fa_classes,id',
+            'fa_category_id' => 'required|exists:fa_categories,id',
             'description' => 'required|string|max:255',
             'brand' => 'nullable|string|max:150',
             'model' => 'nullable|string|max:150',
@@ -206,8 +206,8 @@ class FixedAssetController extends Controller
         ];
 
         $messages = [
-            'fa_class_id.required' => 'La clase es obligatoria.',
-            'fa_class_id.exists' => 'La clase seleccionada no existe.',
+            'fa_category_id.required' => 'La categoría es obligatoria.',
+            'fa_category_id.exists' => 'La categoría seleccionada no existe.',
             'description.required' => 'La descripción es obligatoria.',
             'location.required' => 'La ubicación es obligatoria.',
             'current_responsible.required' => 'El responsable actual es obligatorio.',
@@ -233,9 +233,9 @@ class FixedAssetController extends Controller
             /** @var \App\Models\fixedasset\FixedAsset $asset */
             $asset = FixedAsset::findOrFail($id);
 
-            $classChanged = $asset->fa_class_id !== (int) $data['fa_class_id'];
+            $categoryChanged = $asset->fa_category_id !== (int) $data['fa_category_id'];
 
-            if ($classChanged) {
+            if ($categoryChanged) {
                 $institution = Institution::select('code')
                     ->where('is_active', true)
                     ->orderBy('id', 'asc')
@@ -243,20 +243,20 @@ class FixedAssetController extends Controller
 
                 $institutionCode = $institution?->code ?? '0000';
 
-                /** @var \App\Models\fixedasset\AssetClass $class */
-                $class = AssetClass::with('specific:id,code')
-                    ->findOrFail($data['fa_class_id']);
+                /** @var \App\Models\fixedasset\Category $category */
+                $category = Category::with('specific:id,code')
+                    ->findOrFail($data['fa_category_id']);
 
-                $specificCode = $class->specific?->code ?? '0000';
-                $classCode = $class->code;
+                $specificCode = $category->specific?->code ?? '0000';
+                $categoryCode = $category->code;
 
-                $lastCorrelative = FixedAsset::where('fa_class_id', $class->id)->max('correlative');
+                $lastCorrelative = FixedAsset::where('fa_category_id', $category->id)->max('correlative');
                 $nextCorrelativeNumber = $lastCorrelative ? (int)$lastCorrelative + 1 : 1;
                 $correlative = str_pad($nextCorrelativeNumber, 4, '0', STR_PAD_LEFT);
 
-                $code = $institutionCode . '-' . $specificCode . '-' . $classCode . '-' . $correlative;
+                $code = $institutionCode . '-' . $specificCode . '-' . $categoryCode . '-' . $correlative;
 
-                $asset->fa_class_id = $class->id;
+                $asset->fa_category_id = $category->id;
                 $asset->code = $code;
                 $asset->correlative = $correlative;
             }
@@ -284,8 +284,8 @@ class FixedAssetController extends Controller
             $asset->save();
 
             $asset->load([
-                'assetClass:id,fa_specific_id,code,name,useful_life',
-                'assetClass.specific:id,code,name',
+                'category:id,fa_specific_id,code,name,useful_life',
+                'category.specific:id,code,name',
                 'organizationalUnit:id,name',
                 'origin:id,name',
                 'physicalCondition:id,name',

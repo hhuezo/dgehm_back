@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ficha de Asignación y Desasignación de Activo Fijo</title>
+    <title>Ficha de Asignación de Activo Fijo</title>
     <style>
         @page {
             margin: 108px 36px 56px 36px;
@@ -77,34 +77,6 @@
             width: 50%;
         }
 
-        .name-cell {
-            width: 52%;
-        }
-
-        .sign-cell {
-            width: 24%;
-        }
-
-        .check-box {
-            display: inline-block;
-            width: 11px;
-            height: 11px;
-            border: 1px solid #000;
-            text-align: center;
-            line-height: 10px;
-            font-size: 8px;
-            font-weight: bold;
-            vertical-align: middle;
-            margin-left: 3px;
-        }
-
-        .gray-row td {
-            background-color: #d9d9d9;
-            font-size: 9px;
-            font-style: italic;
-            text-align: center;
-        }
-
         .asset-row td {
             height: 24px;
             font-size: 9px;
@@ -132,22 +104,10 @@
 <body>
 @php
     $fecha = \Carbon\Carbon::parse($assignment->date);
-    $temporalStart = $assignment->temporal_start_date
-        ? \Carbon\Carbon::parse($assignment->temporal_start_date)
-        : null;
-    $temporalEnd = $assignment->temporal_end_date
-        ? \Carbon\Carbon::parse($assignment->temporal_end_date)
-        : null;
-
-    $isAssignmentPermanent = $assignment->is_assignment && $assignment->is_permanent;
-    $isAssignmentTemporal = $assignment->is_assignment && ! $assignment->is_permanent;
-    $isUnassignmentPermanent = $assignment->is_unassignment && $assignment->is_permanent;
-    $isUnassignmentTemporal = $assignment->is_unassignment && ! $assignment->is_permanent;
 
     $unitName = $assignment->organizationalUnit->name ?? '';
-    $personName = $person ? trim(($person->name ?? '') . ' ' . ($person->lastname ?? '')) : '';
-    $collaboratorName = $collaborator
-        ? trim(($collaborator->name ?? '') . ' ' . ($collaborator->lastname ?? ''))
+    $personName = $assignment->person
+        ? trim(($assignment->person->name ?? '') . ' ' . ($assignment->person->lastname ?? ''))
         : '';
 
     $detailRows = $assignment->details->values()->all();
@@ -203,73 +163,16 @@
     </table>
 
     <div class="header-title">
-        FICHA DE ASIGNACIÓN Y DESASIGNACIÓN PERMANENTE O TEMPORAL DE ACTIVO FIJO
+        FICHA DE ASIGNACIÓN DE ACTIVO FIJO
     </div>
 </div>
 
 <table class="form-table" style="margin-top: 6px;">
-    {{-- Fila 1: Fecha de solicitud --}}
     <tr>
         <td class="bold small half-cell">Fecha de solicitud (DD/MM/AAAA)</td>
         <td class="center bold half-cell">{{ $formatDate($fecha) }}</td>
     </tr>
 
-    {{-- Fila 2: Asignación permanente / temporal --}}
-    <tr>
-        <td class="small half-cell">
-            Asignación permanente (marque con X)
-            <span class="check-box">{{ $isAssignmentPermanent ? 'X' : '' }}</span>
-        </td>
-        <td class="small half-cell">
-            Asignación temporal (marque con X)
-            <span class="check-box">{{ $isAssignmentTemporal ? 'X' : '' }}</span>
-        </td>
-    </tr>
-
-    {{-- Fila 3: Desasignación permanente / temporal --}}
-    <tr>
-        <td class="small half-cell">
-            Desasignación permanente (marque con X)
-            <span class="check-box">{{ $isUnassignmentPermanent ? 'X' : '' }}</span>
-        </td>
-        <td class="small half-cell">
-            Desasignación temporal (marque con X)
-            <span class="check-box">{{ $isUnassignmentTemporal ? 'X' : '' }}</span>
-        </td>
-    </tr>
-
-    {{-- Fila 4: Nota temporal --}}
-    <tr class="gray-row">
-        <td colspan="2">
-            * Si la asignación es temporal indique el periodo de tiempo que se utilizará el activo.
-        </td>
-    </tr>
-
-    {{-- Fila 5: Etiquetas fechas temporal --}}
-    <tr>
-        <td class="bold small half-cell center">Fecha inicial (DD/MM/AAAA)</td>
-        <td class="bold small half-cell center">Fecha final (DD/MM/AAAA)</td>
-    </tr>
-
-    {{-- Fila 6: Valores fechas temporal (en blanco si no hay fecha) --}}
-    <tr>
-        <td class="center half-cell">
-            @if ($formatDate($temporalStart))
-                {{ $formatDate($temporalStart) }}
-            @else
-                &nbsp;
-            @endif
-        </td>
-        <td class="center half-cell">
-            @if ($formatDate($temporalEnd))
-                {{ $formatDate($temporalEnd) }}
-            @else
-                &nbsp;
-            @endif
-        </td>
-    </tr>
-
-    {{-- Fila 7: Unidad solicitante --}}
     <tr>
         <td class="bold small half-cell">Unidad solicitante:</td>
         <td class="left half-cell">{{ $unitName }}</td>
@@ -303,21 +206,16 @@
         <col style="width:14%;">
         <col style="width:16%;">
         <col style="width:6%;">
-        <col style="width:6%;">
-        <col style="width:26%;">
+        <col style="width:32%;">
     </colgroup>
     <thead>
         <tr class="bold center small">
-            <th rowspan="2">N°</th>
-            <th rowspan="2">Nombre del bien</th>
-            <th rowspan="2">No. De Inventario</th>
-            <th rowspan="2">Marca / Modelo</th>
-            <th colspan="2">Asignación (A) / Desasignación (D)</th>
-            <th rowspan="2">Observación</th>
-        </tr>
-        <tr class="bold center small">
+            <th>N°</th>
+            <th>Nombre del bien</th>
+            <th>No. De Inventario</th>
+            <th>Marca / Modelo</th>
             <th>A</th>
-            <th>D</th>
+            <th>Observación</th>
         </tr>
     </thead>
     <tbody>
@@ -331,58 +229,11 @@
                 <td class="left">{{ $asset?->description ?? '' }}</td>
                 <td class="center">{{ $inventoryNumber($asset) }}</td>
                 <td class="center">{{ $brandModel($asset) }}</td>
-                <td class="center bold">{{ $detail && $assignment->is_assignment ? 'X' : '' }}</td>
-                <td class="center bold">{{ $detail && $assignment->is_unassignment ? 'X' : '' }}</td>
+                <td class="center bold">{{ $detail ? 'X' : '' }}</td>
                 <td class="left">{{ $detailObservation }}</td>
             </tr>
         @endforeach
     </tbody>
-</table>
-
-<table class="form-table" style="margin-top: -1px;">
-    <colgroup>
-        <col style="width:52%;">
-        <col style="width:24%;">
-        <col style="width:24%;">
-    </colgroup>
-    <tr>
-        <td class="bold small">
-            Nombre del colaborador(a) de activo fijo que atiende la solicitud:
-        </td>
-        <td class="center bold small">Firma</td>
-        <td class="center bold small">Sello UAF</td>
-    </tr>
-    <tr class="sign-row">
-        <td class="left">{{ $collaboratorName }}</td>
-        <td></td>
-        <td></td>
-    </tr>
-</table>
-
-<table class="form-table" style="margin-top: -1px;">
-    <colgroup>
-        <col style="width:25%;">
-        <col style="width:25%;">
-        <col style="width:25%;">
-        <col style="width:25%;">
-    </colgroup>
-    <tr class="gray-row">
-        <td colspan="4">
-            Si la solicitud fue para uso temporal, firmar y sellar en los espacios siguientes:
-        </td>
-    </tr>
-    <tr class="bold center xsmall">
-        <td>Firma devolución<br>(persona responsable)</td>
-        <td>Sello</td>
-        <td>Firma de recepción<br>(Unidad e Activo Fijo)</td>
-        <td>Sello UAF</td>
-    </tr>
-    <tr class="sign-row">
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    </tr>
 </table>
 
 <table class="form-table" style="margin-top: -1px;">

@@ -92,6 +92,7 @@ Route::post('/employees', [EmployeeController::class, 'store']);
 Route::get('/employees/{id}', [EmployeeController::class, 'show']);
 Route::put('/employees/{id}', [EmployeeController::class, 'update']);
 Route::patch('/employees/{id}/warehouse-manager', [EmployeeController::class, 'updateWarehouseManager']);
+Route::patch('/employees/{id}/fixed-asset-manager', [EmployeeController::class, 'updateFixedAssetManager']);
 Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
 
 Route::get('/area-managers', [UserController::class, 'getAreaManagers']);

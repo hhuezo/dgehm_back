@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Models\fixedasset\AssetClass;
+use App\Models\fixedasset\Category;
 use App\Models\fixedasset\FixedAsset;
 use App\Models\fixedasset\OrganizationalUnit;
 use App\Models\fixedasset\Origin;
@@ -36,7 +36,7 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
         $specifics = Specific::where('is_active', true)->get()->keyBy(function ($item) {
             return mb_strtolower(trim($item->name));
         });
-        $classes = AssetClass::with('specific')->get();
+        $categories = Category::with('specific')->get();
 
         // Obtener primer origen, condición física y unidad organizativa como defaults
         $defaultOriginId = Origin::where('is_active', true)->first()?->id;
@@ -70,15 +70,15 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
 
                 // Buscar clase por específico o por código (ej: 4123-0104-09-0001 -> clase 09 del específico 0104)
                 $specificName = $this->getValue($data, ['especifico', 'specific']);
-                $assetClass = $this->findAssetClassBySpecific($specificName, $specifics, $classes);
-                if (!$assetClass && count($codeParts) >= 4) {
-                    $assetClass = $this->findAssetClassByCodeParts($codeParts, $classes);
+                $assetCategory = $this->findCategoryBySpecific($specificName, $specifics, $categories);
+                if (!$assetCategory && count($codeParts) >= 4) {
+                    $assetCategory = $this->findCategoryByCodeParts($codeParts, $categories);
                 }
-                if (!$assetClass) {
-                    $assetClass = $classes->first();
+                if (!$assetCategory) {
+                    $assetCategory = $categories->first();
                 }
-                if (!$assetClass) {
-                    $this->errors[] = "Fila {$rowNumber}: No hay clases de activos disponibles.";
+                if (!$assetCategory) {
+                    $this->errors[] = "Fila {$rowNumber}: No hay categorías de activos disponibles.";
                     $this->skipped++;
                     continue;
                 }
@@ -101,7 +101,7 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
 
                 // Crear el activo
                 $asset = new FixedAsset();
-                $asset->fa_class_id = $assetClass->id;
+                $asset->fa_category_id = $assetCategory->id;
                 $asset->code = $code;
                 $asset->correlative = $correlative;
                 $asset->description = $this->getValue($data, ['descripcion', 'description']) ?? 'Sin descripción';
@@ -190,7 +190,7 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
         return true;
     }
 
-    protected function findAssetClassBySpecific(?string $specificName, $specifics, $classes): ?AssetClass
+    protected function findCategoryBySpecific(?string $specificName, $specifics, $categories): ?Category
     {
         if (!$specificName) {
             return null;
@@ -200,27 +200,27 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
         $specific = $specifics->get($normalizedSpecific);
 
         if ($specific) {
-            $class = $classes->first(fn($c) => $c->fa_specific_id === $specific->id);
-            if ($class) {
-                return $class;
+            $category = $categories->first(fn($c) => $c->fa_specific_id === $specific->id);
+            if ($category) {
+                return $category;
             }
         }
 
         return null;
     }
 
-    protected function findAssetClassByCodeParts(array $codeParts, $classes): ?AssetClass
+    protected function findCategoryByCodeParts(array $codeParts, $categories): ?Category
     {
-        // codeParts: [4123, 0104, 09, 0001] -> específico 0104, clase 09
+        // codeParts: [4123, 0104, 09, 0001] -> específico 0104, categoría 09
         if (count($codeParts) < 4) {
             return null;
         }
         $specificCode = $codeParts[1];
-        $classCode = $codeParts[2];
+        $categoryCode = $codeParts[2];
 
-        return $classes->first(function ($c) use ($specificCode, $classCode) {
+        return $categories->first(function ($c) use ($specificCode, $categoryCode) {
             $spec = $c->specific;
-            return $spec && $spec->code === $specificCode && $c->code === $classCode;
+            return $spec && $spec->code === $specificCode && $c->code === $categoryCode;
         });
     }
 

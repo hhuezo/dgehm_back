@@ -11,14 +11,12 @@ return new class extends Migration
         Schema::create('wh_supply_request_detail', function (Blueprint $table) {
             $table->id();
 
-            // Claves Foráneas
             $table->foreignId('supply_request_id')
-                  ->constrained('wh_supply_request');
+                ->constrained('wh_supply_request');
 
             $table->foreignId('product_id')
-                  ->constrained('wh_products');
+                ->constrained('wh_products');
 
-            // Cantidad solicitada y entregada (mismo valor al insertar; entregado editable solo con solicitud aprobada)
             $table->decimal('quantity', 10, 2);
             $table->decimal('delivered_quantity', 10, 2)->default(0);
 

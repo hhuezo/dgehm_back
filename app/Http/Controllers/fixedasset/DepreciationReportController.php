@@ -24,24 +24,24 @@ class DepreciationReportController extends Controller
 
         $reportDate = $request->input('date');
 
-        $assets = FixedAsset::with(['assetClass:id,fa_specific_id,code,name,useful_life', 'assetClass.specific:id,code,name'])
+        $assets = FixedAsset::with(['category:id,fa_specific_id,code,name,useful_life', 'category.specific:id,code,name'])
             ->where('purchase_value', '>=', DepreciationService::MIN_PURCHASE_VALUE)
-            ->whereHas('assetClass', function ($q) {
+            ->whereHas('category', function ($q) {
                 $q->whereNotNull('useful_life')->where('useful_life', '>', 0);
             })
-            ->orderBy('fa_class_id')
+            ->orderBy('fa_category_id')
             ->get();
 
         $rowsBySpecific = [];
         foreach ($assets as $asset) {
-            $class = $asset->assetClass;
-            if (!$class || !$class->specific) {
+            $category = $asset->category;
+            if (!$category || !$category->specific) {
                 continue;
             }
-            $specific = $class->specific;
+            $specific = $category->specific;
             $key = $specific->id;
             $purchaseValue = (float) $asset->purchase_value;
-            $usefulLife = (int) $class->useful_life;
+            $usefulLife = (int) $category->useful_life;
             $acquisitionDate = $asset->acquisition_date->format('Y-m-d');
 
             $residual = DepreciationService::residualValue($purchaseValue);
@@ -65,8 +65,8 @@ class DepreciationReportController extends Controller
                 'asset' => $asset,
                 'specific_code' => $specific->code,
                 'specific_name' => $specific->name,
-                'class_code' => $class->code,
-                'class_name' => $class->name,
+                'category_code' => $category->code,
+                'category_name' => $category->name,
                 'useful_life_years' => $usefulLife,
                 'purchase_value' => $purchaseValue,
                 'residual_value' => $residual,

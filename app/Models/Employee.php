@@ -41,6 +41,7 @@ class Employee extends Model
         'parking',
         'disabled',
         'warehouse_manager',
+        'fixed_asset_manager',
     ];
 
     protected function casts(): array
@@ -58,6 +59,7 @@ class Employee extends Model
             'parking' => 'boolean',
             'disabled' => 'boolean',
             'warehouse_manager' => 'boolean',
+            'fixed_asset_manager' => 'boolean',
             'status' => 'integer',
         ];
     }
@@ -100,5 +102,49 @@ class Employee extends Model
             ->using(AdmEmployeeFunctionalPosition::class)
             ->withPivot(['id', 'date_start', 'date_end', 'principal', 'salary', 'active'])
             ->withTimestamps();
+    }
+
+    public function fixedAssetCategories(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \App\Models\fixedasset\Category::class,
+            'fa_category_employee',
+            'adm_employee_id',
+            'fa_category_id'
+        )->withTimestamps();
+    }
+
+    public function resolveFaOrganizationalUnitId(): ?int
+    {
+        $principalAssignment = $this->functionalPositionAssignments()
+            ->where('active', true)
+            ->where('principal', true)
+            ->with('functionalPosition.organizationalUnit')
+            ->first();
+
+        $admUnitName = $principalAssignment?->functionalPosition?->organizationalUnit?->name;
+
+        if ($admUnitName) {
+            $faUnitId = \App\Models\fixedasset\OrganizationalUnit::query()
+                ->where('name', $admUnitName)
+                ->value('id');
+
+            if ($faUnitId) {
+                return (int) $faUnitId;
+            }
+        }
+
+        if ($this->user_id) {
+            $faUnitId = $this->user()
+                ->first()
+                ?->organizationalUnits()
+                ->value('fa_organizational_units.id');
+
+            if ($faUnitId) {
+                return (int) $faUnitId;
+            }
+        }
+
+        return null;
     }
 }

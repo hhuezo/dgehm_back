@@ -6,55 +6,39 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        // Orden de Compra (Acta de Recepción)
         Schema::create('wh_purchase_order', function (Blueprint $table) {
             $table->id();
 
-            // Proveedor
             $table->foreignId('supplier_id')->constrained('wh_suppliers');
 
-            // Número de orden de compra
-            $table->string('order_number', 50)->unique();
+            $table->foreignId('wh_funding_sources_id')
+                ->nullable()
+                ->constrained('wh_funding_sources');
 
-            // Compromiso presupuestario
+            $table->string('order_number', 50);
             $table->string('budget_commitment_number', 50)->nullable();
-
-            // Fecha Acta
             $table->dateTime('acta_date');
-
-            // Fecha y hora
             $table->dateTime('reception_date');
-
-            // Representante proveedor
             $table->string('supplier_representative', 150);
-
-            // Número de factura
             $table->string('invoice_number', 50)->unique();
-
-            // Fecha factura
             $table->date('invoice_date');
 
-            // Monto total
-            $table->decimal('total_amount', 12, 2);
+            $table->foreignId('purchase_order_administrator_id')
+                ->constrained('adm_employees');
 
-            // Gerente administrativo
-            $table->string('administrative_manager', 150);
+            $table->foreignId('administrative_technician_id')
+                ->nullable()
+                ->constrained('adm_employees');
 
-            // Tecnico administrativo
-            $table->foreignId('administrative_technician_id')->nullable()->constrained('users');
+            $table->string('file', 255)->nullable();
+            $table->boolean('partial_delivery')->default(false);
 
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('wh_purchase_order');

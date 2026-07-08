@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('supply_return_id')
-                  ->constrained('wh_supply_returns');
+                ->constrained('wh_supply_returns');
 
             $table->foreignId('product_id')->constrained('wh_products');
 

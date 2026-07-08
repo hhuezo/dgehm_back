@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 class AssignmentController extends Controller
@@ -19,21 +20,16 @@ class AssignmentController extends Controller
         $assignments = Assignment::query()
             ->select(
                 'id',
-                'is_assignment',
-                'is_unassignment',
                 'date',
-                'is_permanent',
-                'temporal_start_date',
-                'temporal_end_date',
                 'organizational_unit_id',
                 'person_id',
-                'collaborator_id',
                 'observation',
                 'created_at',
                 'updated_at'
             )
             ->with([
                 'organizationalUnit:id,name,abbreviation',
+                'person:id,name,lastname',
             ])
             ->withCount('details')
             ->orderByDesc('date')
@@ -46,11 +42,39 @@ class AssignmentController extends Controller
         ]);
     }
 
+    public function assignablePersons(): JsonResponse
+    {
+        $employees = Employee::query()
+            ->whereHas('fixedAssetCategories')
+            ->where('active', true)
+            ->with(['fixedAssetCategories:id'])
+            ->orderBy('name')
+            ->orderBy('lastname')
+            ->get(['id', 'name', 'lastname', 'email'])
+            ->map(function (Employee $employee) {
+                return [
+                    'id' => $employee->id,
+                    'name' => $employee->name,
+                    'lastname' => $employee->lastname,
+                    'email' => $employee->email,
+                    'fixed_asset_categories' => $employee->fixedAssetCategories,
+                    'fa_organizational_unit_id' => $employee->resolveFaOrganizationalUnitId(),
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => $employees,
+        ]);
+    }
+
     public function show(string $id): JsonResponse
     {
         $assignment = Assignment::query()
             ->with([
                 'organizationalUnit:id,name,abbreviation',
+                'person:id,name,lastname,email',
                 'details' => fn ($query) => $query
                     ->select('id', 'fa_assignment_id', 'fa_fixed_asset_id', 'observation')
                     ->with('fixedAsset:id,code,correlative,description'),
@@ -66,9 +90,7 @@ class AssignmentController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $this->validateAssignment($request);
-        $details = $validated['details'];
-        unset($validated['details']);
+        [$validated, $details] = $this->prepareAssignmentData($request);
 
         $assignment = DB::transaction(function () use ($validated, $details) {
             $assignment = Assignment::create($validated);
@@ -87,9 +109,7 @@ class AssignmentController extends Controller
     public function update(Request $request, string $id): JsonResponse
     {
         $assignment = Assignment::findOrFail($id);
-        $validated = $this->validateAssignment($request);
-        $details = $validated['details'];
-        unset($validated['details']);
+        [$validated, $details] = $this->prepareAssignmentData($request);
 
         DB::transaction(function () use ($assignment, $validated, $details) {
             $assignment->update($validated);
@@ -108,41 +128,51 @@ class AssignmentController extends Controller
         $assignment = Assignment::query()
             ->with([
                 'organizationalUnit:id,name,abbreviation',
+                'person:id,name,lastname',
                 'details' => fn ($query) => $query
                     ->select('id', 'fa_assignment_id', 'fa_fixed_asset_id', 'observation')
                     ->with('fixedAsset:id,code,correlative,description,brand,model'),
             ])
             ->findOrFail($id);
 
-        $person = $assignment->person_id
-            ? Employee::query()->select('id', 'name', 'lastname')->find($assignment->person_id)
-            : null;
-
-        $collaborator = $assignment->collaborator_id
-            ? Employee::query()->select('id', 'name', 'lastname')->find($assignment->collaborator_id)
-            : null;
-
         $pdf = Pdf::loadView('reports.assignment', [
             'assignment' => $assignment,
-            'person' => $person,
-            'collaborator' => $collaborator,
+            'person' => $assignment->person,
         ])->setPaper('A4', 'portrait');
 
         return $pdf->download("Ficha_Asignacion_Activo_Fijo_{$id}.pdf");
     }
 
+    private function prepareAssignmentData(Request $request): array
+    {
+        $validated = $this->validateAssignment($request);
+        $details = $validated['details'];
+        unset($validated['details']);
+
+        $employee = Employee::query()->findOrFail($validated['person_id']);
+        $organizationalUnitId = $employee->resolveFaOrganizationalUnitId();
+
+        if (!$organizationalUnitId) {
+            throw ValidationException::withMessages([
+                'person_id' => 'No se pudo determinar la unidad organizativa de la persona seleccionada.',
+            ]);
+        }
+
+        $validated['organizational_unit_id'] = $organizationalUnitId;
+
+        return [$validated, $details];
+    }
+
     private function validateAssignment(Request $request): array
     {
-        $validated = $request->validate([
-            'is_assignment' => 'required|boolean',
-            'is_unassignment' => 'required|boolean',
+        return $request->validate([
             'date' => 'required|date',
-            'is_permanent' => 'required|boolean',
-            'temporal_start_date' => 'nullable|date|required_if:is_permanent,false',
-            'temporal_end_date' => 'nullable|date|required_if:is_permanent,false|after_or_equal:temporal_start_date',
-            'organizational_unit_id' => 'required|exists:fa_organizational_units,id',
-            'person_id' => 'nullable|integer',
-            'collaborator_id' => 'nullable|integer',
+            'person_id' => [
+                'required',
+                'integer',
+                Rule::exists('adm_employees', 'id'),
+                Rule::exists('fa_category_employee', 'adm_employee_id'),
+            ],
             'observation' => 'nullable|string|max:2000',
             'details' => 'required|array|min:1',
             'details.*.fa_fixed_asset_id' => [
@@ -153,13 +183,6 @@ class AssignmentController extends Controller
             ],
             'details.*.observation' => 'nullable|string|max:1000',
         ]);
-
-        if ($validated['is_permanent']) {
-            $validated['temporal_start_date'] = null;
-            $validated['temporal_end_date'] = null;
-        }
-
-        return $validated;
     }
 
     private function syncDetails(Assignment $assignment, array $details): void
@@ -178,6 +201,7 @@ class AssignmentController extends Controller
     {
         return $assignment->load([
             'organizationalUnit:id,name,abbreviation',
+            'person:id,name,lastname,email',
             'details.fixedAsset:id,code,correlative,description',
         ])->loadCount('details');
     }

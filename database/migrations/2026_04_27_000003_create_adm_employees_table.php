@@ -37,6 +37,8 @@ return new class extends Migration
             $table->boolean('adhonorem')->default(false);
             $table->boolean('parking')->default(false);
             $table->boolean('disabled')->default(false);
+            $table->boolean('warehouse_manager')->default(false);
+            $table->boolean('fixed_asset_manager')->default(false);
         });
     }
 

@@ -11,19 +11,13 @@ return new class extends Migration
         Schema::create('fa_assignments', function (Blueprint $table) {
             $table->id();
 
-            $table->boolean('is_assignment')->default(false);
-            $table->boolean('is_unassignment')->default(false);
             $table->date('date');
-
-            $table->boolean('is_permanent')->default(false);
-            $table->date('temporal_start_date')->nullable();
-            $table->date('temporal_end_date')->nullable();
 
             $table->foreignId('organizational_unit_id')
                 ->constrained('fa_organizational_units');
 
-            $table->unsignedBigInteger('person_id')->nullable();
-            $table->unsignedBigInteger('collaborator_id')->nullable();
+            $table->foreignId('person_id')
+                ->constrained('adm_employees');
 
             $table->text('observation')->nullable();
 

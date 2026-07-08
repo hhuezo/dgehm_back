@@ -5,15 +5,17 @@ namespace App\Http\Controllers\fixedasset;
 use App\Http\Controllers\Controller;
 use App\Models\fixedasset\Category;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $categories = Category::select('id', 'name', 'code')
+        $categories = Category::select('id', 'name', 'code', 'useful_life', 'fa_specific_id')
+            ->with([
+                'specific:id,code,name',
+                'responsibles:id,name,lastname',
+            ])
             ->where('is_active', true)
             ->get();
 
@@ -21,105 +23,67 @@ class CategoryController extends Controller
             'success' => true,
             'data' => $categories,
         ], 200);
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function show(string $id)
     {
-        //
+        $category = Category::select('id', 'name', 'code', 'useful_life', 'fa_specific_id')
+            ->with([
+                'specific:id,code,name',
+                'responsibles:id,name,lastname',
+            ])
+            ->where('is_active', true)
+            ->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $category,
+        ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $rules = [
-            'name' => 'required|unique:fa_categories,name',
-            'code' => 'required|integer|unique:fa_categories,code',
-        ];
-
-        $messages = [
-            'name.required' => 'El nombre de la categoria es obligatorio.',
-            'name.unique'   => 'Ya existe una categoria contable con este nombre.',
-
-            'code.required' => 'El código de la categoria es obligatorio.',
-            'code.integer'  => 'El código de la categoria debe ser un número entero.',
-            'code.unique'   => 'Ya existe una categoria contable con este código.',
-        ];
-
-        $data = $request->validate($rules, $messages);
+        $data = $this->validatedPayload($request);
 
         $category = new Category();
-        $category->code = $request->code;
-        $category->name = $request->name;
+        $category->name = $data['name'];
+        $category->code = $data['code'];
+        $category->useful_life = $data['useful_life'] ?? null;
+        $category->fa_specific_id = $data['fa_specific_id'];
         $category->is_active = true;
         $category->save();
 
+        $this->syncResponsibles($category, $data['employee_ids'] ?? []);
+        $category->load(['specific:id,code,name', 'responsibles:id,name,lastname']);
+
         return response()->json([
             'success' => true,
-            'message' => 'Categoria creada correctamente.',
+            'message' => 'Categoría creada correctamente.',
             'data' => $category,
         ], 201);
-        //
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        $rules = [
-            'name' => 'required|unique:fa_categories,name,' . $id,
-            'code' => 'required|integer|unique:fa_categories,code,' . $id,
-        ];
+        $data = $this->validatedPayload($request);
 
-        $messages = [
-            'name.required' => 'El nombre es obligatorio.',
-            'name.unique'   => 'Ya existe una categoria con este nombre.',
-
-            'code.required' => 'El código es obligatorio.',
-            'code.integer'  => 'El código solo puede contener números.',
-            'code.unique'   => 'Ya existe una categoria con este código.',
-        ];
-
-        $data = $request->validate($rules, $messages);
         $category = Category::findOrFail($id);
-
-        $category->name = $request->name;
-        $category->code = $request->code;
+        $category->name = $data['name'];
+        $category->code = $data['code'];
+        $category->useful_life = $data['useful_life'] ?? null;
+        $category->fa_specific_id = $data['fa_specific_id'];
         $category->save();
+
+        $this->syncResponsibles($category, $data['employee_ids'] ?? []);
+        $category->load(['specific:id,code,name', 'responsibles:id,name,lastname']);
 
         return response()->json([
             'success' => true,
-            'message' => 'Categoria actualizada correctamente.',
-            'data'    => $category,
+            'message' => 'Categoría actualizada correctamente.',
+            'data' => $category,
         ], 200);
-        //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         $category = Category::findOrFail($id);
@@ -128,8 +92,57 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Categoria deshabilitada correctamente',
+            'message' => 'Categoría deshabilitada correctamente.',
         ], 200);
-        //
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validatedPayload(Request $request): array
+    {
+        return $request->validate([
+            'name' => [
+                'required',
+                Rule::unique('fa_categories')->where('fa_specific_id', $request->fa_specific_id)
+                    ->ignore($request->route('id')),
+            ],
+            'code' => [
+                'required',
+                Rule::unique('fa_categories')->where('fa_specific_id', $request->fa_specific_id)
+                    ->ignore($request->route('id')),
+            ],
+            'useful_life' => 'nullable|integer|min:0',
+            'fa_specific_id' => 'required|exists:fa_specifics,id',
+            'employee_ids' => 'nullable|array',
+            'employee_ids.*' => 'integer|exists:adm_employees,id',
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.unique'   => 'Ya existe una categoría con este nombre en el específico seleccionado.',
+            'code.required' => 'El código es obligatorio.',
+            'code.unique'   => 'Ya existe una categoría con este código en el específico seleccionado.',
+            'useful_life.integer' => 'La vida útil debe ser un número entero.',
+            'useful_life.min' => 'La vida útil no puede ser negativa.',
+            'fa_specific_id.required' => 'El específico es obligatorio.',
+            'fa_specific_id.exists'   => 'El específico no existe.',
+            'employee_ids.array' => 'Los responsables deben enviarse como una lista.',
+            'employee_ids.*.integer' => 'Cada responsable debe ser un identificador válido.',
+            'employee_ids.*.exists' => 'Uno o más responsables seleccionados no existen.',
+        ]);
+    }
+
+    /**
+     * @param  array<int, int|string>  $employeeIds
+     */
+    private function syncResponsibles(Category $category, array $employeeIds): void
+    {
+        $ids = collect($employeeIds)
+            ->filter(fn ($id) => filled($id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $category->responsibles()->sync($ids);
     }
 }

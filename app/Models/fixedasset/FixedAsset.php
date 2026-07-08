@@ -16,7 +16,7 @@ class FixedAsset extends Model
     public $incrementing = true;
 
     protected $fillable = [
-        'fa_class_id',
+        'fa_category_id',
         'code',
         'correlative',
         'description',
@@ -47,9 +47,9 @@ class FixedAsset extends Model
         'purchase_value' => 'decimal:2',
     ];
 
-    public function assetClass()
+    public function category()
     {
-        return $this->belongsTo(AssetClass::class, 'fa_class_id');
+        return $this->belongsTo(Category::class, 'fa_category_id');
     }
 
     public function organizationalUnit()

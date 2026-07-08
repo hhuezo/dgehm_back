@@ -22,6 +22,10 @@ class SpecificsSeeder extends Seeder
             ['code' => '0403', 'name' => 'Derechos de propiedad intelectual', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
         ];
 
-        DB::table('fa_specifics')->insert($specifics);
+        DB::table('fa_specifics')->upsert(
+            $specifics,
+            ['code'],
+            ['name', 'is_active', 'updated_at']
+        );
     }
 }

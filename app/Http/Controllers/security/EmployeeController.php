@@ -152,6 +152,30 @@ class EmployeeController extends Controller
 
     public function updateWarehouseManager(Request $request, string $id)
     {
+        return $this->updateEmployeeManagerFlag(
+            $request,
+            $id,
+            'warehouse_manager',
+            'Encargado de almacén actualizado correctamente.'
+        );
+    }
+
+    public function updateFixedAssetManager(Request $request, string $id)
+    {
+        return $this->updateEmployeeManagerFlag(
+            $request,
+            $id,
+            'fixed_asset_manager',
+            'Encargado de activo fijo actualizado correctamente.'
+        );
+    }
+
+    private function updateEmployeeManagerFlag(
+        Request $request,
+        string $id,
+        string $field,
+        string $successMessage
+    ) {
         $employee = Employee::query()->find($id);
 
         if (!$employee) {
@@ -162,18 +186,18 @@ class EmployeeController extends Controller
         }
 
         $validated = $request->validate([
-            'warehouse_manager' => 'required|boolean',
+            $field => 'required|boolean',
         ]);
 
         $employee->update([
-            'warehouse_manager' => (bool) $validated['warehouse_manager'],
+            $field => (bool) $validated[$field],
         ]);
 
         $employee->load(['user:id,name,lastname,email']);
 
         return response()->json([
             'success' => true,
-            'message' => 'Encargado de almacén actualizado correctamente.',
+            'message' => $successMessage,
             'data' => $employee,
         ]);
     }
@@ -217,6 +241,7 @@ class EmployeeController extends Controller
             'parking' => 'nullable|boolean',
             'disabled' => 'nullable|boolean',
             'warehouse_manager' => 'nullable|boolean',
+            'fixed_asset_manager' => 'nullable|boolean',
         ]);
 
         if (array_key_exists('email_personal', $validated) && $validated['email_personal'] === '') {
@@ -235,6 +260,7 @@ class EmployeeController extends Controller
             'parking' => false,
             'disabled' => false,
             'warehouse_manager' => false,
+            'fixed_asset_manager' => false,
         ];
 
         foreach ($defaults as $key => $default) {

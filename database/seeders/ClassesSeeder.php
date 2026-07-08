@@ -79,6 +79,10 @@ class ClassesSeeder extends Seeder
             'updated_at' => $now,
         ], $classes);
 
-        DB::table('fa_classes')->insert($rows);
+        DB::table('fa_categories')->upsert(
+            $rows,
+            ['fa_specific_id', 'code'],
+            ['name', 'useful_life', 'is_active', 'updated_at']
+        );
     }
 }

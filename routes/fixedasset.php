@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\fixedasset\AssetClassController;
 use App\Http\Controllers\fixedasset\CategoryController;
 use App\Http\Controllers\fixedasset\InstitutionController;
 use App\Http\Controllers\fixedasset\OrganizationalUnitController;
@@ -23,21 +22,16 @@ use App\Http\Controllers\fixedasset\AssignmentController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/classes', [AssetClassController::class, 'index']);
-Route::get('/classes/{id}', [AssetClassController::class, 'show']);
-Route::post('/classes', [AssetClassController::class, 'store']);
-Route::put('/classes/{id}', [AssetClassController::class, 'update']);
-Route::delete('/classes/{id}', [AssetClassController::class, 'destroy']);
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/{id}', [CategoryController::class, 'show']);
+Route::post('/categories', [CategoryController::class, 'store']);
+Route::put('/categories/{id}', [CategoryController::class, 'update']);
+Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 
 Route::get('/institutions', [InstitutionController::class, 'index']);
 Route::post('/institutions', [InstitutionController::class, 'store']);
 Route::put('/institutions/{id}', [InstitutionController::class, 'update']);
 Route::delete('/institutions/{id}', [InstitutionController::class, 'destroy']);
-
-Route::get('/categories', [CategoryController::class, 'index']);
-Route::post('/categories', [CategoryController::class, 'store']);
-Route::put('/categories/{id}', [CategoryController::class, 'update']);
-Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 
 Route::get('/organizational_unit_types', [OrganizationalUnitTypeController::class, 'index']);
 Route::post('/organizational_unit_types', [OrganizationalUnitTypeController::class, 'store']);
@@ -90,6 +84,7 @@ Route::put('/fixed_assets/{id}', [FixedAssetController::class, 'update']);
 Route::delete('/fixed_assets/{id}', [FixedAssetController::class, 'destroy']);
 
 Route::get('/assignments', [AssignmentController::class, 'index']);
+Route::get('/assignments/assignable-persons', [AssignmentController::class, 'assignablePersons']);
 Route::get('/assignments/reports/{id}', [AssignmentController::class, 'report']);
 Route::get('/assignments/{id}', [AssignmentController::class, 'show']);
 Route::post('/assignments', [AssignmentController::class, 'store']);

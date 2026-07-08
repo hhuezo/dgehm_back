@@ -9,17 +9,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('wh_supply_returns', function (Blueprint $table) {
-            $table->id(); // Columna 'id'
+            $table->id();
             $table->date('return_date');
+            $table->date('received_date')->nullable();
 
-            // Llaves Foráneas (Foreign Keys)
             $table->foreignId('returned_by_id')->constrained('users');
-            $table->foreignId('wh_office_id')->constrained();
+            $table->foreignId('fa_organizational_unit_id')
+                ->constrained('fa_organizational_units')
+                ->restrictOnDelete();
             $table->foreignId('immediate_supervisor_id')->constrained('users');
-            $table->foreignId('received_by_id')->constrained('users');
+            $table->foreignId('received_by_id')->nullable()->constrained('users');
 
             $table->string('phone_extension', 10)->nullable();
             $table->text('general_observations')->nullable();
+
+            $table->foreignId('approved_by_id')->nullable()->constrained('users');
+            $table->foreignId('rejected_by_id')->nullable()->constrained('users');
 
             $table->foreignId('status_id')
                 ->default(1)

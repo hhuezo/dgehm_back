@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\PermissionType;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 class PermissionsSeeder extends Seeder
@@ -90,10 +89,6 @@ class PermissionsSeeder extends Seeder
                 'funding_source delete',
             ],
             'Fixed Asset' => [
-                'classes view',
-                'classes create',
-                'classes update',
-                'classes delete',
                 'institutions view',
                 'institutions create',
                 'institutions update',
@@ -170,10 +165,5 @@ class PermissionsSeeder extends Seeder
                     ->update(['permission_type_id' => $typeId]);
             }
         }
-
-        // El admin tiene TODOS los permisos
-        $allPermissions = Permission::pluck('name')->toArray();
-        $adminRole = Role::Where('name', 'admin')->first();
-        $adminRole->syncPermissions($allPermissions);
     }
 }
