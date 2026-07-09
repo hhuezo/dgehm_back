@@ -15,6 +15,8 @@ use App\Http\Controllers\fixedasset\VehicleTypeController;
 use App\Http\Controllers\fixedasset\FixedAssetController;
 use App\Http\Controllers\fixedasset\DepreciationReportController;
 use App\Http\Controllers\fixedasset\AssignmentController;
+use App\Http\Controllers\fixedasset\TransferController;
+use App\Http\Controllers\fixedasset\MovementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -89,6 +91,16 @@ Route::get('/assignments/reports/{id}', [AssignmentController::class, 'report'])
 Route::get('/assignments/{id}', [AssignmentController::class, 'show']);
 Route::post('/assignments', [AssignmentController::class, 'store']);
 Route::put('/assignments/{id}', [AssignmentController::class, 'update']);
+
+Route::get('/transfers', [TransferController::class, 'index']);
+Route::get('/transfers/assignable-persons', [TransferController::class, 'assignablePersons']);
+Route::get('/transfers/persons/{personId}/assigned-assets', [TransferController::class, 'assignedAssets']);
+Route::get('/transfers/{id}', [TransferController::class, 'show']);
+Route::post('/transfers', [TransferController::class, 'store']);
+Route::post('/transfers/{id}/execute', [TransferController::class, 'execute']);
+Route::put('/transfers/{id}', [TransferController::class, 'update']);
+
+Route::get('/fixed_assets/{id}/movements', [MovementController::class, 'indexForAsset']);
 
 
 Route::post('/fixed_assets/import', [FixedAssetController::class, 'import']);

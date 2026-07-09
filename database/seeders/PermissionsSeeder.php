@@ -143,6 +143,12 @@ class PermissionsSeeder extends Seeder
                 'assignments update',
                 'assignments delete',
                 'assignments report',
+                'transfers view',
+                'transfers create',
+                'transfers update',
+                'transfers execute',
+                'transfers delete',
+                'transfers report',
             ],
             'Configuration' => [
                 'configuration view',
