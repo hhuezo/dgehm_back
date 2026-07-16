@@ -8,10 +8,6 @@ use App\Http\Controllers\fixedasset\OrganizationalUnitTypeController;
 use App\Http\Controllers\fixedasset\OriginController;
 use App\Http\Controllers\fixedasset\PhysicalConditionController;
 use App\Http\Controllers\fixedasset\SpecificController;
-use App\Http\Controllers\fixedasset\VehicleBrandController;
-use App\Http\Controllers\fixedasset\VehicleColorController;
-use App\Http\Controllers\fixedasset\VehicleDriveTypeController;
-use App\Http\Controllers\fixedasset\VehicleTypeController;
 use App\Http\Controllers\fixedasset\FixedAssetController;
 use App\Http\Controllers\fixedasset\DepreciationReportController;
 use App\Http\Controllers\fixedasset\AssignmentController;
@@ -59,26 +55,6 @@ Route::get('/specifics', [SpecificController::class, 'index']);
 Route::post('/specifics', [SpecificController::class, 'store']);
 Route::put('/specifics/{id}', [SpecificController::class, 'update']);
 Route::delete('/specifics/{id}', [SpecificController::class, 'destroy']);
-
-Route::get('/vehicle_brands', [VehicleBrandController::class, 'index']);
-Route::post('/vehicle_brands', [VehicleBrandController::class, 'store']);
-Route::put('/vehicle_brands/{id}', [VehicleBrandController::class, 'update']);
-Route::delete('/vehicle_brands/{id}', [VehicleBrandController::class, 'destroy']);
-
-Route::get('/vehicle_colors', [VehicleColorController::class, 'index']);
-Route::post('/vehicle_colors', [VehicleColorController::class, 'store']);
-Route::put('/vehicle_colors/{id}', [VehicleColorController::class, 'update']);
-Route::delete('/vehicle_colors/{id}', [VehicleColorController::class, 'destroy']);
-
-Route::get('/vehicle_drive_types', [VehicleDriveTypeController::class, 'index']);
-Route::post('/vehicle_drive_types', [VehicleDriveTypeController::class, 'store']);
-Route::put('/vehicle_drive_types/{id}', [VehicleDriveTypeController::class, 'update']);
-Route::delete('/vehicle_drive_types/{id}', [VehicleDriveTypeController::class, 'destroy']);
-
-Route::get('/vehicle_types', [VehicleTypeController::class, 'index']);
-Route::post('/vehicle_types', [VehicleTypeController::class, 'store']);
-Route::put('/vehicle_types/{id}', [VehicleTypeController::class, 'update']);
-Route::delete('/vehicle_types/{id}', [VehicleTypeController::class, 'destroy']);
 
 Route::get('/fixed_assets', [FixedAssetController::class, 'index']);
 Route::post('/fixed_assets', [FixedAssetController::class, 'store']);

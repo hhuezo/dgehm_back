@@ -62,26 +62,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PhysicalConditionsSeeder::class);
 
         // -----------------------------------------------------
-        // Marcas de vehículos (fa_vehicle_brands)
-        // -----------------------------------------------------
-        $this->call(VehicleBrandsSeeder::class);
-
-        // -----------------------------------------------------
-        // Tipos de vehículos (fa_vehicle_types)
-        // -----------------------------------------------------
-        $this->call(VehicleTypesSeeder::class);
-
-        // -----------------------------------------------------
-        // Tipos de tracción de vehículos (fa_vehicle_drive_types)
-        // -----------------------------------------------------
-        $this->call(VehicleDriveTypesSeeder::class);
-
-        // -----------------------------------------------------
-        // Colores de vehículos (fa_vehicle_colors)
-        // -----------------------------------------------------
-        $this->call(VehicleColorsSeeder::class);
-
-        // -----------------------------------------------------
         // 1. CUENTAS CONTABLES (wh_accounting_accounts)
         // -----------------------------------------------------
         $accounts = [
