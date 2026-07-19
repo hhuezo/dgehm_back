@@ -84,7 +84,7 @@ class RolesPermissionsSeeder extends Seeder
             'funding_source update',
             'funding_source delete',
 
-            'configuration view',
+            // Encargados de almacén (no el menú Configuración de activo fijo)
             'warehouse_managers update',
         ];
 
@@ -193,7 +193,7 @@ class RolesPermissionsSeeder extends Seeder
             'transfers delete',
             'transfers report',
             'administrar traslado',
-            'configuration view',
+            // Configuración (Empleados); admin también la ve vía todos los permisos
             'employees view',
             'employees show',
             'employees update',
