@@ -5,7 +5,7 @@
     <title>Ficha de Asignación de Activo Fijo</title>
     <style>
         @page {
-            margin: 108px 36px 56px 36px;
+            margin: 108px 36px 48px 36px;
         }
 
         body {
@@ -57,12 +57,17 @@
             margin: 4px 0 0;
             padding: 0 6px;
             line-height: 1.25;
+            text-transform: uppercase;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            padding-top: 4px;
+            padding-bottom: 4px;
         }
 
         .form-table th,
         .form-table td {
             border: 1px solid #000;
-            padding: 5px 4px;
+            padding: 4px 4px;
             vertical-align: middle;
             word-wrap: break-word;
         }
@@ -72,28 +77,56 @@
         .bold { font-weight: bold; }
         .small { font-size: 9px; }
         .xsmall { font-size: 8px; }
+        .italic { font-style: italic; }
+        .upper { text-transform: uppercase; }
 
-        .half-cell {
-            width: 50%;
+        .bg-muted {
+            background-color: #f3f3f3;
+        }
+
+        .bg-section {
+            background-color: #e5e5e5;
+        }
+
+        .half-cell { width: 50%; }
+
+        .check-box {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 1px solid #000;
+            text-align: center;
+            line-height: 11px;
+            font-size: 10px;
+            font-weight: bold;
         }
 
         .asset-row td {
-            height: 24px;
+            height: 22px;
             font-size: 9px;
         }
 
         .sign-row td {
-            height: 34px;
+            height: 42px;
         }
 
-        .obs-row td {
-            height: 22px;
-            vertical-align: bottom;
+        .sign-row-sm td {
+            height: 36px;
+        }
+
+        .obs-line {
+            border-bottom: 1px solid #000;
+            height: 16px;
+            margin-top: 4px;
+        }
+
+        .obs-wrap {
+            padding: 6px 4px 8px;
         }
 
         .pdf-footer {
             position: fixed;
-            bottom: -44px;
+            bottom: -36px;
             left: 0;
             right: 0;
             font-size: 9px;
@@ -105,7 +138,10 @@
 @php
     $fecha = \Carbon\Carbon::parse($assignment->date);
 
-    $unitName = $assignment->organizationalUnit->name ?? '';
+    $unitName = $unitName
+        ?? $assignment->person?->organizationalUnit?->name
+        ?? $assignment->organizationalUnit?->name
+        ?? '';
     $personName = $assignment->person
         ? trim(($assignment->person->name ?? '') . ' ' . ($assignment->person->lastname ?? ''))
         : '';
@@ -143,6 +179,10 @@
         }
         return $brand ?: $model;
     };
+
+    $mark = function ($checked) {
+        return $checked ? 'X' : '';
+    };
 @endphp
 
 <div class="pdf-header">
@@ -163,58 +203,120 @@
     </table>
 
     <div class="header-title">
-        FICHA DE ASIGNACIÓN DE ACTIVO FIJO
+        Ficha de asignación y desasignación permanente o temporal de activo fijo
     </div>
 </div>
 
+{{-- Fecha --}}
 <table class="form-table" style="margin-top: 6px;">
     <tr>
-        <td class="bold small half-cell">Fecha de solicitud (DD/MM/AAAA)</td>
+        <td class="bold small half-cell bg-muted">Fecha de solicitud (DD/MM/AAAA)</td>
         <td class="center bold half-cell">{{ $formatDate($fecha) }}</td>
     </tr>
-
-    <tr>
-        <td class="bold small half-cell">Unidad solicitante:</td>
-        <td class="left half-cell">{{ $unitName }}</td>
-    </tr>
 </table>
 
+{{-- Tipo de movimiento --}}
 <table class="form-table" style="margin-top: -1px;">
     <colgroup>
-        <col style="width:52%;">
-        <col style="width:24%;">
-        <col style="width:24%;">
+        <col style="width:38%;">
+        <col style="width:12%;">
+        <col style="width:38%;">
+        <col style="width:12%;">
     </colgroup>
     <tr>
-        <td class="bold small">
-            Nombre de la persona a la que se asigna el activo:
+        <td class="small left">Asignación permanente (marque con X)</td>
+        <td class="center bold">
+            <span class="check-box">{{ $mark(true) }}</span>
         </td>
-        <td class="center bold small">Firma</td>
-        <td class="center bold small">Sello</td>
+        <td class="small left">Asignación temporal (marque con X)</td>
+        <td class="center bold">
+            <span class="check-box">{{ $mark(false) }}</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="small left">Desasignación permanente (marque con X)</td>
+        <td class="center bold">
+            <span class="check-box">{{ $mark(false) }}</span>
+        </td>
+        <td class="small left">Desasignación temporal (marque con X)</td>
+        <td class="center bold">
+            <span class="check-box">{{ $mark(false) }}</span>
+        </td>
+    </tr>
+</table>
+
+{{-- Período temporal --}}
+<table class="form-table" style="margin-top: -1px;">
+    <tr>
+        <td colspan="2" class="center bold xsmall italic bg-section">
+            * Si la asignación es temporal indique el período de tiempo que se utilizará el activo.
+        </td>
+    </tr>
+    <tr>
+        <td class="half-cell bg-muted center bold xsmall upper">Fecha inicial (DD/MM/AAAA)</td>
+        <td class="half-cell bg-muted center bold xsmall upper">Fecha final (DD/MM/AAAA)</td>
+    </tr>
+    <tr>
+        <td class="center" style="height: 22px;">&nbsp;</td>
+        <td class="center" style="height: 22px;">&nbsp;</td>
+    </tr>
+</table>
+
+{{-- Unidad solicitante --}}
+<table class="form-table" style="margin-top: -1px;">
+    <tr>
+        <td class="bold small bg-muted left">
+            Unidad solicitante:
+            <span class="upper">{{ $unitName !== '' ? ' ' . $unitName : '' }}</span>
+        </td>
+    </tr>
+</table>
+
+{{-- Persona responsable --}}
+<table class="form-table" style="margin-top: -1px;">
+    <colgroup>
+        <col style="width:42%;">
+        <col style="width:33%;">
+        <col style="width:25%;">
+    </colgroup>
+    <tr class="bg-muted">
+        <td class="center bold xsmall upper">Nombre de la persona a la que se asigna el activo:</td>
+        <td class="center bold xsmall upper">Firma</td>
+        <td class="center bold xsmall upper">Sello</td>
     </tr>
     <tr class="sign-row">
-        <td class="left">{{ $personName }}</td>
+        <td class="left bold">{{ $personName }}</td>
         <td></td>
         <td></td>
     </tr>
 </table>
 
+{{-- Tabla de activos --}}
+<table class="form-table" style="margin-top: -1px;">
+    <tr>
+        <td class="xsmall center bg-section bold" style="padding: 3px 4px;">
+            Detalle de bienes — Asignación (A) / Desasignación (D)
+        </td>
+    </tr>
+</table>
 <table class="form-table" style="margin-top: -1px;">
     <colgroup>
         <col style="width:5%;">
-        <col style="width:27%;">
+        <col style="width:24%;">
         <col style="width:14%;">
         <col style="width:16%;">
         <col style="width:6%;">
-        <col style="width:32%;">
+        <col style="width:6%;">
+        <col style="width:29%;">
     </colgroup>
     <thead>
-        <tr class="bold center small">
+        <tr class="bold center xsmall upper bg-muted">
             <th>N°</th>
             <th>Nombre del bien</th>
             <th>No. De Inventario</th>
             <th>Marca / Modelo</th>
             <th>A</th>
+            <th>D</th>
             <th>Observación</th>
         </tr>
     </thead>
@@ -224,27 +326,71 @@
                 $asset = $detail?->fixedAsset;
                 $detailObservation = $detail?->observation ?? '';
             @endphp
-            <tr class="asset-row">
-                <td class="center">{{ $index + 1 }}</td>
-                <td class="left">{{ $asset?->description ?? '' }}</td>
+            <tr class="asset-row {{ $index % 2 === 1 ? 'bg-muted' : '' }}">
+                <td class="center bold">{{ $index + 1 }}</td>
+                <td class="left">{{ $asset?->category?->name ?? '' }}</td>
                 <td class="center">{{ $inventoryNumber($asset) }}</td>
                 <td class="center">{{ $brandModel($asset) }}</td>
                 <td class="center bold">{{ $detail ? 'X' : '' }}</td>
+                <td class="center"></td>
                 <td class="left">{{ $detailObservation }}</td>
             </tr>
         @endforeach
     </tbody>
 </table>
 
+{{-- Firmas UAF --}}
+<table class="form-table" style="margin-top: -1px;">
+    <colgroup>
+        <col style="width:42%;">
+        <col style="width:33%;">
+        <col style="width:25%;">
+    </colgroup>
+    <tr class="bg-muted">
+        <td class="center bold xsmall upper">Nombre del colaborador(a) de activo fijo que atiende la solicitud</td>
+        <td class="center bold xsmall upper">Firma</td>
+        <td class="center bold xsmall upper">Sello UAF</td>
+    </tr>
+    <tr class="sign-row-sm">
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+</table>
+
+{{-- Firmas uso temporal --}}
 <table class="form-table" style="margin-top: -1px;">
     <tr>
-        <td class="bold small">Observaciones:</td>
+        <td colspan="4" class="center bold xsmall bg-section">
+            Si la solicitud fue para uso temporal, firmar y sellar en los espacios siguientes:
+        </td>
     </tr>
-    <tr class="obs-row">
-        <td>{{ $assignment->observation }}</td>
+    <tr class="bg-muted">
+        <td class="center bold xsmall upper" style="width:25%;">Firma devolución (persona responsable)</td>
+        <td class="center bold xsmall upper" style="width:25%;">Sello</td>
+        <td class="center bold xsmall upper" style="width:25%;">Firma de recepción (Unidad de Activo Fijo)</td>
+        <td class="center bold xsmall upper" style="width:25%;">Sello UAF</td>
     </tr>
-    <tr class="obs-row">
-        <td>&nbsp;</td>
+    <tr class="sign-row-sm">
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+</table>
+
+{{-- Observaciones --}}
+<table class="form-table" style="margin-top: -1px;">
+    <tr>
+        <td class="obs-wrap left">
+            <span class="bold">Observaciones:</span>
+            @if (filled($assignment->observation))
+                <span>{{ $assignment->observation }}</span>
+            @endif
+            <div class="obs-line"></div>
+            <div class="obs-line"></div>
+            <div class="obs-line"></div>
+        </td>
     </tr>
 </table>
 

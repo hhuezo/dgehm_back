@@ -127,6 +127,7 @@ class PermissionsSeeder extends Seeder
                 'assignments update',
                 'assignments delete',
                 'assignments report',
+                'assignments execute',
                 'transfers view',
                 'transfers create',
                 'transfers update',

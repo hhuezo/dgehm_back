@@ -31,6 +31,7 @@ class Employee extends Model
         'user_id',
         'adm_gender_id',
         'adm_marital_status_id',
+        'fa_organizational_unit_id',
         'remote_mark',
         'external',
         'viatic',
@@ -79,6 +80,14 @@ class Employee extends Model
         return $this->belongsTo(AdmMaritalStatus::class, 'adm_marital_status_id');
     }
 
+    public function organizationalUnit(): BelongsTo
+    {
+        return $this->belongsTo(
+            \App\Models\fixedasset\OrganizationalUnit::class,
+            'fa_organizational_unit_id'
+        );
+    }
+
     public function documents(): HasMany
     {
         return $this->hasMany(AdmEmployeeDocumentType::class, 'adm_employee_id');
@@ -116,6 +125,10 @@ class Employee extends Model
 
     public function resolveFaOrganizationalUnitId(): ?int
     {
+        if ($this->fa_organizational_unit_id) {
+            return (int) $this->fa_organizational_unit_id;
+        }
+
         $principalAssignment = $this->functionalPositionAssignments()
             ->where('active', true)
             ->where('principal', true)

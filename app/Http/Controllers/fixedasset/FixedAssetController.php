@@ -5,6 +5,7 @@ namespace App\Http\Controllers\fixedasset;
 use App\Http\Controllers\Controller;
 use App\Imports\FixedAssetImport;
 use App\Models\fixedasset\Category;
+use App\Models\fixedasset\DepreciationStatus;
 use App\Models\fixedasset\FixedAsset;
 use App\Models\fixedasset\Institution;
 use Illuminate\Http\Request;
@@ -42,7 +43,8 @@ class FixedAssetController extends Controller
             'observation',
             'is_insured',
             'insured_description',
-            'purchase_value'
+            'purchase_value',
+            'depreciation_status_id'
         )
             ->with([
                 'category:id,fa_specific_id,code,name,useful_life',
@@ -50,6 +52,7 @@ class FixedAssetController extends Controller
                 'organizationalUnit:id,name',
                 'origin:id,name',
                 'physicalCondition:id,name',
+                'depreciationStatus:id,name',
             ])
             ->orderBy('id', 'asc')
             ->get();
@@ -58,6 +61,19 @@ class FixedAssetController extends Controller
             'success' => true,
             'data' => $assets,
         ], 200);
+    }
+
+    public function depreciationStatuses()
+    {
+        $statuses = DepreciationStatus::query()
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->get(['id', 'name']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $statuses,
+        ]);
     }
 
     /**
@@ -73,7 +89,7 @@ class FixedAssetController extends Controller
             'serial_number' => 'nullable|string|max:150',
             'location' => 'required|string|max:255',
             'policy' => 'nullable|string|max:150',
-            'current_responsible' => 'required|string|max:255',
+            'current_responsible' => 'nullable|string|max:255',
             'organizational_unit_id' => 'required|exists:fa_organizational_units,id',
             'asset_type' => 'required|string|max:150',
             'acquisition_date' => 'required|date',
@@ -87,6 +103,7 @@ class FixedAssetController extends Controller
             'is_insured' => 'nullable|boolean',
             'insured_description' => 'nullable|string|max:255',
             'purchase_value' => 'required|numeric|min:0',
+            'depreciation_status_id' => 'nullable|integer|exists:fa_depreciation_statuses,id',
         ];
 
         $messages = [
@@ -94,7 +111,6 @@ class FixedAssetController extends Controller
             'fa_category_id.exists' => 'La categoría seleccionada no existe.',
             'description.required' => 'La descripción es obligatoria.',
             'location.required' => 'La ubicación es obligatoria.',
-            'current_responsible.required' => 'El responsable actual es obligatorio.',
             'organizational_unit_id.required' => 'La unidad organizativa es obligatoria.',
             'organizational_unit_id.exists' => 'La unidad organizativa seleccionada no existe.',
             'asset_type.required' => 'El tipo de bien es obligatorio.',
@@ -134,6 +150,12 @@ class FixedAssetController extends Controller
 
             $code = $institutionCode . '-' . $specificCode . '-' . $categoryCode . '-' . $correlative;
 
+            $statusId = (int) ($data['depreciation_status_id'] ?? DepreciationStatus::ACTIVE);
+            $responsible = trim((string) ($data['current_responsible'] ?? ''));
+            if ($statusId === DepreciationStatus::PENDING_ASSIGNMENT) {
+                $responsible = '';
+            }
+
             $asset = new FixedAsset();
             $asset->fa_category_id = $category->id;
             $asset->code = $code;
@@ -144,7 +166,7 @@ class FixedAssetController extends Controller
             $asset->serial_number = $data['serial_number'] ?? null;
             $asset->location = $data['location'];
             $asset->policy = $data['policy'] ?? null;
-            $asset->current_responsible = $data['current_responsible'];
+            $asset->current_responsible = $responsible !== '' ? $responsible : null;
             $asset->organizational_unit_id = $data['organizational_unit_id'];
             $asset->asset_type = $data['asset_type'];
             $asset->acquisition_date = $data['acquisition_date'];
@@ -158,6 +180,7 @@ class FixedAssetController extends Controller
             $asset->is_insured = $data['is_insured'] ?? false;
             $asset->insured_description = $data['insured_description'] ?? null;
             $asset->purchase_value = $data['purchase_value'];
+            $asset->depreciation_status_id = $statusId;
             $asset->save();
 
             $asset->load([
@@ -166,6 +189,7 @@ class FixedAssetController extends Controller
                 'organizationalUnit:id,name',
                 'origin:id,name',
                 'physicalCondition:id,name',
+                'depreciationStatus:id,name',
             ]);
         });
 
@@ -189,7 +213,7 @@ class FixedAssetController extends Controller
             'serial_number' => 'nullable|string|max:150',
             'location' => 'required|string|max:255',
             'policy' => 'nullable|string|max:150',
-            'current_responsible' => 'required|string|max:255',
+            'current_responsible' => 'nullable|string|max:255',
             'organizational_unit_id' => 'required|exists:fa_organizational_units,id',
             'asset_type' => 'required|string|max:150',
             'acquisition_date' => 'required|date',
@@ -203,6 +227,7 @@ class FixedAssetController extends Controller
             'is_insured' => 'nullable|boolean',
             'insured_description' => 'nullable|string|max:255',
             'purchase_value' => 'required|numeric|min:0',
+            'depreciation_status_id' => 'nullable|integer|exists:fa_depreciation_statuses,id',
         ];
 
         $messages = [
@@ -210,7 +235,6 @@ class FixedAssetController extends Controller
             'fa_category_id.exists' => 'La categoría seleccionada no existe.',
             'description.required' => 'La descripción es obligatoria.',
             'location.required' => 'La ubicación es obligatoria.',
-            'current_responsible.required' => 'El responsable actual es obligatorio.',
             'organizational_unit_id.required' => 'La unidad organizativa es obligatoria.',
             'organizational_unit_id.exists' => 'La unidad organizativa seleccionada no existe.',
             'asset_type.required' => 'El tipo de bien es obligatorio.',
@@ -261,13 +285,19 @@ class FixedAssetController extends Controller
                 $asset->correlative = $correlative;
             }
 
+            $statusId = (int) ($data['depreciation_status_id'] ?? $asset->depreciation_status_id ?? DepreciationStatus::ACTIVE);
+            $responsible = trim((string) ($data['current_responsible'] ?? ''));
+            if ($statusId === DepreciationStatus::PENDING_ASSIGNMENT) {
+                $responsible = '';
+            }
+
             $asset->description = $data['description'];
             $asset->brand = $data['brand'] ?? null;
             $asset->model = $data['model'] ?? null;
             $asset->serial_number = $data['serial_number'] ?? null;
             $asset->location = $data['location'];
             $asset->policy = $data['policy'] ?? null;
-            $asset->current_responsible = $data['current_responsible'];
+            $asset->current_responsible = $responsible !== '' ? $responsible : null;
             $asset->organizational_unit_id = $data['organizational_unit_id'];
             $asset->asset_type = $data['asset_type'];
             $asset->acquisition_date = $data['acquisition_date'];
@@ -281,6 +311,7 @@ class FixedAssetController extends Controller
             $asset->is_insured = $data['is_insured'] ?? false;
             $asset->insured_description = $data['insured_description'] ?? null;
             $asset->purchase_value = $data['purchase_value'];
+            $asset->depreciation_status_id = $statusId;
             $asset->save();
 
             $asset->load([
@@ -289,6 +320,7 @@ class FixedAssetController extends Controller
                 'organizationalUnit:id,name',
                 'origin:id,name',
                 'physicalCondition:id,name',
+                'depreciationStatus:id,name',
             ]);
         });
 

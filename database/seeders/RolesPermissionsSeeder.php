@@ -128,6 +128,117 @@ class RolesPermissionsSeeder extends Seeder
         $almacenJefeAreaRole->syncPermissions($almacenJefeAreaPermissions);
         $this->command->info('Permisos asignados al rol: almacen-jefe-area (' . count($almacenJefeAreaPermissions) . ' permisos)');
 
+        $catalogViewPermissions = [
+            'institutions view',
+            'categories view',
+            'organizational_unit_types view',
+            'organizational_units view',
+            'origins view',
+            'physical_conditions view',
+            'specifics view',
+        ];
+
+        $catalogCrudPermissions = [
+            'institutions view',
+            'institutions create',
+            'institutions update',
+            'institutions delete',
+            'categories view',
+            'categories create',
+            'categories update',
+            'categories delete',
+            'organizational_unit_types view',
+            'organizational_unit_types create',
+            'organizational_unit_types update',
+            'organizational_unit_types delete',
+            'organizational_units view',
+            'organizational_units create',
+            'organizational_units update',
+            'organizational_units delete',
+            'origins view',
+            'origins create',
+            'origins update',
+            'origins delete',
+            'physical_conditions view',
+            'physical_conditions create',
+            'physical_conditions update',
+            'physical_conditions delete',
+            'specifics view',
+            'specifics create',
+            'specifics update',
+            'specifics delete',
+        ];
+
+        // ============================================
+        // ROL: ACTIVO-FIJO-ENCARGADO
+        // ============================================
+        $faEncargadoRole = Role::firstOrCreate(['name' => 'activo-fijo-encargado', 'guard_name' => 'web']);
+        $faEncargadoPermissions = array_merge($catalogCrudPermissions, [
+            'fixed_assets view',
+            'fixed_assets create',
+            'fixed_assets update',
+            'fixed_assets delete',
+            'fixed_assets import',
+            'assignments view',
+            'assignments create',
+            'assignments update',
+            'assignments delete',
+            'assignments report',
+            'assignments execute',
+            'transfers view',
+            'transfers create',
+            'transfers update',
+            'transfers execute',
+            'transfers delete',
+            'transfers report',
+            'configuration view',
+            'employees view',
+            'employees show',
+            'employees update',
+        ]);
+        $faEncargadoRole->syncPermissions($faEncargadoPermissions);
+        $this->command->info('Permisos asignados al rol: activo-fijo-encargado (' . count($faEncargadoPermissions) . ' permisos)');
+
+        // ============================================
+        // ROL: ACTIVO-FIJO-SOLICITANTE
+        // ============================================
+        $faSolicitanteRole = Role::firstOrCreate(['name' => 'activo-fijo-solicitante', 'guard_name' => 'web']);
+        $faSolicitantePermissions = array_merge($catalogViewPermissions, [
+            'fixed_assets view',
+            'assignments view',
+            'assignments create',
+            'assignments update',
+            'assignments report',
+            'transfers view',
+            'transfers create',
+            'transfers update',
+            'transfers report',
+        ]);
+        $faSolicitanteRole->syncPermissions($faSolicitantePermissions);
+        $this->command->info('Permisos asignados al rol: activo-fijo-solicitante (' . count($faSolicitantePermissions) . ' permisos)');
+
+        // ============================================
+        // ROL: ACTIVO-FIJO-ENCARGADO-CATEGORIA
+        // ============================================
+        $faEncargadoCategoriaRole = Role::firstOrCreate(['name' => 'activo-fijo-encargado-categoria', 'guard_name' => 'web']);
+        $faEncargadoCategoriaPermissions = array_merge($catalogViewPermissions, [
+            'fixed_assets view',
+            'fixed_assets create',
+            'fixed_assets update',
+            'assignments view',
+            'assignments create',
+            'assignments update',
+            'assignments report',
+            'assignments execute',
+            'transfers view',
+            'transfers create',
+            'transfers update',
+            'transfers execute',
+            'transfers report',
+        ]);
+        $faEncargadoCategoriaRole->syncPermissions($faEncargadoCategoriaPermissions);
+        $this->command->info('Permisos asignados al rol: activo-fijo-encargado-categoria (' . count($faEncargadoCategoriaPermissions) . ' permisos)');
+
         $this->command->info('✅ Asignación de permisos a roles completada exitosamente.');
     }
 }

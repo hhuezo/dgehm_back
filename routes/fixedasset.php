@@ -57,6 +57,7 @@ Route::put('/specifics/{id}', [SpecificController::class, 'update']);
 Route::delete('/specifics/{id}', [SpecificController::class, 'destroy']);
 
 Route::get('/fixed_assets', [FixedAssetController::class, 'index']);
+Route::get('/fixed_assets/depreciation-statuses', [FixedAssetController::class, 'depreciationStatuses']);
 Route::post('/fixed_assets', [FixedAssetController::class, 'store']);
 Route::put('/fixed_assets/{id}', [FixedAssetController::class, 'update']);
 Route::delete('/fixed_assets/{id}', [FixedAssetController::class, 'destroy']);
@@ -64,17 +65,27 @@ Route::delete('/fixed_assets/{id}', [FixedAssetController::class, 'destroy']);
 Route::get('/assignments', [AssignmentController::class, 'index']);
 Route::get('/assignments/assignable-persons', [AssignmentController::class, 'assignablePersons']);
 Route::get('/assignments/reports/{id}', [AssignmentController::class, 'report']);
+Route::get('/assignments/{id}/reception-act-file', [AssignmentController::class, 'downloadReceptionActFile']);
 Route::get('/assignments/{id}', [AssignmentController::class, 'show']);
 Route::post('/assignments', [AssignmentController::class, 'store']);
+Route::post('/assignments/{id}/execute', [AssignmentController::class, 'execute']);
+Route::post('/assignments/{id}/approve', [AssignmentController::class, 'approve']);
+Route::post('/assignments/{id}/reject', [AssignmentController::class, 'reject']);
+Route::post('/assignments/{id}/annul', [AssignmentController::class, 'annul']);
 Route::put('/assignments/{id}', [AssignmentController::class, 'update']);
+Route::post('/assignments/{id}', [AssignmentController::class, 'update']);
 
 Route::get('/transfers', [TransferController::class, 'index']);
 Route::get('/transfers/assignable-persons', [TransferController::class, 'assignablePersons']);
 Route::get('/transfers/persons/{personId}/assigned-assets', [TransferController::class, 'assignedAssets']);
+Route::get('/transfers/{id}/file', [TransferController::class, 'downloadFile']);
 Route::get('/transfers/{id}', [TransferController::class, 'show']);
 Route::post('/transfers', [TransferController::class, 'store']);
 Route::post('/transfers/{id}/execute', [TransferController::class, 'execute']);
+Route::post('/transfers/{id}/approve', [TransferController::class, 'approve']);
+Route::post('/transfers/{id}/reject', [TransferController::class, 'reject']);
 Route::put('/transfers/{id}', [TransferController::class, 'update']);
+Route::post('/transfers/{id}', [TransferController::class, 'update']);
 
 Route::get('/fixed_assets/{id}/movements', [MovementController::class, 'indexForAsset']);
 

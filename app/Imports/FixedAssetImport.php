@@ -111,6 +111,12 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
                 $asset->location = $this->getValue($data, ['ubicacion', 'location']) ?? '';
                 $asset->policy = $this->getValue($data, ['poliza', 'policy']);
                 $asset->current_responsible = $this->getValue($data, ['responble_actual', 'responsable_actual', 'asignado_a', 'responsable']) ?? '';
+                if ($asset->current_responsible === '') {
+                    $asset->current_responsible = null;
+                }
+                if (!$asset->depreciation_status_id) {
+                    $asset->depreciation_status_id = \App\Models\fixedasset\DepreciationStatus::ACTIVE;
+                }
                 $asset->organizational_unit_id = $organizationalUnitId;
                 $asset->asset_type = $this->getValue($data, ['tipo_de_bien_segun_min_hacienda', 'tipo_bien', 'tipo']) ?? 'General';
                 $asset->acquisition_date = $acquisitionDate ?? now();

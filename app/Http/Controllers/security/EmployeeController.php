@@ -7,6 +7,7 @@ use App\Models\AdmGender;
 use App\Models\AdmMaritalStatus;
 use App\Models\Employee;
 use App\Models\User;
+use App\Models\fixedasset\OrganizationalUnit;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -30,12 +31,17 @@ class EmployeeController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'lastname', 'email']);
 
+        $organizationalUnits = OrganizationalUnit::query()
+            ->orderBy('name')
+            ->get(['id', 'name', 'abbreviation']);
+
         return response()->json([
             'success' => true,
             'data' => [
                 'genders' => $genders,
                 'marital_statuses' => $maritalStatuses,
                 'users' => $users,
+                'organizational_units' => $organizationalUnits,
             ],
         ]);
     }
@@ -47,6 +53,7 @@ class EmployeeController extends Controller
                 'user:id,name,lastname,email',
                 'gender:id,name',
                 'maritalStatus:id,name',
+                'organizationalUnit:id,name,abbreviation',
             ])
             ->orderByDesc('id')
             ->get();
@@ -63,7 +70,7 @@ class EmployeeController extends Controller
 
         $employee = Employee::create($data);
 
-        $employee->load(['user', 'gender', 'maritalStatus']);
+        $employee->load(['user', 'gender', 'maritalStatus', 'organizationalUnit']);
 
         return response()->json([
             'success' => true,
@@ -75,7 +82,7 @@ class EmployeeController extends Controller
     public function show(string $id)
     {
         $employee = Employee::query()
-            ->with(['user', 'gender', 'maritalStatus'])
+            ->with(['user', 'gender', 'maritalStatus', 'organizationalUnit'])
             ->find($id);
 
         if (!$employee) {
@@ -105,7 +112,7 @@ class EmployeeController extends Controller
         $data = $this->validatedPayload($request, (int) $employee->id);
 
         $employee->update($data);
-        $employee->load(['user', 'gender', 'maritalStatus']);
+        $employee->load(['user', 'gender', 'maritalStatus', 'organizationalUnit']);
 
         return response()->json([
             'success' => true,
@@ -231,6 +238,7 @@ class EmployeeController extends Controller
             'user_id' => 'nullable|integer|exists:users,id',
             'adm_gender_id' => 'nullable|integer|exists:adm_genders,id',
             'adm_marital_status_id' => 'nullable|integer|exists:adm_marital_statuses,id',
+            'fa_organizational_unit_id' => 'required|integer|exists:fa_organizational_units,id',
             'remote_mark' => 'nullable|boolean',
             'external' => 'nullable|boolean',
             'viatic' => 'nullable|boolean',

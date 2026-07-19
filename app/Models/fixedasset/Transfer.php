@@ -10,9 +10,6 @@ use Spatie\Activitylog\LogOptions;
 
 class Transfer extends Model
 {
-    public const STATUS_ENTERED = 1;
-    public const STATUS_FINALIZED = 2;
-
     protected $table = 'fa_transfers';
 
     protected $fillable = [
@@ -21,12 +18,13 @@ class Transfer extends Model
         'person_delivers_id',
         'person_receives_id',
         'observation',
-        'status',
+        'file',
+        'status_id',
     ];
 
     protected $casts = [
         'date' => 'date',
-        'status' => 'integer',
+        'status_id' => 'integer',
     ];
 
     public function organizationalUnit(): BelongsTo
@@ -42,6 +40,11 @@ class Transfer extends Model
     public function personReceives(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'person_receives_id');
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(MovementStatus::class, 'status_id');
     }
 
     public function details(): HasMany

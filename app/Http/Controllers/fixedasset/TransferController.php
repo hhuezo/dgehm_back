@@ -5,7 +5,10 @@ namespace App\Http\Controllers\fixedasset;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\fixedasset\Transfer;
+use App\Models\fixedasset\MovementStatus;
 use App\Services\fixedasset\AssetCustodyService;
+use App\Services\fixedasset\FixedAssetAttachmentService;
+use App\Services\fixedasset\MovementStatusService;
 use App\Services\fixedasset\TransferExecutionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,7 +28,8 @@ class TransferController extends Controller
                 'person_delivers_id',
                 'person_receives_id',
                 'observation',
-                'status',
+                'file',
+                'status_id',
                 'created_at',
                 'updated_at'
             )
@@ -33,6 +37,7 @@ class TransferController extends Controller
                 'organizationalUnit:id,name,abbreviation',
                 'personDelivers:id,name,lastname',
                 'personReceives:id,name,lastname',
+                'status:id,name',
             ])
             ->withCount('details')
             ->orderByDesc('date')
@@ -53,7 +58,7 @@ class TransferController extends Controller
             ->with(['fixedAssetCategories:id'])
             ->orderBy('name')
             ->orderBy('lastname')
-            ->get(['id', 'name', 'lastname', 'email'])
+            ->get(['id', 'name', 'lastname', 'email', 'fa_organizational_unit_id'])
             ->map(function (Employee $employee) {
                 return [
                     'id' => $employee->id,
@@ -107,14 +112,25 @@ class TransferController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, FixedAssetAttachmentService $attachments): JsonResponse
     {
+        $this->normalizeMultipartPayload($request);
         [$validated, $details] = $this->prepareTransferData($request);
+        unset($validated['file']);
 
-        $transfer = DB::transaction(function () use ($validated, $details) {
-            $validated['status'] = Transfer::STATUS_ENTERED;
+        $transfer = DB::transaction(function () use ($validated, $details, $request, $attachments) {
+            $validated['status_id'] = MovementStatus::PENDING_APPROVAL;
             $transfer = Transfer::create($validated);
             $this->syncDetails($transfer, $details);
+
+            if ($request->hasFile('file')) {
+                $transfer->file = $attachments->store(
+                    $request->file('file'),
+                    FixedAssetAttachmentService::DIRECTORY_TRANSFERS,
+                    $transfer->id
+                );
+                $transfer->save();
+            }
 
             return $transfer;
         });
@@ -126,27 +142,80 @@ class TransferController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, string $id): JsonResponse
+    public function update(Request $request, string $id, FixedAssetAttachmentService $attachments): JsonResponse
     {
         $transfer = Transfer::findOrFail($id);
 
-        if ((int) $transfer->status !== Transfer::STATUS_ENTERED) {
+        if ((int) $transfer->status_id !== MovementStatus::PENDING_APPROVAL) {
             throw ValidationException::withMessages([
-                'status' => 'No se puede modificar un traslado finalizado.',
+                'status_id' => 'Solo se puede modificar un traslado pendiente de aprobación.',
             ]);
         }
 
+        $this->normalizeMultipartPayload($request);
         [$validated, $details] = $this->prepareTransferData($request);
+        unset($validated['file']);
 
-        DB::transaction(function () use ($transfer, $validated, $details) {
+        DB::transaction(function () use ($transfer, $validated, $details, $request, $attachments) {
             $transfer->update($validated);
             $this->syncDetails($transfer, $details);
+
+            if ($request->hasFile('file')) {
+                $transfer->file = $attachments->store(
+                    $request->file('file'),
+                    FixedAssetAttachmentService::DIRECTORY_TRANSFERS,
+                    $transfer->id,
+                    $transfer->file
+                );
+                $transfer->save();
+            }
         });
 
         return response()->json([
             'success' => true,
             'message' => 'Traslado actualizado correctamente',
             'data' => $this->loadTransferResponse($transfer->fresh()),
+        ]);
+    }
+
+    public function downloadFile(string $id, FixedAssetAttachmentService $attachments)
+    {
+        $transfer = Transfer::find($id);
+
+        if (!$transfer || !$transfer->file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Archivo no encontrado.',
+            ], 404);
+        }
+
+        return $attachments->download(
+            FixedAssetAttachmentService::DIRECTORY_TRANSFERS,
+            $transfer->file
+        );
+    }
+
+    public function approve(string $id, MovementStatusService $statusService): JsonResponse
+    {
+        $transfer = Transfer::findOrFail($id);
+        $transfer = $statusService->approve($transfer);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Traslado aprobado correctamente',
+            'data' => $this->loadTransferResponse($transfer),
+        ]);
+    }
+
+    public function reject(string $id, MovementStatusService $statusService): JsonResponse
+    {
+        $transfer = Transfer::findOrFail($id);
+        $transfer = $statusService->reject($transfer);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Traslado rechazado correctamente',
+            'data' => $this->loadTransferResponse($transfer),
         ]);
     }
 
@@ -160,6 +229,17 @@ class TransferController extends Controller
             'message' => 'Traslado ejecutado correctamente',
             'data' => $this->loadTransferResponse($transfer),
         ]);
+    }
+
+    private function normalizeMultipartPayload(Request $request): void
+    {
+        $details = $request->input('details');
+        if (is_string($details)) {
+            $decoded = json_decode($details, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $request->merge(['details' => $decoded]);
+            }
+        }
     }
 
     private function prepareTransferData(Request $request): array
@@ -219,6 +299,7 @@ class TransferController extends Controller
                 Rule::exists('fa_category_employee', 'adm_employee_id'),
             ],
             'observation' => 'nullable|string|max:2000',
+            'file' => FixedAssetAttachmentService::FILE_RULE,
             'details' => 'required|array|min:1',
             'details.*.fa_fixed_asset_id' => [
                 'required',
@@ -251,6 +332,7 @@ class TransferController extends Controller
             'organizationalUnit:id,name,abbreviation',
             'personDelivers:id,name,lastname,email',
             'personReceives:id,name,lastname,email',
+            'status:id,name',
             'details.fixedAsset:id,code,correlative,description,fa_category_id',
             'details.fixedAsset.category:id,name,code',
         ])->loadCount('details');

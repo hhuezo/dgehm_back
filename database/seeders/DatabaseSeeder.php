@@ -281,5 +281,8 @@ class DatabaseSeeder extends Seeder
         // -----------------------------------------------------
         $this->call(AdmEmployeesSeeder::class);
         $this->call(AdmEmployeeRelationsSeeder::class);
+
+        // Roles, usuarios y personas de Activo Fijo
+        $this->call(FixedAssetRolesUsersSeeder::class);
     }
 }

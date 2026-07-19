@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('correlative', 50);
 
             $table->string('description', 255);
-            $table->string('brand', 150);
-            $table->string('model', 150);
+            $table->string('brand', 150)->nullable();
+            $table->string('model', 150)->nullable();
             $table->string('serial_number', 150)->nullable();
             $table->string('location', 255);
             $table->string('policy', 150)->nullable();

@@ -17,10 +17,14 @@ class Assignment extends Model
         'organizational_unit_id',
         'person_id',
         'observation',
+        'reception_act_file',
+        'annulment_reason',
+        'status_id',
     ];
 
     protected $casts = [
         'date' => 'date',
+        'status_id' => 'integer',
     ];
 
     public function organizationalUnit(): BelongsTo
@@ -31,6 +35,11 @@ class Assignment extends Model
     public function person(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'person_id');
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(MovementStatus::class, 'status_id');
     }
 
     public function details(): HasMany

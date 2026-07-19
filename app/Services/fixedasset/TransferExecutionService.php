@@ -4,6 +4,7 @@ namespace App\Services\fixedasset;
 
 use App\Models\Employee;
 use App\Models\fixedasset\FixedAsset;
+use App\Models\fixedasset\MovementStatus;
 use App\Models\fixedasset\Transfer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -16,9 +17,9 @@ class TransferExecutionService
 
     public function execute(Transfer $transfer): Transfer
     {
-        if ((int) $transfer->status !== Transfer::STATUS_ENTERED) {
+        if ((int) $transfer->status_id !== MovementStatus::APPROVED) {
             throw ValidationException::withMessages([
-                'status' => 'Solo se pueden ejecutar traslados en estado ingresado.',
+                'status_id' => 'Solo se pueden ejecutar traslados aprobados.',
             ]);
         }
 
@@ -57,7 +58,7 @@ class TransferExecutionService
                 $asset->save();
             }
 
-            $transfer->status = Transfer::STATUS_FINALIZED;
+            $transfer->status_id = MovementStatus::FINALIZED;
             $transfer->save();
         });
 

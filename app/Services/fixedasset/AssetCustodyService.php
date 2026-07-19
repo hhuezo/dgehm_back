@@ -4,6 +4,7 @@ namespace App\Services\fixedasset;
 
 use App\Models\fixedasset\Assignment;
 use App\Models\fixedasset\FixedAsset;
+use App\Models\fixedasset\MovementStatus;
 use App\Models\fixedasset\Transfer;
 use Illuminate\Support\Collection;
 
@@ -17,6 +18,7 @@ class AssetCustodyService
         $custody = [];
 
         $assignments = Assignment::query()
+            ->where('status_id', MovementStatus::FINALIZED)
             ->with('details:id,fa_assignment_id,fa_fixed_asset_id')
             ->orderBy('date')
             ->orderBy('id')
@@ -29,7 +31,7 @@ class AssetCustodyService
         }
 
         $transfersQuery = Transfer::query()
-            ->where('status', Transfer::STATUS_FINALIZED)
+            ->where('status_id', MovementStatus::FINALIZED)
             ->with('details:id,fa_transfer_id,fa_fixed_asset_id')
             ->orderBy('date')
             ->orderBy('id');

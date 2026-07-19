@@ -4,6 +4,7 @@ namespace App\Services\fixedasset;
 
 use App\Models\Employee;
 use App\Models\fixedasset\Assignment;
+use App\Models\fixedasset\MovementStatus;
 use App\Models\fixedasset\Transfer;
 use Illuminate\Support\Collection;
 
@@ -37,9 +38,9 @@ class MovementService
                 'fa_transfers.date',
                 'fa_transfers.person_delivers_id',
                 'fa_transfers.person_receives_id',
-                'fa_transfers.status'
+                'fa_transfers.status_id'
             )
-            ->where('status', Transfer::STATUS_FINALIZED)
+            ->where('status_id', MovementStatus::FINALIZED)
             ->whereHas('details', fn ($query) => $query->where('fa_fixed_asset_id', $fixedAssetId))
             ->with([
                 'personDelivers:id,name,lastname,email',

@@ -39,12 +39,14 @@ class FixedAsset extends Model
         'is_insured',
         'insured_description',
         'purchase_value',
+        'depreciation_status_id',
     ];
 
     protected $casts = [
         'acquisition_date' => 'date',
         'is_insured' => 'boolean',
         'purchase_value' => 'decimal:2',
+        'depreciation_status_id' => 'integer',
     ];
 
     public function category()
@@ -65,6 +67,11 @@ class FixedAsset extends Model
     public function origin()
     {
         return $this->belongsTo(Origin::class, 'origin_id');
+    }
+
+    public function depreciationStatus()
+    {
+        return $this->belongsTo(DepreciationStatus::class, 'depreciation_status_id');
     }
 
     public function getActivitylogOptions(): LogOptions
