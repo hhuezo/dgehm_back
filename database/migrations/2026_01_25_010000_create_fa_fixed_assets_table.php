@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('serial_number', 150)->nullable();
             $table->string('location', 255);
             $table->string('policy', 150)->nullable();
-            $table->string('current_responsible', 255);
+            $table->string('current_responsible', 255)->nullable();
 
             $table->foreignId('organizational_unit_id')->constrained('fa_organizational_units');
 
@@ -43,6 +43,9 @@ return new class extends Migration
             $table->string('insured_description', 255)->nullable();
 
             $table->decimal('purchase_value', 15, 4);
+
+            $table->foreignId('depreciation_status_id')
+                ->constrained('fa_depreciation_statuses');
 
             $table->timestamps();
         });

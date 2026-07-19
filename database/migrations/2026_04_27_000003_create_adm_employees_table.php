@@ -26,6 +26,10 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained();
             $table->foreignId('adm_gender_id')->nullable()->constrained();
             $table->foreignId('adm_marital_status_id')->nullable()->constrained();
+            $table->foreignId('fa_organizational_unit_id')
+                ->nullable()
+                ->constrained('fa_organizational_units')
+                ->nullOnDelete();
             $table->timestamps();
             $table->timestamp('deleted_at')->nullable();
             $table->boolean('remote_mark')->default(false);

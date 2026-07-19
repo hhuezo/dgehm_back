@@ -20,6 +20,13 @@ return new class extends Migration
                 ->constrained('adm_employees');
 
             $table->text('observation')->nullable();
+            $table->string('reception_act_file', 255)->nullable();
+            $table->text('annulment_reason')->nullable();
+
+            $table->foreignId('status_id')
+                ->default(1)
+                ->constrained('fa_movement_statuses')
+                ->restrictOnDelete();
 
             $table->timestamps();
         });
