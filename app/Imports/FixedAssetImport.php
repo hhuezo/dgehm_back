@@ -3,11 +3,13 @@
 namespace App\Imports;
 
 use App\Models\fixedasset\Category;
+use App\Models\fixedasset\DepreciationStatus;
 use App\Models\fixedasset\FixedAsset;
 use App\Models\fixedasset\OrganizationalUnit;
 use App\Models\fixedasset\Origin;
 use App\Models\fixedasset\PhysicalCondition;
 use App\Models\fixedasset\Specific;
+use App\Services\FixedAssetResponsibleResolver;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -18,10 +20,14 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
     public array $errors = [];
     public int $imported = 0;
     public int $skipped = 0;
+    public int $duplicates = 0;
+    public int $personsCreated = 0;
+    public int $personsReused = 0;
 
-    /**
-     * Fila de encabezados (fila 1).
-     */
+    public function __construct(private readonly bool $dryRun = false)
+    {
+    }
+
     public function headingRow(): int
     {
         return 1;
@@ -29,7 +35,16 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
 
     public function collection(Collection $rows)
     {
-        // Cache de lookups para optimizar
+        $this->processRows($rows, 0);
+    }
+
+    /**
+     * Procesa filas ya normalizadas (claves tipo heading) o crudas de Excel.
+     *
+     * @param  Collection<int, mixed>  $rows
+     */
+    public function processRows(Collection $rows, int $rowOffset = 0): void
+    {
         $origins = Origin::where('is_active', true)->pluck('id', 'name')->toArray();
         $physicalConditions = PhysicalCondition::where('is_active', true)->pluck('id', 'name')->toArray();
         $organizationalUnits = OrganizationalUnit::where('is_active', true)->pluck('id', 'name')->toArray();
@@ -38,24 +53,24 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
         });
         $categories = Category::with('specific')->get();
 
-        // Obtener primer origen, condición física y unidad organizativa como defaults
         $defaultOriginId = Origin::where('is_active', true)->first()?->id;
         $defaultPhysicalConditionId = PhysicalCondition::where('is_active', true)->first()?->id;
         $defaultOrganizationalUnitId = OrganizationalUnit::where('is_active', true)->first()?->id;
 
+        $resolver = new FixedAssetResponsibleResolver();
+        $existingCodes = FixedAsset::query()->pluck('id', 'code')->all();
+
         foreach ($rows as $index => $row) {
-            $rowNumber = $index + 2; // encabezados en fila 1, datos desde fila 2
+            $rowNumber = $rowOffset + $index + 2;
 
             try {
-                // Normalizar claves del row (hoja BASE: INVENTARIO NUEVO, DESCRIPCION, etc.)
-                $data = $this->normalizeRow($row->toArray());
+                $raw = is_array($row) ? $row : (method_exists($row, 'toArray') ? $row->toArray() : (array) $row);
+                $data = $this->normalizeRow($raw);
 
-                // Saltar filas vacías
                 if ($this->isEmptyRow($data)) {
                     continue;
                 }
 
-                // Obtener código del activo (INVENTARIO NUEVO)
                 $code = $this->getValue($data, ['inventario_nuevo', 'no_inventario', 'inventario', 'codigo']);
 
                 if (!$code) {
@@ -64,11 +79,14 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
                     continue;
                 }
 
-                // Extraer correlativo del código (última parte después del último guion)
+                if (isset($existingCodes[$code])) {
+                    $this->duplicates++;
+                    continue;
+                }
+
                 $codeParts = explode('-', $code);
                 $correlative = end($codeParts) ?: '0000';
 
-                // Buscar clase por específico o por código (ej: 4123-0104-09-0001 -> clase 09 del específico 0104)
                 $specificName = $this->getValue($data, ['especifico', 'specific']);
                 $assetCategory = $this->findCategoryBySpecific($specificName, $specifics, $categories);
                 if (!$assetCategory && count($codeParts) >= 4) {
@@ -83,7 +101,6 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
                     continue;
                 }
 
-                // Lookups por nombre
                 $originName = $this->getValue($data, ['procedencia', 'origen', 'origin']);
                 $originId = $this->findForeignKey($originName, $origins) ?? $defaultOriginId;
 
@@ -93,30 +110,40 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
                 $unitName = $this->getValue($data, ['unidad_gerencia', 'unidad', 'gerencia', 'organizational_unit']);
                 $organizationalUnitId = $this->findForeignKey($unitName, $organizationalUnits) ?? $defaultOrganizationalUnitId;
 
-                // Preparar fecha de adquisición (convertir número Excel a fecha)
                 $acquisitionDate = $this->parseExcelDate($data, ['fecha_de_adquisicion', 'fecha_adquisicion', 'fecha']);
-
-                // Preparar valor de compra (valor_de_compra_facturas o valor_de_compra)
                 $purchaseValue = $this->parseDecimal($data, ['valor_de_compra_facturas', 'valor_de_compra', 'valor_compra', 'valor']);
 
-                // Crear el activo
+                $responsibleName = $this->getValue($data, [
+                    'responble_actual',
+                    'responsable_actual',
+                    'asignado_a',
+                    'responsable',
+                ]);
+
+                $employee = $resolver->resolve($responsibleName, $organizationalUnitId);
+
+                if ($this->dryRun) {
+                    $this->imported++;
+                    $existingCodes[$code] = 0;
+                    continue;
+                }
+
                 $asset = new FixedAsset();
                 $asset->fa_category_id = $assetCategory->id;
                 $asset->code = $code;
                 $asset->correlative = $correlative;
                 $asset->description = $this->getValue($data, ['descripcion', 'description']) ?? 'Sin descripción';
-                $asset->brand = $this->getValue($data, ['marca', 'brand']) ?? '';
-                $asset->model = $this->getValue($data, ['modelo', 'model']) ?? '';
+                $asset->brand = $this->getValue($data, ['marca', 'brand']);
+                $asset->model = $this->getValue($data, ['modelo', 'model']);
                 $asset->serial_number = $this->getValue($data, ['serie', 'numero_de_serie', 'numero_serie', 'serial']);
                 $asset->location = $this->getValue($data, ['ubicacion', 'location']) ?? '';
                 $asset->policy = $this->getValue($data, ['poliza', 'policy']);
-                $asset->current_responsible = $this->getValue($data, ['responble_actual', 'responsable_actual', 'asignado_a', 'responsable']) ?? '';
-                if ($asset->current_responsible === '') {
-                    $asset->current_responsible = null;
-                }
-                if (!$asset->depreciation_status_id) {
-                    $asset->depreciation_status_id = \App\Models\fixedasset\DepreciationStatus::ACTIVE;
-                }
+                $asset->current_responsible = $employee
+                    ? trim($employee->name . ' ' . $employee->lastname)
+                    : ($responsibleName ?: null);
+                $asset->depreciation_status_id = $employee
+                    ? DepreciationStatus::ACTIVE
+                    : DepreciationStatus::PENDING_ASSIGNMENT;
                 $asset->organizational_unit_id = $organizationalUnitId;
                 $asset->asset_type = $this->getValue($data, ['tipo_de_bien_segun_min_hacienda', 'tipo_bien', 'tipo']) ?? 'General';
                 $asset->acquisition_date = $acquisitionDate ?? now();
@@ -131,7 +158,6 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
                 $asset->insured_description = null;
                 $asset->purchase_value = $purchaseValue ?? 0;
 
-                // Validar campos requeridos
                 if (!$asset->organizational_unit_id) {
                     $this->errors[] = "Fila {$rowNumber}: No hay unidades organizativas disponibles.";
                     $this->skipped++;
@@ -151,24 +177,25 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
                 }
 
                 $asset->save();
+                $existingCodes[$code] = $asset->id;
                 $this->imported++;
             } catch (\Exception $e) {
                 $this->errors[] = "Fila {$rowNumber}: " . $e->getMessage();
                 $this->skipped++;
             }
         }
+
+        $this->personsCreated = $resolver->createdEmployees;
+        $this->personsReused = $resolver->reusedEmployees;
     }
 
-    /**
-     * Normaliza las claves del row (minúsculas, sin acentos, espacios a guiones bajos).
-     */
     protected function normalizeRow(array $row): array
     {
         $normalized = [];
         foreach ($row as $key => $value) {
-            $normalizedKey = $this->normalizeKey($key);
-            $normalized[$normalizedKey] = $value;
+            $normalized[$this->normalizeKey($key)] = $value;
         }
+
         return $normalized;
     }
 
@@ -193,6 +220,7 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
                 return false;
             }
         }
+
         return true;
     }
 
@@ -206,7 +234,7 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
         $specific = $specifics->get($normalizedSpecific);
 
         if ($specific) {
-            $category = $categories->first(fn($c) => $c->fa_specific_id === $specific->id);
+            $category = $categories->first(fn ($c) => $c->fa_specific_id === $specific->id);
             if ($category) {
                 return $category;
             }
@@ -217,7 +245,6 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
 
     protected function findCategoryByCodeParts(array $codeParts, $categories): ?Category
     {
-        // codeParts: [4123, 0104, 09, 0001] -> específico 0104, categoría 09
         if (count($codeParts) < 4) {
             return null;
         }
@@ -226,6 +253,7 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
 
         return $categories->first(function ($c) use ($specificCode, $categoryCode) {
             $spec = $c->specific;
+
             return $spec && $spec->code === $specificCode && $c->code === $categoryCode;
         });
     }
@@ -244,11 +272,12 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
             if (mb_strtolower(trim($name)) === mb_strtolower(trim($value))) {
                 return $id;
             }
-            if (str_contains(mb_strtolower($name), mb_strtolower($value)) ||
-                str_contains(mb_strtolower($value), mb_strtolower($name))) {
+            if (str_contains(mb_strtolower($name), mb_strtolower($value))
+                || str_contains(mb_strtolower($value), mb_strtolower($name))) {
                 return $id;
             }
         }
+
         return null;
     }
 
@@ -259,7 +288,8 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
             return false;
         }
         $value = mb_strtolower(trim($value));
-        return in_array($value, ['si', 'sí', 'yes', '1', 'true', 'x', 'verdadero']);
+
+        return in_array($value, ['si', 'sí', 'yes', '1', 'true', 'x', 'verdadero'], true);
     }
 
     protected function getValue(array $data, array $possibleKeys): ?string
@@ -270,6 +300,7 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
                 return trim((string) $data[$normalizedKey]);
             }
         }
+
         return null;
     }
 
@@ -281,19 +312,16 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
             return null;
         }
 
-        // Si es numérico, es un número de serie de Excel
         if (is_numeric($value)) {
             try {
                 return \Carbon\Carbon::instance(ExcelDate::excelToDateTimeObject((float) $value));
             } catch (\Exception $e) {
-                // Si falla, intentar como año
                 if ((int) $value > 1900 && (int) $value < 2100) {
                     return \Carbon\Carbon::createFromDate((int) $value, 1, 1);
                 }
             }
         }
 
-        // Intentar parsear como fecha normal
         try {
             return \Carbon\Carbon::parse($value);
         } catch (\Exception $e) {
@@ -309,11 +337,9 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
             return null;
         }
 
-        // Limpiar el valor (quitar símbolos de moneda, comas, etc.)
         $cleaned = preg_replace('/[^0-9.,\-]/', '', $value);
         $cleaned = str_replace(',', '.', $cleaned);
 
-        // Si hay múltiples puntos, quitar todos menos el último
         if (substr_count($cleaned, '.') > 1) {
             $parts = explode('.', $cleaned);
             $lastPart = array_pop($parts);

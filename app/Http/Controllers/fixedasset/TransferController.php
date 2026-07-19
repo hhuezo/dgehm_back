@@ -53,8 +53,11 @@ class TransferController extends Controller
     public function assignablePersons(): JsonResponse
     {
         $employees = Employee::query()
-            ->whereHas('fixedAssetCategories')
             ->where('active', true)
+            ->whereHas('fixedAssetCategories')
+            ->whereHas('user.roles', function ($query) {
+                $query->where('name', 'activo-fijo-encargado-categoria');
+            })
             ->with(['fixedAssetCategories:id'])
             ->orderBy('name')
             ->orderBy('lastname')

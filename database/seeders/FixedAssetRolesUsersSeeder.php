@@ -29,7 +29,7 @@ class FixedAssetRolesUsersSeeder extends Seeder
                 'lastname' => 'Encargada AF',
                 'employee_email' => 'af.encargado@empresa.com',
                 'fixed_asset_manager' => true,
-                'category_codes' => null, // todas las categorías
+                'category_codes' => [], // solo encargado-categoría tiene fa_category_employee
             ],
             [
                 'role' => 'activo-fijo-solicitante',
@@ -39,7 +39,7 @@ class FixedAssetRolesUsersSeeder extends Seeder
                 'lastname' => 'Solicitante AF',
                 'employee_email' => 'af.solicitante@empresa.com',
                 'fixed_asset_manager' => false,
-                'category_codes' => ['01', '02'], // Archivos, Escritorios
+                'category_codes' => [],
             ],
             [
                 'role' => 'activo-fijo-encargado-categoria',
@@ -132,6 +132,10 @@ class FixedAssetRolesUsersSeeder extends Seeder
     {
         if ($codes === null) {
             return Category::query()->orderBy('id')->pluck('id')->map(fn ($id) => (int) $id)->all();
+        }
+
+        if ($codes === []) {
+            return [];
         }
 
         return Category::query()

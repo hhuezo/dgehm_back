@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\fixedasset;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
 use App\Models\fixedasset\Category;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class CategoryController extends Controller
 {
+    public const ROLE_CATEGORY_MANAGER = 'activo-fijo-encargado-categoria';
+
     public function index()
     {
         $categories = Category::select('id', 'name', 'code', 'useful_life', 'fa_specific_id')
@@ -22,6 +26,26 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'data' => $categories,
+        ], 200);
+    }
+
+    /**
+     * Empleados elegibles como responsables de categoría (rol encargado-categoría).
+     */
+    public function responsiblesOptions()
+    {
+        $employees = Employee::query()
+            ->where('active', true)
+            ->whereHas('user.roles', function ($query) {
+                $query->where('name', self::ROLE_CATEGORY_MANAGER);
+            })
+            ->orderBy('name')
+            ->orderBy('lastname')
+            ->get(['id', 'name', 'lastname', 'email']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $employees,
         ], 200);
     }
 
@@ -143,6 +167,27 @@ class CategoryController extends Controller
             ->values()
             ->all();
 
-        $category->responsibles()->sync($ids);
+        if ($ids === []) {
+            $category->responsibles()->sync([]);
+
+            return;
+        }
+
+        $allowedIds = Employee::query()
+            ->whereIn('id', $ids)
+            ->whereHas('user.roles', function ($query) {
+                $query->where('name', self::ROLE_CATEGORY_MANAGER);
+            })
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if (count($allowedIds) !== count($ids)) {
+            throw ValidationException::withMessages([
+                'employee_ids' => 'Solo se pueden asignar personas con rol activo-fijo-encargado-categoria.',
+            ]);
+        }
+
+        $category->responsibles()->sync($allowedIds);
     }
 }

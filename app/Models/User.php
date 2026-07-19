@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\fixedasset\OrganizationalUnit;
+use App\Models\Employee;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -44,6 +45,11 @@ class User extends Authenticatable
             'user_id',
             'fa_organizational_unit_id'
         )->withTimestamps();
+    }
+
+    public function employee()
+    {
+        return $this->hasOne(Employee::class, 'user_id');
     }
 
     public function permissions()

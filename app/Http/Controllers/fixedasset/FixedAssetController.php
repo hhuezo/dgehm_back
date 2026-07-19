@@ -8,6 +8,7 @@ use App\Models\fixedasset\Category;
 use App\Models\fixedasset\DepreciationStatus;
 use App\Models\fixedasset\FixedAsset;
 use App\Models\fixedasset\Institution;
+use App\Services\FixedAssetMigrationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -346,17 +347,17 @@ class FixedAssetController extends Controller
     }
 
     /**
-     * Importar activos fijos desde archivo Excel.
+     * Importar activos fijos desde archivo Excel (síncrono, legado).
      */
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // Max 10MB
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:20480',
         ], [
             'file.required' => 'El archivo es obligatorio.',
             'file.file' => 'Debe ser un archivo válido.',
             'file.mimes' => 'El archivo debe ser de tipo Excel (.xlsx, .xls) o CSV.',
-            'file.max' => 'El archivo no puede superar los 10MB.',
+            'file.max' => 'El archivo no puede superar los 20MB.',
         ]);
 
         try {
@@ -369,6 +370,9 @@ class FixedAssetController extends Controller
                 'data' => [
                     'imported' => $import->imported,
                     'skipped' => $import->skipped,
+                    'duplicates' => $import->duplicates,
+                    'persons_created' => $import->personsCreated,
+                    'persons_reused' => $import->personsReused,
                     'errors' => $import->errors,
                 ],
             ], 200);
@@ -377,6 +381,86 @@ class FixedAssetController extends Controller
                 'success' => false,
                 'message' => 'Error al importar el archivo: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Inicia migración por chunks (sube archivo y prepara el job).
+     */
+    public function importStart(Request $request, FixedAssetMigrationService $migration)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls|max:20480',
+            'fresh' => 'nullable|boolean',
+        ], [
+            'file.required' => 'El archivo es obligatorio.',
+            'file.mimes' => 'El archivo debe ser Excel (.xlsx o .xls).',
+            'file.max' => 'El archivo no puede superar los 20MB.',
+        ]);
+
+        try {
+            $fresh = $request->boolean('fresh');
+            $data = $migration->start($request->file('file'), $fresh);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Archivo cargado. Iniciando migración.',
+                'data' => $data,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo preparar la migración: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Procesa el siguiente chunk de la migración.
+     */
+    public function importProcess(Request $request, FixedAssetMigrationService $migration)
+    {
+        $request->validate([
+            'job_id' => 'required|string',
+            'chunk_size' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        try {
+            $state = $migration->process(
+                $request->input('job_id'),
+                $request->integer('chunk_size') ?: null
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => $state['message'] ?? 'OK',
+                'data' => $state,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Consulta el avance de una migración.
+     */
+    public function importProgress(string $jobId, FixedAssetMigrationService $migration)
+    {
+        try {
+            $state = $migration->progress($jobId);
+
+            return response()->json([
+                'success' => true,
+                'data' => $state,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 404);
         }
     }
 }

@@ -284,5 +284,6 @@ class DatabaseSeeder extends Seeder
 
         // Roles, usuarios y personas de Activo Fijo
         $this->call(FixedAssetRolesUsersSeeder::class);
+        $this->call(FixedAssetCategoryManagersSeeder::class);
     }
 }

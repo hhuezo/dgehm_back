@@ -19,8 +19,19 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/signout', [AuthController::class, 'signout']);
-Route::get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    $user = $request->user();
+    $user->loadMissing(['employee:id,user_id']);
+
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'email' => $user->email,
+        'employee_id' => $user->employee?->id,
+        'roles' => $user->getRoleNames(),
+        'permissions' => $user->getAllPermissions()->pluck('name'),
+        'organizational_units' => $user->organizationalUnits ?? [],
+    ];
 });
 
 Route::get('general/images/{imgName}', [ImageController::class, 'getGeneralImage']);

@@ -185,6 +185,7 @@ class RolesPermissionsSeeder extends Seeder
             'assignments delete',
             'assignments report',
             'assignments execute',
+            'administrar asignacion',
             'transfers view',
             'transfers create',
             'transfers update',
@@ -206,12 +207,8 @@ class RolesPermissionsSeeder extends Seeder
         $faSolicitantePermissions = array_merge($catalogViewPermissions, [
             'fixed_assets view',
             'assignments view',
-            'assignments create',
-            'assignments update',
             'assignments report',
             'transfers view',
-            'transfers create',
-            'transfers update',
             'transfers report',
         ]);
         $faSolicitanteRole->syncPermissions($faSolicitantePermissions);
@@ -226,8 +223,6 @@ class RolesPermissionsSeeder extends Seeder
             'fixed_assets create',
             'fixed_assets update',
             'assignments view',
-            'assignments create',
-            'assignments update',
             'assignments report',
             'assignments execute',
             'transfers view',

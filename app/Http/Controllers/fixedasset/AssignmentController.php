@@ -16,13 +16,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\Response;
 
 class AssignmentController extends Controller
 {
-    public function index(): JsonResponse
+    public const PERMISSION_MANAGE = 'administrar asignacion';
+
+    public function index(Request $request): JsonResponse
     {
-        $assignments = Assignment::query()
+        $query = Assignment::query()
             ->select(
                 'id',
                 'date',
@@ -40,7 +43,11 @@ class AssignmentController extends Controller
                 'person:id,name,lastname',
                 'status:id,name',
             ])
-            ->withCount('details')
+            ->withCount('details');
+
+        $this->scopeVisibleAssignments($query, $this->authUser($request));
+
+        $assignments = $query
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->get();
@@ -51,11 +58,21 @@ class AssignmentController extends Controller
         ]);
     }
 
-    public function assignablePersons(): JsonResponse
+    public function assignablePersons(Request $request): JsonResponse
     {
+        if (!$this->canManageAssignments($this->authUser($request))) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
+
         $employees = Employee::query()
-            ->whereHas('fixedAssetCategories')
             ->where('active', true)
+            ->whereHas('fixedAssetCategories')
+            ->whereHas('user.roles', function ($query) {
+                $query->where('name', 'activo-fijo-encargado-categoria');
+            })
             ->with(['fixedAssetCategories:id'])
             ->orderBy('name')
             ->orderBy('lastname')
@@ -78,7 +95,7 @@ class AssignmentController extends Controller
         ]);
     }
 
-    public function show(string $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
         $assignment = Assignment::query()
             ->with([
@@ -94,6 +111,8 @@ class AssignmentController extends Controller
             ->withCount('details')
             ->findOrFail($id);
 
+        $this->assertCanViewAssignment($this->authUser($request), $assignment);
+
         return response()->json([
             'success' => true,
             'data' => $assignment,
@@ -102,6 +121,7 @@ class AssignmentController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $this->assertCanManageAssignments($this->authUser($request));
         $this->normalizeMultipartPayload($request);
         [$validated, $details] = $this->prepareAssignmentData($request);
 
@@ -122,6 +142,7 @@ class AssignmentController extends Controller
 
     public function update(Request $request, string $id): JsonResponse
     {
+        $this->assertCanManageAssignments($this->authUser($request));
         $assignment = Assignment::findOrFail($id);
 
         if ((int) $assignment->status_id !== MovementStatus::PENDING_APPROVAL) {
@@ -145,7 +166,7 @@ class AssignmentController extends Controller
         ]);
     }
 
-    public function downloadReceptionActFile(string $id, FixedAssetAttachmentService $attachments)
+    public function downloadReceptionActFile(Request $request, string $id, FixedAssetAttachmentService $attachments)
     {
         $assignment = Assignment::find($id);
 
@@ -156,15 +177,18 @@ class AssignmentController extends Controller
             ], 404);
         }
 
+        $this->assertCanViewAssignment($this->authUser($request), $assignment);
+
         return $attachments->download(
             FixedAssetAttachmentService::DIRECTORY_ASSIGNMENT_RECEPTION_ACTS,
             $assignment->reception_act_file
         );
     }
 
-    public function approve(string $id, MovementStatusService $statusService): JsonResponse
+    public function approve(Request $request, string $id, MovementStatusService $statusService): JsonResponse
     {
         $assignment = Assignment::findOrFail($id);
+        $this->assertIsAssignedPerson($this->authUser($request), $assignment);
         $assignment = $statusService->approve($assignment);
 
         return response()->json([
@@ -174,9 +198,10 @@ class AssignmentController extends Controller
         ]);
     }
 
-    public function reject(string $id, MovementStatusService $statusService): JsonResponse
+    public function reject(Request $request, string $id, MovementStatusService $statusService): JsonResponse
     {
         $assignment = Assignment::findOrFail($id);
+        $this->assertIsAssignedPerson($this->authUser($request), $assignment);
         $assignment = $statusService->reject($assignment);
 
         return response()->json([
@@ -188,6 +213,8 @@ class AssignmentController extends Controller
 
     public function annul(Request $request, string $id, MovementStatusService $statusService): JsonResponse
     {
+        $this->assertCanManageAssignments($this->authUser($request));
+
         $validated = $request->validate([
             'annulment_reason' => 'required|string|min:5|max:2000',
         ], [
@@ -211,6 +238,7 @@ class AssignmentController extends Controller
         string $id,
         AssignmentExecutionService $executionService
     ): JsonResponse {
+        $this->assertCanManageAssignments($this->authUser($request));
         $assignment = Assignment::findOrFail($id);
         $assignment = $executionService->execute($assignment, $request);
 
@@ -221,7 +249,7 @@ class AssignmentController extends Controller
         ]);
     }
 
-    public function report(string $id): Response
+    public function report(Request $request, string $id): Response
     {
         $assignment = Assignment::query()
             ->with([
@@ -236,6 +264,8 @@ class AssignmentController extends Controller
                     ]),
             ])
             ->findOrFail($id);
+
+        $this->assertCanViewAssignment($this->authUser($request), $assignment);
 
         $person = $assignment->person;
         $unitName = $person?->organizationalUnit?->name
@@ -260,6 +290,83 @@ class AssignmentController extends Controller
         return $pdf->stream("Ficha_Asignacion_Activo_Fijo_{$id}.pdf");
     }
 
+    private function authUser(Request $request)
+    {
+        $user = $request->user() ?? $request->user('sanctum');
+
+        if (!$user && $request->bearerToken()) {
+            $accessToken = PersonalAccessToken::findToken($request->bearerToken());
+            $user = $accessToken?->tokenable;
+        }
+
+        if (!$user) {
+            abort(401, 'Token no proporcionado o inválido.');
+        }
+
+        return $user;
+    }
+
+    private function canManageAssignments($user): bool
+    {
+        return $user && $user->can(self::PERMISSION_MANAGE);
+    }
+
+    private function currentEmployeeId($user): ?int
+    {
+        if (!$user) {
+            return null;
+        }
+
+        $employeeId = Employee::query()->where('user_id', $user->id)->value('id');
+
+        return $employeeId ? (int) $employeeId : null;
+    }
+
+    private function scopeVisibleAssignments($query, $user): void
+    {
+        if ($this->canManageAssignments($user)) {
+            return;
+        }
+
+        $employeeId = $this->currentEmployeeId($user);
+        if (!$employeeId) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $query->where('person_id', $employeeId);
+    }
+
+    private function assertCanManageAssignments($user): void
+    {
+        if (!$this->canManageAssignments($user)) {
+            abort(403, 'No tienes permiso para administrar asignaciones.');
+        }
+    }
+
+    private function assertCanViewAssignment($user, Assignment $assignment): void
+    {
+        if ($this->canManageAssignments($user)) {
+            return;
+        }
+
+        $employeeId = $this->currentEmployeeId($user);
+        if ($employeeId && (int) $assignment->person_id === $employeeId) {
+            return;
+        }
+
+        abort(403, 'No tienes permiso para ver esta asignación.');
+    }
+
+    private function assertIsAssignedPerson($user, Assignment $assignment): void
+    {
+        $employeeId = $this->currentEmployeeId($user);
+        if (!$employeeId || (int) $assignment->person_id !== $employeeId) {
+            abort(403, 'Solo la persona asignada puede aprobar o rechazar esta asignación.');
+        }
+    }
+
     private function normalizeMultipartPayload(Request $request): void
     {
         $details = $request->input('details');
@@ -278,8 +385,14 @@ class AssignmentController extends Controller
         unset($validated['details']);
 
         $employee = Employee::query()
-            ->with('fixedAssetCategories:id')
+            ->with(['fixedAssetCategories:id', 'user'])
             ->findOrFail($validated['person_id']);
+
+        if (!$employee->user || !$employee->user->hasRole('activo-fijo-encargado-categoria')) {
+            throw ValidationException::withMessages([
+                'person_id' => 'La persona debe tener el rol activo-fijo-encargado-categoria.',
+            ]);
+        }
 
         $organizationalUnitId = $employee->resolveFaOrganizationalUnitId();
 
@@ -319,8 +432,7 @@ class AssignmentController extends Controller
     }
 
     /**
-     * La persona debe ser responsable de la categoría de cada activo a asignar.
-     * (Flujo: primero se agregan activos, luego se elige la persona.)
+     * La persona debe ser encargada de la categoría de cada activo a asignar.
      */
     private function assertPersonOwnsAssetCategories(Employee $employee, array $details): void
     {
@@ -331,7 +443,7 @@ class AssignmentController extends Controller
 
         if ($allowedCategoryIds === []) {
             throw ValidationException::withMessages([
-                'person_id' => 'La persona seleccionada no tiene categorías de activo fijo asignadas.',
+                'person_id' => 'La persona seleccionada no es encargada de ninguna categoría de activo fijo.',
             ]);
         }
 
@@ -349,8 +461,8 @@ class AssignmentController extends Controller
                 $label = trim(($asset->code ?? '') . '-' . ($asset->correlative ?? ''), '-');
                 throw ValidationException::withMessages([
                     'person_id' => $label !== ''
-                        ? "La persona no es responsable de la categoría del activo {$label}."
-                        : 'La persona no es responsable de la categoría de uno o más activos.',
+                        ? "La persona no es encargada de la categoría del activo {$label}."
+                        : 'La persona no es encargada de la categoría de uno o más activos.',
                 ]);
             }
         }

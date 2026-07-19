@@ -35,6 +35,7 @@ class AuthController extends Controller
             'organizationalUnits' => function ($query) {
                 $query->select('fa_organizational_units.id', 'fa_organizational_units.name');
             },
+            'employee:id,user_id',
         ])->where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
@@ -57,6 +58,7 @@ class AuthController extends Controller
                 'id'    => $user->id,
                 'name'  => $user->name,
                 'email' => $user->email,
+                'employee_id' => $user->employee?->id,
                 'organizational_units' => $user->organizationalUnits,
                 'roles' => $user->getRoleNames(),
                 'permissions' => $user->getAllPermissions()->pluck('name'),
