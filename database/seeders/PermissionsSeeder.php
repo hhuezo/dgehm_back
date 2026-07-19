@@ -135,6 +135,7 @@ class PermissionsSeeder extends Seeder
                 'transfers execute',
                 'transfers delete',
                 'transfers report',
+                'administrar traslado',
             ],
             'Configuration' => [
                 'configuration view',

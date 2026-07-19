@@ -192,6 +192,7 @@ class RolesPermissionsSeeder extends Seeder
             'transfers execute',
             'transfers delete',
             'transfers report',
+            'administrar traslado',
             'configuration view',
             'employees view',
             'employees show',
@@ -233,6 +234,8 @@ class RolesPermissionsSeeder extends Seeder
         ]);
         $faEncargadoCategoriaRole->syncPermissions($faEncargadoCategoriaPermissions);
         $this->command->info('Permisos asignados al rol: activo-fijo-encargado-categoria (' . count($faEncargadoCategoriaPermissions) . ' permisos)');
+
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $this->command->info('✅ Asignación de permisos a roles completada exitosamente.');
     }

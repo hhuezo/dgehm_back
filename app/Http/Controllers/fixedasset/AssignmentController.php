@@ -5,7 +5,6 @@ namespace App\Http\Controllers\fixedasset;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\fixedasset\Assignment;
-use App\Models\fixedasset\FixedAsset;
 use App\Models\fixedasset\MovementStatus;
 use App\Services\fixedasset\AssignmentExecutionService;
 use App\Services\fixedasset\FixedAssetAttachmentService;
@@ -308,7 +307,15 @@ class AssignmentController extends Controller
 
     private function canManageAssignments($user): bool
     {
-        return $user && $user->can(self::PERMISSION_MANAGE);
+        if (!$user) {
+            return false;
+        }
+
+        if (method_exists($user, 'hasRole') && $user->hasRole('admin')) {
+            return true;
+        }
+
+        return $user->can(self::PERMISSION_MANAGE);
     }
 
     private function currentEmployeeId($user): ?int
@@ -385,7 +392,7 @@ class AssignmentController extends Controller
         unset($validated['details']);
 
         $employee = Employee::query()
-            ->with(['fixedAssetCategories:id', 'user'])
+            ->with(['user'])
             ->findOrFail($validated['person_id']);
 
         if (!$employee->user || !$employee->user->hasRole('activo-fijo-encargado-categoria')) {
@@ -401,8 +408,6 @@ class AssignmentController extends Controller
                 'person_id' => 'No se pudo determinar la unidad organizativa de la persona seleccionada.',
             ]);
         }
-
-        $this->assertPersonOwnsAssetCategories($employee, $details);
 
         $validated['organizational_unit_id'] = $organizationalUnitId;
 
@@ -429,43 +434,6 @@ class AssignmentController extends Controller
             ],
             'details.*.observation' => 'nullable|string|max:1000',
         ]);
-    }
-
-    /**
-     * La persona debe ser encargada de la categoría de cada activo a asignar.
-     */
-    private function assertPersonOwnsAssetCategories(Employee $employee, array $details): void
-    {
-        $allowedCategoryIds = $employee->fixedAssetCategories
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        if ($allowedCategoryIds === []) {
-            throw ValidationException::withMessages([
-                'person_id' => 'La persona seleccionada no es encargada de ninguna categoría de activo fijo.',
-            ]);
-        }
-
-        $assetIds = collect($details)
-            ->pluck('fa_fixed_asset_id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        $assets = FixedAsset::query()
-            ->whereIn('id', $assetIds)
-            ->get(['id', 'fa_category_id', 'code', 'correlative']);
-
-        foreach ($assets as $asset) {
-            if (!in_array((int) $asset->fa_category_id, $allowedCategoryIds, true)) {
-                $label = trim(($asset->code ?? '') . '-' . ($asset->correlative ?? ''), '-');
-                throw ValidationException::withMessages([
-                    'person_id' => $label !== ''
-                        ? "La persona no es encargada de la categoría del activo {$label}."
-                        : 'La persona no es encargada de la categoría de uno o más activos.',
-                ]);
-            }
-        }
     }
 
     private function syncDetails(Assignment $assignment, array $details): void

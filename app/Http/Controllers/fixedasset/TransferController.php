@@ -4,23 +4,29 @@ namespace App\Http\Controllers\fixedasset;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
+use App\Models\fixedasset\OrganizationalUnit;
 use App\Models\fixedasset\Transfer;
 use App\Models\fixedasset\MovementStatus;
 use App\Services\fixedasset\AssetCustodyService;
 use App\Services\fixedasset\FixedAssetAttachmentService;
 use App\Services\fixedasset\MovementStatusService;
 use App\Services\fixedasset\TransferExecutionService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
+use Symfony\Component\HttpFoundation\Response;
 
 class TransferController extends Controller
 {
-    public function index(): JsonResponse
+    public const PERMISSION_MANAGE = 'administrar traslado';
+
+    public function index(Request $request): JsonResponse
     {
-        $transfers = Transfer::query()
+        $query = Transfer::query()
             ->select(
                 'id',
                 'date',
@@ -39,7 +45,11 @@ class TransferController extends Controller
                 'personReceives:id,name,lastname',
                 'status:id,name',
             ])
-            ->withCount('details')
+            ->withCount('details');
+
+        $this->scopeVisibleTransfers($query, $this->authUser($request));
+
+        $transfers = $query
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->get();
@@ -50,15 +60,12 @@ class TransferController extends Controller
         ]);
     }
 
-    public function assignablePersons(): JsonResponse
+    public function assignablePersons(Request $request): JsonResponse
     {
+        $this->authUser($request);
+
         $employees = Employee::query()
             ->where('active', true)
-            ->whereHas('fixedAssetCategories')
-            ->whereHas('user.roles', function ($query) {
-                $query->where('name', 'activo-fijo-encargado-categoria');
-            })
-            ->with(['fixedAssetCategories:id'])
             ->orderBy('name')
             ->orderBy('lastname')
             ->get(['id', 'name', 'lastname', 'email', 'fa_organizational_unit_id'])
@@ -68,7 +75,6 @@ class TransferController extends Controller
                     'name' => $employee->name,
                     'lastname' => $employee->lastname,
                     'email' => $employee->email,
-                    'fixed_asset_categories' => $employee->fixedAssetCategories,
                     'fa_organizational_unit_id' => $employee->resolveFaOrganizationalUnitId(),
                 ];
             })
@@ -80,11 +86,20 @@ class TransferController extends Controller
         ]);
     }
 
-    public function assignedAssets(string $personId, AssetCustodyService $custodyService): JsonResponse
+    public function assignedAssets(Request $request, string $personId, AssetCustodyService $custodyService): JsonResponse
     {
-        $excludeTransferId = request()->integer('exclude_transfer_id') ?: null;
+        $user = $this->authUser($request);
+        $requestedPersonId = (int) $personId;
 
-        $assets = $custodyService->getAssetsForPerson((int) $personId, $excludeTransferId);
+        if (
+            !$this->canManageTransfers($user)
+            && $this->currentEmployeeId($user) !== $requestedPersonId
+        ) {
+            abort(403, 'Solo puedes consultar los activos de tu custodia.');
+        }
+
+        $excludeTransferId = $request->integer('exclude_transfer_id') ?: null;
+        $assets = $custodyService->getAssetsForPerson($requestedPersonId, $excludeTransferId);
 
         return response()->json([
             'success' => true,
@@ -92,7 +107,7 @@ class TransferController extends Controller
         ]);
     }
 
-    public function show(string $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
         $transfer = Transfer::query()
             ->with([
@@ -109,6 +124,8 @@ class TransferController extends Controller
             ->withCount('details')
             ->findOrFail($id);
 
+        $this->assertCanViewTransfer($this->authUser($request), $transfer);
+
         return response()->json([
             'success' => true,
             'data' => $transfer,
@@ -117,8 +134,10 @@ class TransferController extends Controller
 
     public function store(Request $request, FixedAssetAttachmentService $attachments): JsonResponse
     {
+        $user = $this->authUser($request);
+        $this->assertCanCreateTransfer($user);
         $this->normalizeMultipartPayload($request);
-        [$validated, $details] = $this->prepareTransferData($request);
+        [$validated, $details] = $this->prepareTransferData($request, $user);
         unset($validated['file']);
 
         $transfer = DB::transaction(function () use ($validated, $details, $request, $attachments) {
@@ -147,7 +166,9 @@ class TransferController extends Controller
 
     public function update(Request $request, string $id, FixedAssetAttachmentService $attachments): JsonResponse
     {
+        $user = $this->authUser($request);
         $transfer = Transfer::findOrFail($id);
+        $this->assertCanEditTransfer($user, $transfer);
 
         if ((int) $transfer->status_id !== MovementStatus::PENDING_APPROVAL) {
             throw ValidationException::withMessages([
@@ -156,7 +177,7 @@ class TransferController extends Controller
         }
 
         $this->normalizeMultipartPayload($request);
-        [$validated, $details] = $this->prepareTransferData($request);
+        [$validated, $details] = $this->prepareTransferData($request, $user, $transfer);
         unset($validated['file']);
 
         DB::transaction(function () use ($transfer, $validated, $details, $request, $attachments) {
@@ -181,7 +202,7 @@ class TransferController extends Controller
         ]);
     }
 
-    public function downloadFile(string $id, FixedAssetAttachmentService $attachments)
+    public function downloadFile(Request $request, string $id, FixedAssetAttachmentService $attachments)
     {
         $transfer = Transfer::find($id);
 
@@ -192,15 +213,18 @@ class TransferController extends Controller
             ], 404);
         }
 
+        $this->assertCanViewTransfer($this->authUser($request), $transfer);
+
         return $attachments->download(
             FixedAssetAttachmentService::DIRECTORY_TRANSFERS,
             $transfer->file
         );
     }
 
-    public function approve(string $id, MovementStatusService $statusService): JsonResponse
+    public function approve(Request $request, string $id, MovementStatusService $statusService): JsonResponse
     {
         $transfer = Transfer::findOrFail($id);
+        $this->assertIsReceiver($this->authUser($request), $transfer);
         $transfer = $statusService->approve($transfer);
 
         return response()->json([
@@ -210,9 +234,10 @@ class TransferController extends Controller
         ]);
     }
 
-    public function reject(string $id, MovementStatusService $statusService): JsonResponse
+    public function reject(Request $request, string $id, MovementStatusService $statusService): JsonResponse
     {
         $transfer = Transfer::findOrFail($id);
+        $this->assertIsReceiver($this->authUser($request), $transfer);
         $transfer = $statusService->reject($transfer);
 
         return response()->json([
@@ -222,16 +247,187 @@ class TransferController extends Controller
         ]);
     }
 
-    public function execute(string $id, TransferExecutionService $executionService): JsonResponse
+    public function execute(Request $request, string $id, TransferExecutionService $executionService): JsonResponse
     {
+        $this->assertCanManageTransfers($this->authUser($request));
         $transfer = Transfer::findOrFail($id);
-        $transfer = $executionService->execute($transfer);
+        $transfer = $executionService->execute($transfer, $request);
 
         return response()->json([
             'success' => true,
             'message' => 'Traslado ejecutado correctamente',
             'data' => $this->loadTransferResponse($transfer),
         ]);
+    }
+
+    public function report(Request $request, string $id): Response
+    {
+        $transfer = Transfer::query()
+            ->with([
+                'organizationalUnit:id,name,abbreviation',
+                'personDelivers:id,name,lastname,fa_organizational_unit_id',
+                'personReceives:id,name,lastname,fa_organizational_unit_id',
+                'personReceives.organizationalUnit:id,name,abbreviation',
+                'details' => fn ($query) => $query
+                    ->select('id', 'fa_transfer_id', 'fa_fixed_asset_id', 'observation')
+                    ->with([
+                        'fixedAsset:id,code,correlative,description,brand,model,fa_category_id',
+                        'fixedAsset.category:id,name,code',
+                    ]),
+            ])
+            ->findOrFail($id);
+
+        $this->assertCanViewTransfer($this->authUser($request), $transfer);
+
+        $receiver = $transfer->personReceives;
+        $deliverer = $transfer->personDelivers;
+        $unitName = $receiver?->organizationalUnit?->name
+            ?? $transfer->organizationalUnit?->name
+            ?? '';
+
+        if ($unitName === '' && $receiver) {
+            $resolvedUnitId = $receiver->resolveFaOrganizationalUnitId();
+            if ($resolvedUnitId) {
+                $unitName = OrganizationalUnit::query()
+                    ->whereKey($resolvedUnitId)
+                    ->value('name') ?? '';
+            }
+        }
+
+        $pdf = Pdf::loadView('reports.transfer', [
+            'transfer' => $transfer,
+            'receiver' => $receiver,
+            'deliverer' => $deliverer,
+            'unitName' => $unitName,
+        ])->setPaper('A4', 'portrait');
+
+        return $pdf->stream("Ficha_Traslado_Activo_Fijo_{$id}.pdf");
+    }
+
+    private function authUser(Request $request)
+    {
+        $user = $request->user() ?? $request->user('sanctum');
+
+        if (!$user && $request->bearerToken()) {
+            $accessToken = PersonalAccessToken::findToken($request->bearerToken());
+            $user = $accessToken?->tokenable;
+        }
+
+        if (!$user) {
+            abort(401, 'Token no proporcionado o inválido.');
+        }
+
+        return $user;
+    }
+
+    private function canManageTransfers($user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if (method_exists($user, 'hasRole') && $user->hasRole('admin')) {
+            return true;
+        }
+
+        return $user->can(self::PERMISSION_MANAGE);
+    }
+
+    private function currentEmployeeId($user): ?int
+    {
+        if (!$user) {
+            return null;
+        }
+
+        $employeeId = Employee::query()->where('user_id', $user->id)->value('id');
+
+        return $employeeId ? (int) $employeeId : null;
+    }
+
+    private function scopeVisibleTransfers($query, $user): void
+    {
+        if ($this->canManageTransfers($user)) {
+            return;
+        }
+
+        $employeeId = $this->currentEmployeeId($user);
+        if (!$employeeId) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $query->where(function ($builder) use ($employeeId) {
+            $builder
+                ->where('person_delivers_id', $employeeId)
+                ->orWhere('person_receives_id', $employeeId);
+        });
+    }
+
+    private function assertCanManageTransfers($user): void
+    {
+        if (!$this->canManageTransfers($user)) {
+            abort(403, 'No tienes permiso para administrar traslados.');
+        }
+    }
+
+    private function assertCanCreateTransfer($user): void
+    {
+        if ($this->canManageTransfers($user)) {
+            return;
+        }
+
+        if ($user && $user->can('transfers create')) {
+            return;
+        }
+
+        abort(403, 'No tienes permiso para crear traslados.');
+    }
+
+    private function assertCanViewTransfer($user, Transfer $transfer): void
+    {
+        if ($this->canManageTransfers($user)) {
+            return;
+        }
+
+        $employeeId = $this->currentEmployeeId($user);
+        if (
+            $employeeId
+            && (
+                (int) $transfer->person_delivers_id === $employeeId
+                || (int) $transfer->person_receives_id === $employeeId
+            )
+        ) {
+            return;
+        }
+
+        abort(403, 'No tienes permiso para ver este traslado.');
+    }
+
+    private function assertCanEditTransfer($user, Transfer $transfer): void
+    {
+        if ($this->canManageTransfers($user)) {
+            return;
+        }
+
+        $employeeId = $this->currentEmployeeId($user);
+        if (
+            $employeeId
+            && (int) $transfer->person_delivers_id === $employeeId
+            && $user->can('transfers update')
+        ) {
+            return;
+        }
+
+        abort(403, 'No tienes permiso para editar este traslado.');
+    }
+
+    private function assertIsReceiver($user, Transfer $transfer): void
+    {
+        $employeeId = $this->currentEmployeeId($user);
+        if (!$employeeId || (int) $transfer->person_receives_id !== $employeeId) {
+            abort(403, 'Solo la persona que recibe puede aprobar o rechazar este traslado.');
+        }
     }
 
     private function normalizeMultipartPayload(Request $request): void
@@ -245,11 +441,22 @@ class TransferController extends Controller
         }
     }
 
-    private function prepareTransferData(Request $request): array
+    private function prepareTransferData(Request $request, $user, ?Transfer $existing = null): array
     {
         $validated = $this->validateTransfer($request);
         $details = $validated['details'];
         unset($validated['details']);
+
+        if (!$this->canManageTransfers($user)) {
+            $employeeId = $this->currentEmployeeId($user);
+            if (!$employeeId) {
+                throw ValidationException::withMessages([
+                    'person_delivers_id' => 'No se encontró la persona asociada a tu usuario.',
+                ]);
+            }
+
+            $validated['person_delivers_id'] = $employeeId;
+        }
 
         if ((int) $validated['person_delivers_id'] === (int) $validated['person_receives_id']) {
             throw ValidationException::withMessages([
@@ -257,7 +464,7 @@ class TransferController extends Controller
             ]);
         }
 
-        $excludeTransferId = $request->route('id') ? (int) $request->route('id') : null;
+        $excludeTransferId = $existing?->id ?? ($request->route('id') ? (int) $request->route('id') : null);
         $custodyService = app(AssetCustodyService::class);
 
         foreach ($details as $detail) {
@@ -299,7 +506,6 @@ class TransferController extends Controller
                 'integer',
                 'different:person_delivers_id',
                 Rule::exists('adm_employees', 'id'),
-                Rule::exists('fa_category_employee', 'adm_employee_id'),
             ],
             'observation' => 'nullable|string|max:2000',
             'file' => FixedAssetAttachmentService::FILE_RULE,

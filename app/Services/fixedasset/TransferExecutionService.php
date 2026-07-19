@@ -6,22 +6,33 @@ use App\Models\Employee;
 use App\Models\fixedasset\FixedAsset;
 use App\Models\fixedasset\MovementStatus;
 use App\Models\fixedasset\Transfer;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class TransferExecutionService
 {
     public function __construct(
-        private readonly AssetCustodyService $custodyService
+        private readonly AssetCustodyService $custodyService,
+        private readonly FixedAssetAttachmentService $attachments
     ) {}
 
-    public function execute(Transfer $transfer): Transfer
+    public function execute(Transfer $transfer, Request $request): Transfer
     {
         if ((int) $transfer->status_id !== MovementStatus::APPROVED) {
             throw ValidationException::withMessages([
                 'status_id' => 'Solo se pueden ejecutar traslados aprobados.',
             ]);
         }
+
+        $request->validate([
+            'file' => FixedAssetAttachmentService::REQUIRED_FILE_RULE,
+        ], [
+            'file.required' => 'El acta de traslado es obligatoria para ejecutar el traslado.',
+            'file.file' => 'El acta de traslado debe ser un archivo válido.',
+            'file.mimes' => 'El acta de traslado debe ser PDF o imagen.',
+            'file.max' => 'El acta de traslado no puede superar los 10 MB.',
+        ]);
 
         $transfer->load([
             'details:id,fa_transfer_id,fa_fixed_asset_id',
@@ -49,7 +60,7 @@ class TransferExecutionService
         $receiverName = $this->formatEmployeeName($transfer->personReceives);
         $organizationalUnitId = (int) $transfer->organizational_unit_id;
 
-        DB::transaction(function () use ($transfer, $receiverName, $organizationalUnitId) {
+        DB::transaction(function () use ($transfer, $receiverName, $organizationalUnitId, $request) {
             foreach ($transfer->details as $detail) {
                 /** @var FixedAsset $asset */
                 $asset = $detail->fixedAsset;
@@ -58,6 +69,12 @@ class TransferExecutionService
                 $asset->save();
             }
 
+            $transfer->file = $this->attachments->store(
+                $request->file('file'),
+                FixedAssetAttachmentService::DIRECTORY_TRANSFERS,
+                $transfer->id . '_acta',
+                $transfer->file
+            );
             $transfer->status_id = MovementStatus::FINALIZED;
             $transfer->save();
         });

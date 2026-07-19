@@ -76,18 +76,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/assignments/{id}/annul', [AssignmentController::class, 'annul']);
     Route::put('/assignments/{id}', [AssignmentController::class, 'update']);
     Route::post('/assignments/{id}', [AssignmentController::class, 'update']);
+
+    Route::get('/transfers', [TransferController::class, 'index']);
+    Route::get('/transfers/assignable-persons', [TransferController::class, 'assignablePersons']);
+    Route::get('/transfers/persons/{personId}/assigned-assets', [TransferController::class, 'assignedAssets']);
+    Route::get('/transfers/reports/{id}', [TransferController::class, 'report']);
+    Route::get('/transfers/{id}/file', [TransferController::class, 'downloadFile']);
+    Route::get('/transfers/{id}', [TransferController::class, 'show']);
+    Route::post('/transfers', [TransferController::class, 'store']);
+    Route::post('/transfers/{id}/execute', [TransferController::class, 'execute']);
+    Route::post('/transfers/{id}/approve', [TransferController::class, 'approve']);
+    Route::post('/transfers/{id}/reject', [TransferController::class, 'reject']);
+    Route::put('/transfers/{id}', [TransferController::class, 'update']);
+    Route::post('/transfers/{id}', [TransferController::class, 'update']);
 });
-Route::get('/transfers', [TransferController::class, 'index']);
-Route::get('/transfers/assignable-persons', [TransferController::class, 'assignablePersons']);
-Route::get('/transfers/persons/{personId}/assigned-assets', [TransferController::class, 'assignedAssets']);
-Route::get('/transfers/{id}/file', [TransferController::class, 'downloadFile']);
-Route::get('/transfers/{id}', [TransferController::class, 'show']);
-Route::post('/transfers', [TransferController::class, 'store']);
-Route::post('/transfers/{id}/execute', [TransferController::class, 'execute']);
-Route::post('/transfers/{id}/approve', [TransferController::class, 'approve']);
-Route::post('/transfers/{id}/reject', [TransferController::class, 'reject']);
-Route::put('/transfers/{id}', [TransferController::class, 'update']);
-Route::post('/transfers/{id}', [TransferController::class, 'update']);
 
 Route::get('/fixed_assets/{id}/movements', [MovementController::class, 'indexForAsset']);
 
