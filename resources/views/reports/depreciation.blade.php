@@ -42,28 +42,32 @@
     <table class="report-table">
         <thead>
             <tr>
-                <th style="width:8%">Código</th>
-                <th style="width:18%">Descripción</th>
-                <th style="width:8%">F. Adquisición</th>
+                <th style="width:12%">Código</th>
+                <th style="width:8%">Específico</th>
+                <th style="width:8%">Categoría</th>
+                <th style="width:14%">Descripción</th>
+                <th style="width:7%">F. Adquisición</th>
                 <th style="width:5%">Vida útil (años)</th>
-                <th style="width:10%">Valor compra</th>
-                <th style="width:8%">Valor residual 10%</th>
-                <th style="width:8%">Deprec. anual</th>
-                <th style="width:8%">Deprec. mensual</th>
-                <th style="width:10%">Deprec. acumulada</th>
-                <th style="width:10%">Valor en libros</th>
+                <th style="width:8%">Valor compra</th>
+                <th style="width:7%">Valor residual 10%</th>
+                <th style="width:7%">Deprec. anual</th>
+                <th style="width:7%">Deprec. mensual</th>
+                <th style="width:7%">Deprec. acumulada</th>
+                <th style="width:7%">Valor en libros</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($rowsBySpecific as $group)
                 <tr class="specific-header">
-                    <td colspan="10">
-                        Específico: {{ $group['specific']->code }} — {{ $group['specific']->name }}
+                    <td colspan="12">
+                        Específico: {{ $group['specific']->name }}
                     </td>
                 </tr>
                 @foreach ($group['rows'] as $row)
                     <tr>
                         <td class="text-center">{{ $row['asset']->code }}</td>
+                        <td>{{ $row['specific_name'] }}</td>
+                        <td>{{ $row['category_name'] }}</td>
                         <td>{{ $row['asset']->description }}</td>
                         <td class="text-center">{{ $row['asset']->acquisition_date->format('d/m/Y') }}</td>
                         <td class="text-center">{{ $row['useful_life_years'] }}</td>
@@ -76,7 +80,7 @@
                     </tr>
                 @endforeach
                 <tr class="subtotal">
-                    <td colspan="4" class="text-right">SUB TOTAL POR ESPECÍFICO:</td>
+                    <td colspan="6" class="text-right">SUBTOTAL POR ESPECÍFICO:</td>
                     <td class="text-right">${{ number_format($group['subtotal_purchase'], 2) }}</td>
                     <td></td>
                     <td></td>
@@ -87,7 +91,7 @@
             @endforeach
 
             <tr class="total-general">
-                <td colspan="4" class="text-right">TOTAL GENERAL:</td>
+                <td colspan="6" class="text-right">TOTAL GENERAL:</td>
                 <td class="text-right">${{ number_format($grandTotalPurchase, 2) }}</td>
                 <td></td>
                 <td></td>

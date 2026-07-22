@@ -33,7 +33,7 @@ class FixedAssetController extends Controller
             'policy',
             'current_responsible',
             'organizational_unit_id',
-            'asset_type',
+            'asset_type_id',
             'acquisition_date',
             'supplier',
             'invoice',
@@ -51,6 +51,7 @@ class FixedAssetController extends Controller
                 'category:id,fa_specific_id,code,name,useful_life',
                 'category.specific:id,code,name',
                 'organizationalUnit:id,name',
+                'assetType:id,name',
                 'origin:id,name',
                 'physicalCondition:id,name',
                 'depreciationStatus:id,name',
@@ -92,7 +93,7 @@ class FixedAssetController extends Controller
             'policy' => 'nullable|string|max:150',
             'current_responsible' => 'nullable|string|max:255',
             'organizational_unit_id' => 'required|exists:fa_organizational_units,id',
-            'asset_type' => 'required|string|max:150',
+            'asset_type_id' => 'nullable|exists:fa_asset_types,id',
             'acquisition_date' => 'required|date',
             'supplier' => 'nullable|string|max:255',
             'invoice' => 'nullable|string|max:150',
@@ -114,7 +115,7 @@ class FixedAssetController extends Controller
             'location.required' => 'La ubicación es obligatoria.',
             'organizational_unit_id.required' => 'La unidad organizativa es obligatoria.',
             'organizational_unit_id.exists' => 'La unidad organizativa seleccionada no existe.',
-            'asset_type.required' => 'El tipo de bien es obligatorio.',
+            'asset_type_id.exists' => 'El tipo de bien seleccionado no existe.',
             'acquisition_date.required' => 'La fecha de adquisición es obligatoria.',
             'acquisition_date.date' => 'La fecha de adquisición no es válida.',
             'origin_id.required' => 'El origen es obligatorio.',
@@ -169,7 +170,7 @@ class FixedAssetController extends Controller
             $asset->policy = $data['policy'] ?? null;
             $asset->current_responsible = $responsible !== '' ? $responsible : null;
             $asset->organizational_unit_id = $data['organizational_unit_id'];
-            $asset->asset_type = $data['asset_type'];
+            $asset->asset_type_id = $data['asset_type_id'] ?? null;
             $asset->acquisition_date = $data['acquisition_date'];
             $asset->supplier = $data['supplier'] ?? null;
             $asset->invoice = $data['invoice'] ?? null;
@@ -188,6 +189,7 @@ class FixedAssetController extends Controller
                 'category:id,fa_specific_id,code,name,useful_life',
                 'category.specific:id,code,name',
                 'organizationalUnit:id,name',
+                'assetType:id,name',
                 'origin:id,name',
                 'physicalCondition:id,name',
                 'depreciationStatus:id,name',
@@ -216,7 +218,7 @@ class FixedAssetController extends Controller
             'policy' => 'nullable|string|max:150',
             'current_responsible' => 'nullable|string|max:255',
             'organizational_unit_id' => 'required|exists:fa_organizational_units,id',
-            'asset_type' => 'required|string|max:150',
+            'asset_type_id' => 'nullable|exists:fa_asset_types,id',
             'acquisition_date' => 'required|date',
             'supplier' => 'nullable|string|max:255',
             'invoice' => 'nullable|string|max:150',
@@ -238,7 +240,7 @@ class FixedAssetController extends Controller
             'location.required' => 'La ubicación es obligatoria.',
             'organizational_unit_id.required' => 'La unidad organizativa es obligatoria.',
             'organizational_unit_id.exists' => 'La unidad organizativa seleccionada no existe.',
-            'asset_type.required' => 'El tipo de bien es obligatorio.',
+            'asset_type_id.exists' => 'El tipo de bien seleccionado no existe.',
             'acquisition_date.required' => 'La fecha de adquisición es obligatoria.',
             'acquisition_date.date' => 'La fecha de adquisición no es válida.',
             'origin_id.required' => 'El origen es obligatorio.',
@@ -300,7 +302,7 @@ class FixedAssetController extends Controller
             $asset->policy = $data['policy'] ?? null;
             $asset->current_responsible = $responsible !== '' ? $responsible : null;
             $asset->organizational_unit_id = $data['organizational_unit_id'];
-            $asset->asset_type = $data['asset_type'];
+            $asset->asset_type_id = $data['asset_type_id'] ?? null;
             $asset->acquisition_date = $data['acquisition_date'];
             $asset->supplier = $data['supplier'] ?? null;
             $asset->invoice = $data['invoice'] ?? null;
@@ -319,6 +321,7 @@ class FixedAssetController extends Controller
                 'category:id,fa_specific_id,code,name,useful_life',
                 'category.specific:id,code,name',
                 'organizationalUnit:id,name',
+                'assetType:id,name',
                 'origin:id,name',
                 'physicalCondition:id,name',
                 'depreciationStatus:id,name',

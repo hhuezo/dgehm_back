@@ -27,7 +27,7 @@ class FixedAsset extends Model
         'policy',
         'current_responsible',
         'organizational_unit_id',
-        'asset_type',
+        'asset_type_id',
         'acquisition_date',
         'supplier',
         'invoice',
@@ -57,6 +57,11 @@ class FixedAsset extends Model
     public function organizationalUnit()
     {
         return $this->belongsTo(OrganizationalUnit::class, 'organizational_unit_id');
+    }
+
+    public function assetType()
+    {
+        return $this->belongsTo(AssetType::class, 'asset_type_id');
     }
 
     public function physicalCondition()

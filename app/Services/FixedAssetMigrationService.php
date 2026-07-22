@@ -153,7 +153,8 @@ class FixedAssetMigrationService
     {
         $spreadsheet = IOFactory::load($absolutePath);
         $sheet = $spreadsheet->getSheetByName('BASE') ?? $spreadsheet->getActiveSheet();
-        $matrix = $sheet->toArray(null, true, true, false);
+        // formatData=false: fechas como serial de Excel (número), no como texto localizado
+        $matrix = $sheet->toArray(null, true, false, false);
 
         if ($matrix === []) {
             return [];

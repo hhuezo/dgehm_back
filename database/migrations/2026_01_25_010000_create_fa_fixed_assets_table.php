@@ -26,7 +26,7 @@ return new class extends Migration
 
             $table->foreignId('organizational_unit_id')->constrained('fa_organizational_units');
 
-            $table->string('asset_type', 150);
+            $table->foreignId('asset_type_id')->nullable()->constrained('fa_asset_types');
             $table->date('acquisition_date');
 
             $table->string('supplier', 255)->nullable();

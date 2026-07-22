@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Employee;
+use App\Models\fixedasset\AssetType;
 use App\Models\fixedasset\Assignment;
 use App\Models\fixedasset\Category;
 use App\Models\fixedasset\FixedAsset;
@@ -37,10 +38,12 @@ class DemoFixedAssetsAssignmentSeeder extends Seeder
         $origins = Origin::where('is_active', true)->pluck('id', 'name')->toArray();
         $physicalConditions = PhysicalCondition::where('is_active', true)->pluck('id', 'name')->toArray();
         $organizationalUnits = OrganizationalUnit::where('is_active', true)->pluck('id', 'name')->toArray();
+        $assetTypes = AssetType::query()->pluck('id', 'name')->toArray();
 
         $defaultOriginId = Origin::where('is_active', true)->value('id');
         $defaultPhysicalConditionId = PhysicalCondition::where('is_active', true)->value('id');
         $defaultOrganizationalUnitId = OrganizationalUnit::where('is_active', true)->value('id');
+        $defaultAssetTypeId = $assetTypes['01'] ?? AssetType::query()->orderBy('id')->value('id');
 
         $assetIds = [];
 
@@ -72,7 +75,8 @@ class DemoFixedAssetsAssignmentSeeder extends Seeder
                     'organizational_unit_id' => $this->findForeignKey($row['organizational_unit'] ?? null, $organizationalUnits)
                         ?? $employee->resolveFaOrganizationalUnitId()
                         ?? $defaultOrganizationalUnitId,
-                    'asset_type' => $row['asset_type'] ?? 'General',
+                    'asset_type_id' => $this->resolveAssetTypeId($row['asset_type'] ?? null, $assetTypes)
+                        ?? $defaultAssetTypeId,
                     'acquisition_date' => $this->parseDate($row['acquisition_date'] ?? null) ?? now(),
                     'supplier' => $row['supplier'] ?? null,
                     'invoice' => $row['invoice'] ?? null,
@@ -190,6 +194,20 @@ class DemoFixedAssetsAssignmentSeeder extends Seeder
         }
 
         return null;
+    }
+
+    private function resolveAssetTypeId(?string $value, array $lookupTable): ?int
+    {
+        if ($value === null || trim($value) === '') {
+            return null;
+        }
+
+        $raw = trim($value);
+        $normalized = preg_match('/^\d+$/', $raw)
+            ? str_pad($raw, 2, '0', STR_PAD_LEFT)
+            : $raw;
+
+        return $lookupTable[$normalized] ?? $this->findForeignKey($normalized, $lookupTable);
     }
 
     private function parseDate(?string $value): ?Carbon

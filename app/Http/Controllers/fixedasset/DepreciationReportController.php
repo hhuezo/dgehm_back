@@ -12,9 +12,7 @@ class DepreciationReportController extends Controller
 {
     /**
      * Reporte de depreciación a una fecha dada.
-     * Lista activos con valor de compra >= 900, agrupados por específico,
-     * con total por específico y total general.
-     * Valor residual 10%; depreciación sobre 90% del valor en vida útil.
+     * Sin flags → HTML; exportPdf=true → PDF.
      */
     public function report(Request $request)
     {
@@ -90,7 +88,6 @@ class DepreciationReportController extends Controller
             $rowsBySpecific[$key]['subtotal_book_value'] += $bookValue;
         }
 
-        // Ordenar por código del específico y redondear subtotales
         foreach (array_keys($rowsBySpecific) as $key) {
             $rowsBySpecific[$key]['subtotal_purchase'] = round($rowsBySpecific[$key]['subtotal_purchase'], 2);
             $rowsBySpecific[$key]['subtotal_book_value'] = round($rowsBySpecific[$key]['subtotal_book_value'], 2);
@@ -108,14 +105,19 @@ class DepreciationReportController extends Controller
         $grandTotalPurchase = round($grandTotalPurchase, 2);
         $grandTotalBookValue = round($grandTotalBookValue, 2);
 
-        $pdf = Pdf::loadView('reports.depreciation', [
+        $viewData = [
             'reportDate' => $reportDate,
             'rowsBySpecific' => $rowsBySpecific,
             'grandTotalPurchase' => $grandTotalPurchase,
             'grandTotalBookValue' => $grandTotalBookValue,
-        ])
-            ->setPaper('A4', 'landscape');
+        ];
 
-        return $pdf->download('Reporte_Depreciacion_' . $reportDate . '.pdf');
+        if ($request->boolean('exportPdf', false) || $request->boolean('pdf', false)) {
+            return Pdf::loadView('reports.depreciation', $viewData)
+                ->setPaper('A4', 'landscape')
+                ->download('Reporte_Depreciacion_' . $reportDate . '.pdf');
+        }
+
+        return response()->view('reports.depreciation', $viewData);
     }
 }

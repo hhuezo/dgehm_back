@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Models\fixedasset\AssetType;
 use App\Models\fixedasset\Category;
 use App\Models\fixedasset\DepreciationStatus;
 use App\Models\fixedasset\FixedAsset;
@@ -48,6 +49,7 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
         $origins = Origin::where('is_active', true)->pluck('id', 'name')->toArray();
         $physicalConditions = PhysicalCondition::where('is_active', true)->pluck('id', 'name')->toArray();
         $organizationalUnits = OrganizationalUnit::where('is_active', true)->pluck('id', 'name')->toArray();
+        $assetTypes = AssetType::query()->pluck('id', 'name')->toArray();
         $specifics = Specific::where('is_active', true)->get()->keyBy(function ($item) {
             return mb_strtolower(trim($item->name));
         });
@@ -110,7 +112,30 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
                 $unitName = $this->getValue($data, ['unidad_gerencia', 'unidad', 'gerencia', 'organizational_unit']);
                 $organizationalUnitId = $this->findForeignKey($unitName, $organizationalUnits) ?? $defaultOrganizationalUnitId;
 
-                $acquisitionDate = $this->parseExcelDate($data, ['fecha_de_adquisicion', 'fecha_adquisicion', 'fecha']);
+                $assetTypeRaw = $this->getValue($data, [
+                    'tipo_de_bien_segun_min_hacienda',
+                    'tipo_bien_segun_min_hacienda',
+                    'tipo_de_bien_segun_mh',
+                    'tipo_bien_segun_mh',
+                    'tipo_bien_segun_mhacienda',
+                    'tipo_de_bien',
+                    'tipo_bien',
+                    'tipo',
+                    'asset_type',
+                ]);
+                $assetTypeId = $this->resolveAssetTypeId($assetTypeRaw, $assetTypes);
+
+                if ($assetTypeRaw !== null && $assetTypeRaw !== '' && !$assetTypeId) {
+                    $this->errors[] = "Fila {$rowNumber}: Tipo de bien «{$assetTypeRaw}» no existe en fa_asset_types.";
+                }
+
+                $acquisitionDate = $this->parseExcelDate($data, [
+                    'fecha_de_adquisicion',
+                    'fecha_adquisicion',
+                    'f_adquisicion',
+                    'fecha_adq',
+                    'acquisition_date',
+                ]);
                 $purchaseValue = $this->parseDecimal($data, ['valor_de_compra_facturas', 'valor_de_compra', 'valor_compra', 'valor']);
 
                 $responsibleName = $this->getValue($data, [
@@ -145,8 +170,20 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
                     ? DepreciationStatus::ACTIVE
                     : DepreciationStatus::PENDING_ASSIGNMENT;
                 $asset->organizational_unit_id = $organizationalUnitId;
-                $asset->asset_type = $this->getValue($data, ['tipo_de_bien_segun_min_hacienda', 'tipo_bien', 'tipo']) ?? 'General';
+                $asset->asset_type_id = $assetTypeId; // null si vacío o no encontrado en catálogo
                 $asset->acquisition_date = $acquisitionDate ?? now();
+                if (!$acquisitionDate) {
+                    $rawDate = $this->getRawValue($data, [
+                        'fecha_de_adquisicion',
+                        'fecha_adquisicion',
+                        'f_adquisicion',
+                        'fecha_adq',
+                        'acquisition_date',
+                    ]);
+                    if ($rawDate !== null && $rawDate !== '') {
+                        $this->errors[] = "Fila {$rowNumber}: No se pudo interpretar la fecha de adquisición «{$rawDate}»; se usó la fecha actual.";
+                    }
+                }
                 $asset->supplier = $this->getValue($data, ['proveedor', 'supplier']);
                 $asset->invoice = $this->getValue($data, ['factura', 'no_de_factura', 'no_factura', 'invoice']);
                 $asset->origin_id = $originId;
@@ -281,6 +318,31 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
         return null;
     }
 
+    protected function resolveAssetTypeId(?string $value, array $lookupTable): ?int
+    {
+        if ($value === null || trim($value) === '') {
+            return null;
+        }
+
+        $raw = trim($value);
+
+        // Excel a veces manda "4" o "4.0"; catálogo usa "04"
+        if (is_numeric($raw)) {
+            $raw = (string) (int) round((float) $raw);
+            $normalized = str_pad($raw, 2, '0', STR_PAD_LEFT);
+
+            return $lookupTable[$normalized] ?? null;
+        }
+
+        if (preg_match('/^\d+$/', $raw)) {
+            $normalized = str_pad($raw, 2, '0', STR_PAD_LEFT);
+
+            return $lookupTable[$normalized] ?? null;
+        }
+
+        return $lookupTable[$raw] ?? null;
+    }
+
     protected function parseBoolean(array $data, array $possibleKeys): bool
     {
         $value = $this->getValue($data, $possibleKeys);
@@ -292,39 +354,85 @@ class FixedAssetImport implements ToCollection, WithHeadingRow
         return in_array($value, ['si', 'sí', 'yes', '1', 'true', 'x', 'verdadero'], true);
     }
 
-    protected function getValue(array $data, array $possibleKeys): ?string
+    protected function getRawValue(array $data, array $possibleKeys): mixed
     {
         foreach ($possibleKeys as $key) {
             $normalizedKey = $this->normalizeKey($key);
-            if (isset($data[$normalizedKey]) && $data[$normalizedKey] !== null && $data[$normalizedKey] !== '') {
-                return trim((string) $data[$normalizedKey]);
+            if (array_key_exists($normalizedKey, $data) && $data[$normalizedKey] !== null && $data[$normalizedKey] !== '') {
+                return $data[$normalizedKey];
             }
         }
 
         return null;
     }
 
+    protected function getValue(array $data, array $possibleKeys): ?string
+    {
+        $value = $this->getRawValue($data, $possibleKeys);
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+
+        return trim((string) $value);
+    }
+
     protected function parseExcelDate(array $data, array $possibleKeys): ?\Carbon\Carbon
     {
-        $value = $this->getValue($data, $possibleKeys);
+        $value = $this->getRawValue($data, $possibleKeys);
 
-        if (!$value) {
+        if ($value === null || $value === '') {
             return null;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return \Carbon\Carbon::instance(\DateTimeImmutable::createFromInterface($value));
         }
 
         if (is_numeric($value)) {
             try {
-                return \Carbon\Carbon::instance(ExcelDate::excelToDateTimeObject((float) $value));
+                return \Carbon\Carbon::instance(ExcelDate::excelToDateTimeObject((float) $value))->startOfDay();
             } catch (\Exception $e) {
-                if ((int) $value > 1900 && (int) $value < 2100) {
-                    return \Carbon\Carbon::createFromDate((int) $value, 1, 1);
+                return null;
+            }
+        }
+
+        $raw = trim((string) $value);
+
+        // Formato local SV: d/m/Y o d/m/y (ej. 30/10/09)
+        if (preg_match('/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/', $raw, $matches)) {
+            $day = (int) $matches[1];
+            $month = (int) $matches[2];
+            $year = (int) $matches[3];
+
+            if ($year < 100) {
+                $year += $year >= 70 ? 1900 : 2000;
+            }
+
+            if (checkdate($month, $day, $year)) {
+                return \Carbon\Carbon::createFromDate($year, $month, $day)->startOfDay();
+            }
+        }
+
+        foreach (['Y-m-d', 'd-m-Y', 'd/m/Y', 'Y/m/d', 'm/d/Y'] as $format) {
+            try {
+                $parsed = \Carbon\Carbon::createFromFormat($format, $raw);
+
+                if ($parsed !== false) {
+                    return $parsed->startOfDay();
                 }
+            } catch (\Throwable) {
+                // siguiente formato
             }
         }
 
         try {
-            return \Carbon\Carbon::parse($value);
-        } catch (\Exception $e) {
+            return \Carbon\Carbon::parse($raw)->startOfDay();
+        } catch (\Throwable) {
             return null;
         }
     }

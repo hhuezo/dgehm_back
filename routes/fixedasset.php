@@ -5,6 +5,7 @@ use App\Http\Controllers\fixedasset\CategoryController;
 use App\Http\Controllers\fixedasset\InstitutionController;
 use App\Http\Controllers\fixedasset\OrganizationalUnitController;
 use App\Http\Controllers\fixedasset\OrganizationalUnitTypeController;
+use App\Http\Controllers\fixedasset\AssetTypeController;
 use App\Http\Controllers\fixedasset\OriginController;
 use App\Http\Controllers\fixedasset\PhysicalConditionController;
 use App\Http\Controllers\fixedasset\SpecificController;
@@ -46,6 +47,8 @@ Route::get('/origins', [OriginController::class, 'index']);
 Route::post('/origins', [OriginController::class, 'store']);
 Route::put('/origins/{id}', [OriginController::class, 'update']);
 Route::delete('/origins/{id}', [OriginController::class, 'destroy']);
+
+Route::get('/asset_types', [AssetTypeController::class, 'index']);
 
 Route::get('/physical_conditions', [PhysicalConditionController::class, 'index']);
 Route::post('/physical_conditions', [PhysicalConditionController::class, 'store']);

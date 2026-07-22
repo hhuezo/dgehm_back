@@ -29,11 +29,20 @@ class ReportsController extends Controller
         return (int) $request->input('wh_funding_sources_id');
     }
 
+    private function wantsExcel(Request $request): bool
+    {
+        return $request->boolean('exportExcel', false);
+    }
+
+    private function wantsPdf(Request $request): bool
+    {
+        return $request->boolean('exportPdf', false);
+    }
+
     public function liquidationReport(Request $request)
     {
         $startDate   = $request->input('startDate');
         $endDate     = $request->input('endDate');
-        $exportExcel = $request->boolean('exportExcel', false);
         $fundingSourceId = $this->resolveFundingSourceId($request);
 
         $accounts = Kardex::join('wh_products', 'wh_kardex.product_id', '=', 'wh_products.id')
@@ -84,44 +93,29 @@ class ReportsController extends Controller
 
 
 
-        if ($exportExcel) {
+        $viewData = compact('accounts', 'products', 'startDate', 'endDate');
+        $fileBase = 'Liquidacion_Inventario_' . $startDate . '_' . $endDate;
+
+        if ($this->wantsExcel($request)) {
             return Excel::download(
-                new LiquidationReportExport(
-                    $accounts,
-                    $products,
-                    $startDate,
-                    $endDate
-                ),
-                'Liquidacion_Inventario_' . $startDate . '_' . $endDate . '.xlsx'
+                new LiquidationReportExport($accounts, $products, $startDate, $endDate),
+                $fileBase . '.xlsx'
             );
         }
 
+        if ($this->wantsPdf($request)) {
+            return Pdf::loadView('reports.liquidation', $viewData)
+                ->setPaper('A4', 'landscape')
+                ->download($fileBase . '.pdf');
+        }
 
-        $pdf = Pdf::loadView('reports.liquidation', [
-            'accounts'  => $accounts,
-            'products'  => $products,
-            'startDate' => $startDate,
-            'endDate'   => $endDate,
-        ])
-            ->setPaper('A4', 'landscape');
-
-        return $pdf->download(
-            'Liquidacion_Inventario_' . $startDate . '_' . $endDate . '.pdf'
-        );
-
-        return view('reports.liquidation', compact(
-            'accounts',
-            'products',
-            'startDate',
-            'endDate'
-        ));
+        return response()->view('reports.liquidation', $viewData);
     }
 
 
     public function stockReport(Request $request)
     {
         $date        = $request->input('date');
-        $exportExcel = $request->boolean('exportExcel', false);
         $fundingSourceId = $this->resolveFundingSourceId($request);
 
         // Existencias a la fecha: solo entradas (reception_date <= fecha) y salidas (delivery_date <= fecha)
@@ -177,28 +171,20 @@ class ReportsController extends Controller
             ->orderBy('unit_price')
             ->get();
 
-        /* =========================
-            EXPORTAR EXCEL
-            ========================== */
-        if ($exportExcel) {
-            return Excel::download(
-                new StockReportExport($stock, $date),
-                'Existencias_' . $date . '.xlsx'
-            );
+        $viewData = compact('stock', 'date');
+        $fileBase = 'Existencias_' . $date;
+
+        if ($this->wantsExcel($request)) {
+            return Excel::download(new StockReportExport($stock, $date), $fileBase . '.xlsx');
         }
 
-        /* =========================
-            EXPORTAR PDF (DEFAULT)
-            ========================== */
-        $pdf = Pdf::loadView('reports.stock', [
-            'stock' => $stock,
-            'date'  => $date,
-        ])
-            ->setPaper('A4', 'landscape');
+        if ($this->wantsPdf($request)) {
+            return Pdf::loadView('reports.stock', $viewData)
+                ->setPaper('A4', 'landscape')
+                ->download($fileBase . '.pdf');
+        }
 
-        return $pdf->download(
-            'Existencias_' . $date . '.pdf'
-        );
+        return response()->view('reports.stock', $viewData);
     }
 
     public function deliveryReport(Request $request)
@@ -210,7 +196,6 @@ class ReportsController extends Controller
 
         $startDate   = $request->startDate;
         $endDate     = $request->endDate;
-        $exportExcel = $request->boolean('exportExcel', false);
         $fundingSourceId = $this->resolveFundingSourceId($request);
 
         // 1. Datos base (producto + oficina + cantidad)
@@ -249,27 +234,23 @@ class ReportsController extends Controller
         // 3. Agrupar por producto (para la matriz)
         $products = $data->groupBy('product_id');
 
-        /* =========================
-            EXPORTAR EXCEL
-            ========================== */
-        if ($exportExcel) {
+        $viewData = compact('products', 'organizationalUnits', 'startDate', 'endDate');
+        $fileBase = "Entrega_Productos_{$startDate}_{$endDate}";
+
+        if ($this->wantsExcel($request)) {
             return Excel::download(
                 new DeliveryReportExport($products, $organizationalUnits, $startDate, $endDate),
-                "Entrega_Productos_{$startDate}_{$endDate}.xlsx"
+                "{$fileBase}.xlsx"
             );
         }
 
-        $pdf = Pdf::loadView('reports.delivery', [
-            'products'  => $products,
-            'organizationalUnits' => $organizationalUnits,
-            'startDate' => $startDate,
-            'endDate'   => $endDate,
-        ])
-            ->setPaper('A4', 'landscape');
+        if ($this->wantsPdf($request)) {
+            return Pdf::loadView('reports.delivery', $viewData)
+                ->setPaper('A4', 'landscape')
+                ->download("{$fileBase}.pdf");
+        }
 
-        return $pdf->download(
-            "Entrega_Productos_{$startDate}_{$endDate}.pdf"
-        );
+        return response()->view('reports.delivery', $viewData);
     }
 
     public function environmentalSuppliesReport(Request $request)
@@ -281,7 +262,6 @@ class ReportsController extends Controller
 
         $startDate   = $request->startDate;
         $endDate     = $request->endDate;
-        $exportExcel = $request->boolean('exportExcel', false);
         $fundingSourceId = $this->resolveFundingSourceId($request);
 
         Carbon::setLocale('es');
@@ -346,20 +326,21 @@ class ReportsController extends Controller
             });
 
         $fileName = "Medio_Ambiente_Insumos_{$startDate}_{$endDate}";
+        $viewData = compact('rows', 'startDate', 'endDate');
 
-        if ($exportExcel) {
+        if ($this->wantsExcel($request)) {
             return Excel::download(
                 new EnvironmentalSuppliesReportExport($rows, $startDate, $endDate),
                 "{$fileName}.xlsx"
             );
         }
 
-        $pdf = Pdf::loadView('reports.environmental_supplies', [
-            'rows'      => $rows,
-            'startDate' => $startDate,
-            'endDate'   => $endDate,
-        ])->setPaper('A4', 'landscape');
+        if ($this->wantsPdf($request)) {
+            return Pdf::loadView('reports.environmental_supplies', $viewData)
+                ->setPaper('A4', 'landscape')
+                ->download("{$fileName}.pdf");
+        }
 
-        return $pdf->download("{$fileName}.pdf");
+        return response()->view('reports.environmental_supplies', $viewData);
     }
 }
